@@ -23,10 +23,10 @@ DEBUG = env.bool('DEBUG', default=True)
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
 # Required in production so Django admin/CSRF-protected POSTs are trusted
-# when served from behind Render's (or any) HTTPS domain.
+# when served from behind Vercel's (or any) HTTPS domain.
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
 
-# Render (and most PaaS hosts) terminate TLS at a proxy and forward requests
+# Vercel (and most PaaS hosts) terminate TLS at a proxy and forward requests
 # over plain HTTP with this header set, so Django needs telling how to detect HTTPS.
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
