@@ -167,8 +167,16 @@ if env('SUPABASE_STORAGE_BUCKET_NAME', default=''):
     AWS_STORAGE_BUCKET_NAME = env('SUPABASE_STORAGE_BUCKET_NAME')
     AWS_S3_ENDPOINT_URL = env('SUPABASE_STORAGE_ENDPOINT_URL')
     AWS_S3_REGION_NAME = env('SUPABASE_STORAGE_REGION', default='us-east-1')
+    # Supabase's S3 gateway only accepts SigV4 — django-storages/botocore
+    # otherwise falls back to the older SigV2 style, which gets a 403.
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
     AWS_DEFAULT_ACL = None
-    AWS_QUERYSTRING_AUTH = False
+    # Supabase's S3-compatible gateway requires a signed request for every object,
+    # even in a "public" bucket — unsigned URLs get a 403 "Missing signature".
+    # So URLs need the SigV4 query-string signature (with an expiry) rather than
+    # a bare unsigned URL like a real public S3 bucket would allow.
+    AWS_QUERYSTRING_AUTH = True
+    AWS_QUERYSTRING_EXPIRE = 3600
     STORAGES['default'] = {'BACKEND': 'storages.backends.s3.S3Storage'}
 else:
     STORAGES['default'] = {'BACKEND': 'django.core.files.storage.FileSystemStorage'}

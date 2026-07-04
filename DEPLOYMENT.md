@@ -22,6 +22,10 @@ update two env vars on the backend with the frontend's real URL.
 4. **Storage S3 credentials**: Project Settings → Storage → S3 Connection. Note the endpoint URL,
    region, access key ID, and secret access key.
 
+> **Never paste real credentials into this file.** It's tracked in git and pushed to GitHub —
+> secrets belong in `backend/.env` (gitignored, for local testing) or directly in the
+> Render/Vercel dashboard env var fields, never in a committed doc.
+
 ## 2. Deploy the backend to Render
 
 1. Push this repo to GitHub if you haven't already (it already is, at
