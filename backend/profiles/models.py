@@ -28,3 +28,18 @@ class Profile(models.Model):
     def clean(self):
         if not self.pk and Profile.objects.exists():
             raise ValidationError('Only one Profile instance is allowed. Edit the existing one instead.')
+
+
+class Skill(models.Model):
+    name = models.CharField(max_length=80)
+    description = models.CharField(
+        max_length=200, blank=True,
+        help_text='Short blurb, e.g. "REST APIs, ORM, admin-driven CMS"',
+    )
+    display_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['display_order', 'name']
+
+    def __str__(self):
+        return self.name
