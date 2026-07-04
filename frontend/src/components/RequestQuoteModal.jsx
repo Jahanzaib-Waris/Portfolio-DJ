@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { submitQuoteRequest } from '../api/client'
 import SystemButton from './SystemButton'
 
@@ -8,6 +8,22 @@ export default function RequestQuoteModal({ open, onClose }) {
   const [form, setForm] = useState(initialForm)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [open, onClose])
 
   if (!open) return null
 
@@ -90,7 +106,7 @@ export default function RequestQuoteModal({ open, onClose }) {
               />
             </div>
             {error && <p className="text-status-red text-sm">{error}</p>}
-            <SystemButton type="submit" disabled={status === 'submitting'}>
+            <SystemButton type="submit" variant="primary" disabled={status === 'submitting'}>
               {status === 'submitting' ? 'Sending...' : 'Submit Request'}
             </SystemButton>
           </form>

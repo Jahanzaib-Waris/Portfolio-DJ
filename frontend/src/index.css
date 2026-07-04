@@ -6,12 +6,13 @@
   --color-panel: #0d1128;
   --color-panel-edge: #1a2050;
   --color-neon-blue: #3fd0ff;
-  --color-neon-purple: #a259ff;
-  --color-neon-violet: #7b2ff7;
+  --color-neon-indigo: #3b6dff;
+  --color-neon-deep: #16296e;
+  --color-accent: #ffb454;
   --color-status-green: #35e08c;
   --color-status-red: #ff4d6d;
-  --font-display: "Orbitron", "Rajdhani", sans-serif;
-  --font-mono-ui: "Share Tech Mono", "Consolas", monospace;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-mono-ui: "JetBrains Mono", "Consolas", monospace;
 }
 
 @layer base {
@@ -23,17 +24,24 @@
     margin: 0;
     background-color: var(--color-void);
     background-image:
-      radial-gradient(circle at 15% 10%, rgba(162, 89, 255, 0.14), transparent 45%),
+      radial-gradient(circle at 15% 10%, rgba(59, 109, 255, 0.16), transparent 45%),
       radial-gradient(circle at 85% 0%, rgba(63, 208, 255, 0.12), transparent 40%),
+      radial-gradient(rgba(230, 236, 255, 0.06) 1px, transparent 1px),
       linear-gradient(180deg, #05060f 0%, #070a18 100%);
+    background-size: auto, auto, 26px 26px, auto;
     color: #e6ecff;
-    font-family: "Rajdhani", "Segoe UI", sans-serif;
+    font-family: "Inter", "Segoe UI", sans-serif;
     min-height: 100vh;
   }
 
   ::selection {
-    background: var(--color-neon-purple);
+    background: var(--color-neon-indigo);
     color: #05060f;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-neon-blue);
+    outline-offset: 2px;
   }
 }
 
@@ -42,39 +50,61 @@
     position: relative;
     background: linear-gradient(160deg, rgba(13, 17, 40, 0.9), rgba(6, 8, 20, 0.9));
     border: 1px solid var(--color-panel-edge);
-    clip-path: polygon(0 12px, 12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+    border-radius: 0.75rem;
     box-shadow:
-      0 0 0 1px rgba(162, 89, 255, 0.08),
+      0 0 0 1px rgba(59, 109, 255, 0.08),
       0 0 24px rgba(63, 208, 255, 0.08),
-      inset 0 0 40px rgba(122, 47, 247, 0.06);
+      inset 0 0 40px rgba(22, 41, 110, 0.12);
   }
 
   .system-panel-glow:hover {
     box-shadow:
-      0 0 0 1px rgba(162, 89, 255, 0.25),
+      0 0 0 1px rgba(59, 109, 255, 0.3),
       0 0 32px rgba(63, 208, 255, 0.25),
-      inset 0 0 40px rgba(122, 47, 247, 0.12);
+      inset 0 0 40px rgba(22, 41, 110, 0.2);
     border-color: rgba(63, 208, 255, 0.5);
   }
 
   .glow-text {
-    text-shadow: 0 0 12px rgba(63, 208, 255, 0.65), 0 0 28px rgba(162, 89, 255, 0.35);
+    text-shadow: 0 0 12px rgba(63, 208, 255, 0.65), 0 0 28px rgba(59, 109, 255, 0.4);
   }
 
   .system-heading {
     font-family: var(--font-display);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .eyebrow {
+    position: relative;
+    display: inline-block;
+    padding-bottom: 0.6rem;
+  }
+
+  .eyebrow::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 2.25rem;
+    background: linear-gradient(90deg, var(--color-neon-blue), var(--color-neon-indigo));
+    border-radius: 1px;
+  }
+
+  .eyebrow-center::after {
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .system-button {
-    font-family: var(--font-mono-ui);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: 0;
     border: 1px solid var(--color-neon-blue);
+    border-radius: 0.5rem;
     color: var(--color-neon-blue);
     background: rgba(63, 208, 255, 0.06);
-    clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
     transition: all 0.2s ease;
   }
 
@@ -82,5 +112,30 @@
     background: rgba(63, 208, 255, 0.16);
     box-shadow: 0 0 18px rgba(63, 208, 255, 0.45);
     color: #ffffff;
+  }
+
+  .system-button-primary {
+    border: 1px solid var(--color-accent);
+    color: #1a1206;
+    background: linear-gradient(135deg, var(--color-accent), #ff8f6b);
+    box-shadow: 0 0 20px rgba(255, 180, 84, 0.35);
+  }
+
+  .system-button-primary:hover {
+    background: linear-gradient(135deg, #ffc574, #ff9f7d);
+    box-shadow: 0 0 28px rgba(255, 180, 84, 0.55);
+    color: #1a1206;
+  }
+
+  .skeleton {
+    background: linear-gradient(90deg, rgba(230, 236, 255, 0.06) 25%, rgba(230, 236, 255, 0.12) 37%, rgba(230, 236, 255, 0.06) 63%);
+    background-size: 400% 100%;
+    animation: skeleton-pulse 1.6s ease infinite;
+    border-radius: 0.4rem;
+  }
+
+  @keyframes skeleton-pulse {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
   }
 }
