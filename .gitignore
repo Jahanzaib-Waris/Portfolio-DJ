@@ -46,3 +46,5 @@ Thumbs.db
 # ---- Misc ----
 *.pyc
 *.swp
+context.txt
+PROGRESS.md
