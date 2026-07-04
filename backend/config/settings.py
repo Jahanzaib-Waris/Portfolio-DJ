@@ -22,6 +22,17 @@ DEBUG = env.bool('DEBUG', default=True)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
 
+# Required in production so Django admin/CSRF-protected POSTs are trusted
+# when served from behind Render's (or any) HTTPS domain.
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+
+# Render (and most PaaS hosts) terminate TLS at a proxy and forward requests
+# over plain HTTP with this header set, so Django needs telling how to detect HTTPS.
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
 
 # Application definition
 
@@ -42,6 +53,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -135,11 +147,31 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Media files (resume PDF, profile photo, project/blog images)
-# NOTE (MVP known follow-up): local media storage does not persist on hosts
-# with an ephemeral filesystem. Migrate to Supabase Storage (or S3-compatible)
-# before deploying somewhere without a persistent disk.
+#
+# Defaults to local disk so the project runs immediately with zero setup.
+# Set SUPABASE_STORAGE_BUCKET_NAME (and friends) in .env to serve/store media
+# from Supabase Storage (S3-compatible) instead — required on hosts with an
+# ephemeral filesystem, since local uploads would be wiped on every redeploy.
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+STORAGES = {
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
+
+if env('SUPABASE_STORAGE_BUCKET_NAME', default=''):
+    AWS_ACCESS_KEY_ID = env('SUPABASE_STORAGE_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = env('SUPABASE_STORAGE_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = env('SUPABASE_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = env('SUPABASE_STORAGE_ENDPOINT_URL')
+    AWS_S3_REGION_NAME = env('SUPABASE_STORAGE_REGION', default='us-east-1')
+    AWS_DEFAULT_ACL = None
+    AWS_QUERYSTRING_AUTH = False
+    STORAGES['default'] = {'BACKEND': 'storages.backends.s3.S3Storage'}
+else:
+    STORAGES['default'] = {'BACKEND': 'django.core.files.storage.FileSystemStorage'}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

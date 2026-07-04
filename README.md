@@ -55,3 +55,7 @@ The dev server runs at `http://localhost:5173/` and proxies `/api` and `/media` 
 ## Content management
 
 All content (profile, blog posts, projects, quote requests) is managed through the Django admin at `/admin/`. No frontend auth or CMS UI is required for the MVP.
+
+## Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full step-by-step guide to deploying the backend to Render, the frontend to Vercel, and wiring both up to Supabase (Postgres + Storage).
