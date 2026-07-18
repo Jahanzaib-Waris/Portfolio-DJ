@@ -48,3 +48,6 @@ Thumbs.db
 *.swp
 context.txt
 PROGRESS.md
+
+.vercel
+.env*

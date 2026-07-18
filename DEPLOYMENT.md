@@ -54,7 +54,8 @@ from settings, and runs `collectstatic` automatically during the build — no `P
    against the same Supabase database instead:
    ```
    cd backend
-   vercel pull          # writes .env.local with the project's env vars
+   vercel pull              # writes .env.local with the project's env vars
+   cp .env.local .env       # Django's settings.py only reads .env, not .env.local
    python manage.py migrate
    python manage.py createsuperuser
    ```
