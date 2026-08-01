@@ -1,8 +1,6 @@
 # Solo Leveling Developer Portfolio
 
-A personal developer portfolio site with a Solo Leveling anime-inspired visual theme (dark base, glowing purple/blue neon accents, "system window" style panels). Django REST Framework backend + React (Vite) frontend.
-
-See [PROGRESS.md](PROGRESS.md) for current build status and what's still outstanding.
+A personal developer portfolio site with a Solo Leveling anime-inspired visual theme (dark base, glowing blue neon accents, "system window" style panels). Django REST Framework backend + React (Vite) frontend.
 
 ## Project structure
 
@@ -46,6 +44,7 @@ The dev server runs at `http://localhost:5173/` and proxies `/api` and `/media` 
 | Endpoint | Description |
 |---|---|
 | `GET /api/profile/` | Profile info (name, tagline, bio, photo, links) |
+| `GET /api/profile/skills/` | List skills (home page tech stack section) |
 | `GET /api/profile/resume/` | Download resume PDF |
 | `GET /api/blog/posts/` | List published blog posts |
 | `GET /api/blog/posts/<slug>/` | Blog post detail |
@@ -58,4 +57,4 @@ All content (profile, blog posts, projects, quote requests) is managed through t
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for the full step-by-step guide to deploying the backend to Render, the frontend to Vercel, and wiring both up to Supabase (Postgres + Storage).
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full step-by-step guide to deploying the backend and frontend as two separate Vercel projects, and wiring both up to Supabase (Postgres + Storage).

@@ -1,9 +1,9 @@
 import axios from 'axios'
 
 // In local dev this stays '/api' and Vite's dev-server proxy forwards it to
-// Django. In production (Vercel), the frontend and backend are on different
-// domains, so VITE_API_BASE_URL must point at the deployed Render API, e.g.
-// https://your-api.onrender.com/api
+// Django. In production the frontend and backend are separate Vercel projects
+// on different domains, so VITE_API_BASE_URL must point at the deployed API, e.g.
+// https://your-api.vercel.app/api
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const apiClient = axios.create({
