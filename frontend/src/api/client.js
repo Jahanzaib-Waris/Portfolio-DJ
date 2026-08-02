@@ -135,3 +135,38 @@ export const updateBlogPost = (slug, payload) =>
   apiClient.patch(`/blog/posts/${slug}/`, payload).then((res) => res.data)
 
 export const deleteBlogPost = (slug) => apiClient.delete(`/blog/posts/${slug}/`)
+
+/* ------------------------------------------------------------------ projects */
+
+export const getProject = (id) => apiClient.get(`/projects/${id}/`).then((res) => res.data)
+
+export const createProject = (payload) =>
+  apiClient.post('/projects/', payload).then((res) => res.data)
+
+export const updateProject = (id, payload) =>
+  apiClient.patch(`/projects/${id}/`, payload).then((res) => res.data)
+
+export const deleteProject = (id) => apiClient.delete(`/projects/${id}/`)
+
+/* -------------------------------------------------------------------- skills */
+
+export const createSkill = (payload) =>
+  apiClient.post('/profile/skills/', payload).then((res) => res.data)
+
+export const updateSkill = (id, payload) =>
+  apiClient.patch(`/profile/skills/${id}/`, payload).then((res) => res.data)
+
+export const deleteSkill = (id) => apiClient.delete(`/profile/skills/${id}/`)
+
+/* ------------------------------------------------------------------- profile */
+
+// Profile is a singleton: POST creates the one row (409 if it exists), PATCH updates it.
+export const createProfile = (payload) =>
+  apiClient.post('/profile/', payload).then((res) => res.data)
+
+export const updateProfile = (payload) =>
+  apiClient.patch('/profile/', payload).then((res) => res.data)
+
+/* -------------------------------------------------------------- quote inbox */
+
+export const deleteQuoteRequest = (id) => apiClient.delete(`/quotes/${id}/`)

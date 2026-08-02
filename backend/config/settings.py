@@ -206,7 +206,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'config.pagination.StandardPagination',
     'PAGE_SIZE': 10,
     # Only the quote form is throttled (it's the one unauthenticated write endpoint).
     # The scope's rate lives here; the viewset opts in via `throttle_scope`.

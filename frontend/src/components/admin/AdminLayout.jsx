@@ -6,10 +6,10 @@ import { useAuth } from '../../auth/authContext'
 const nav = [
   { to: '/admin', label: 'Dashboard', end: true, ready: true },
   { to: '/admin/blog', label: 'Blog posts', ready: true },
-  { to: '/admin/projects', label: 'Projects', ready: false },
-  { to: '/admin/skills', label: 'Skills', ready: false },
-  { to: '/admin/profile', label: 'Profile', ready: false },
-  { to: '/admin/quotes', label: 'Quote requests', ready: false },
+  { to: '/admin/projects', label: 'Projects', ready: true },
+  { to: '/admin/skills', label: 'Skills', ready: true },
+  { to: '/admin/profile', label: 'Profile', ready: true },
+  { to: '/admin/quotes', label: 'Quote requests', ready: true },
 ]
 
 export default function AdminLayout() {

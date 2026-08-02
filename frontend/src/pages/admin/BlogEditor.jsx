@@ -6,6 +6,8 @@ import MarkdownEditor from '../../components/admin/MarkdownEditor'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
+import { fieldErrorsFrom, formErrorFrom, messageFor } from '../../utils/apiErrors'
+import buildPayload from '../../utils/buildPayload'
 import slugify from '../../utils/slugify'
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -123,27 +125,19 @@ export default function BlogEditor() {
     setDirty(true)
   }
 
-  const buildPayload = (isPublished) => {
-    const fields = {
-      title: form.title,
-      slug: form.slug,
-      excerpt: form.excerpt,
-      content: form.content,
-      published_date: form.published_date,
-      is_published: isPublished,
-    }
-
-    // A new file means multipart. Otherwise stay on JSON — sending the existing
-    // cover_image back as a URL string would make DRF try to parse it as a file.
-    if (coverFile) {
-      const data = new FormData()
-      Object.entries(fields).forEach(([key, value]) => data.append(key, value))
-      data.append('cover_image', coverFile)
-      return data
-    }
-
-    return removeCover ? { ...fields, cover_image: null } : fields
-  }
+  const payloadFor = (isPublished) =>
+    buildPayload(
+      {
+        title: form.title,
+        slug: form.slug,
+        excerpt: form.excerpt,
+        content: form.content,
+        published_date: form.published_date,
+        is_published: isPublished,
+      },
+      { cover_image: coverFile },
+      removeCover ? ['cover_image'] : [],
+    )
 
   const save = async (publishOverride) => {
     setSaving(true)
@@ -154,7 +148,7 @@ export default function BlogEditor() {
     const isPublished = publishOverride === undefined ? form.is_published : publishOverride
 
     try {
-      const payload = buildPayload(isPublished)
+      const payload = payloadFor(isPublished)
       const saved = isNew
         ? await createBlogPost(payload)
         : await updateBlogPost(routeSlug, payload)
@@ -168,24 +162,16 @@ export default function BlogEditor() {
       if (fileInputRef.current) fileInputRef.current.value = ''
       setForm((prev) => ({ ...prev, is_published: Boolean(saved.is_published) }))
     } catch (error) {
-      const data = error?.response?.data
-      if (data && typeof data === 'object' && !Array.isArray(data)) {
-        setFieldErrors(data)
-        if (data.detail) setFormError(String(data.detail))
-      } else if (!error?.response) {
-        setFormError('Cannot reach the server.')
-      } else {
-        setFormError('Could not save. Check the fields and try again.')
-      }
+      setFieldErrors(fieldErrorsFrom(error))
+      setFormError(formErrorFrom(error))
     } finally {
       setSaving(false)
     }
   }
 
   const errorFor = (field) => {
-    const value = fieldErrors[field]
-    if (!value) return null
-    return <p className="mt-1 text-xs text-status-red">{Array.isArray(value) ? value[0] : String(value)}</p>
+    const message = messageFor(fieldErrors, field)
+    return message ? <p className="mt-1 text-xs text-status-red">{message}</p> : null
   }
 
   if (loadState === 'loading') {
