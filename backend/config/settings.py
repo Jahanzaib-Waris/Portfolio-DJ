@@ -2,6 +2,7 @@
 Django settings for config project.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
 import environ
@@ -44,7 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    # Stores rotated/logged-out refresh tokens so they can't be reused.
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
+    'accounts',
     'profiles',
     'blog',
     'projects',
@@ -191,6 +195,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 _num_proxies = env('NUM_PROXIES', default='').strip()
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # The admin panel authenticates with a JWT. SessionAuthentication is kept
+        # so the DRF browsable API still works while logged into Django admin.
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    # Endpoints opt into stricter rules individually; the public site reads most
+    # of this API unauthenticated.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
@@ -232,6 +244,22 @@ else:
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         }
     }
+
+
+# JWT (admin panel authentication)
+#
+# The access token is short-lived and held in memory by the panel; the refresh
+# token is longer-lived and persisted client-side. Rotation plus blacklisting
+# means a refresh token is single-use, so a stolen one is only good until the
+# real session next refreshes.
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+}
 
 
 # CORS - allow the Vite dev server (and any extra origins from env) to call the API

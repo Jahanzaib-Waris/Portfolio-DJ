@@ -1,9 +1,13 @@
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 
-from .views import ProfileView, ResumeDownloadView, SkillListView
+from .views import ProfileView, ResumeDownloadView, SkillViewSet
+
+router = DefaultRouter()
+router.register('skills', SkillViewSet, basename='skill')
 
 urlpatterns = [
     path('', ProfileView.as_view(), name='profile-detail'),
     path('resume/', ResumeDownloadView.as_view(), name='profile-resume'),
-    path('skills/', SkillListView.as_view(), name='profile-skills'),
+    path('', include(router.urls)),
 ]
