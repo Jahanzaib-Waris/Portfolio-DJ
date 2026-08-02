@@ -57,7 +57,6 @@ API → http://127.0.0.1:8000/ · Django admin → http://127.0.0.1:8000/admin/
 - [ ] A card shows a red `—` rather than blanking the page if one endpoint fails
       (stop the backend mid-load)
 - [ ] Sidebar on desktop, hamburger below `lg`
-- [ ] Greyed `soon` items (Projects, Skills, Profile, Quote requests) are not clickable
 - [ ] Public navbar/footer do **not** appear on admin pages
 
 **Verified:** `/admin`, `/admin/blog`, `/admin/blog/new` all redirect to login when signed
@@ -123,7 +122,63 @@ The whole editor is unexercised. This is the highest-value section.
 
 ---
 
-## 3. Public site
+## 3. Projects, Skills, Profile, Quote inbox — also untested
+
+### Projects
+
+- [ ] `/admin/projects` lists existing projects with thumbnail, `#display_order` badge and
+      tech-stack tags; projects without an image show a dashed "no image" placeholder
+- [ ] Typing into **Tech stack** renders live tag chips below the field as you type
+- [ ] Create → redirects to the edit URL for the new project
+- [ ] Changes appear on the public `/projects` page
+- [ ] **Display order actually reorders** the public page (lower first)
+- [ ] Thumbnail upload, replace, and Remove all behave
+- [ ] **Save a project with an existing thumbnail and no new file** → the thumbnail survives
+      (the JSON-vs-multipart branch again)
+- [ ] An invalid Repo/Live URL shows the error *under that field*
+- [ ] Delete → confirm dialog → list refreshes
+
+### Skills
+
+- [ ] Add a skill → appears in the list below without a manual reload
+- [ ] Edit → row becomes inputs; Save persists, Cancel discards
+- [ ] Delete → confirm dialog → removed
+- [ ] Changes show in the home page tech-stack section
+- [ ] Display order controls the order on the home page
+- [ ] **Add more than 10 skills** → all still listed. (They're fetched with `page_size=100`;
+      if only 10 appear, the pagination change didn't take.)
+
+### Profile
+
+- [ ] **With no profile yet** the page says "No profile exists yet" and the button reads
+      "Create profile"
+- [ ] Creating it succeeds, and the button changes to "Save changes"
+- [ ] Name and photo immediately drive the navbar branding and home page hero
+- [ ] Photo upload shows a round preview; Remove works
+- [ ] Resume upload → "View current resume" link appears and opens the PDF
+- [ ] **Save with an existing photo and resume but no new files** → both survive
+- [ ] A "Saved" indicator appears after saving and clears once you edit again
+- [ ] Invalid email or URL → error under that field
+
+### Quote inbox
+
+- [ ] Submit the public form → the request appears at `/admin/quotes`
+- [ ] Newest appears first
+- [ ] Clicking a row expands the full message; clicking again collapses it
+- [ ] "Reply" opens your mail client addressed to the sender
+- [ ] Delete → confirm dialog → removed
+- [ ] **The inbox is not rate-limited** — reload it 8+ times in a row and it keeps working
+      (the 5/hour cap must apply only to public submissions)
+
+### Panel-wide
+
+- [ ] Every sidebar item is now clickable — no greyed `soon` entries remain
+- [ ] Each page sets its own browser tab title
+- [ ] Unsaved-changes warning fires on the Project and Profile forms too
+
+---
+
+## 4. Public site
 
 **Verified in the browser against seeded content:**
 
@@ -134,6 +189,7 @@ The whole editor is unexercised. This is the highest-value section.
   **not** scroll sideways
 - Pagination on `/blogs`: 10 posts → Load more → 12 appended, no duplicates, button disappears
   on the last page
+- `BlogDetail` is now lazy-loaded and still renders Markdown correctly after that change
 
 Residual checks — these were **not** covered:
 
@@ -159,7 +215,7 @@ throttled request persisting no row.
 
 ---
 
-## 4. API authorisation
+## 5. API authorisation
 
 *Covered by 11 automated tests that passed* — anonymous reads succeed and writes 401, staff
 CRUD works, non-staff can't obtain a token, drafts stay hidden, the quote inbox is unthrottled
@@ -167,21 +223,42 @@ for staff. Re-check by hand only if something looks wrong.
 
 ---
 
-## 5. Production deploy — required before the live site works
+## 6. Production deploy — required before the live site works
 
-`abcf36f` (JWT auth) is already pushed, so the deployed backend is running code whose tables
-don't exist yet.
+> **Blocked.** The deployed API currently 500s on every request — the Supabase project it points
+> at no longer exists. Confirmed 2026-08-02 from Vercel runtime logs:
+> `FATAL: (ENOTFOUND) tenant/user postgres.fbeegpzrbocqgyxeqqtc not found`, and
+> `fbeegpzrbocqgyxeqqtc.supabase.co` has no DNS record. None of the steps below can run until
+> there is a live database. This is unrelated to the application code — the connection fails
+> before any view executes.
+
+**First, restore the database:**
+
+- [ ] Check Supabase — was the project deleted, or does it exist under a different reference?
+- [ ] Update `SUPABASE_DB_HOST`, `SUPABASE_DB_USER`, `SUPABASE_DB_PASSWORD` in the backend
+      Vercel project
+- [ ] Set `SUPABASE_DB_PORT` to **5432** (session pooler), not the 6543 currently configured
+- [ ] Check Project Settings → Deployment Protection isn't blocking the domain the frontend calls
+
+**Then the deploy steps.** `abcf36f` (JWT auth) is already pushed, so the deployed backend is
+running code whose tables don't exist yet.
 
 - [ ] Set `NUM_PROXIES=1` in the backend Vercel project's env vars
 - [ ] Optionally set `QUOTE_THROTTLE_RATE` (defaults to `5/hour`)
 - [ ] Run migrations and the cache table against Supabase:
       ```bash
-      cd backend
-      vercel pull
+      cd backend                          # already linked to the portfolio-dj project
+      vercel env pull .env.local --environment=production
       cp .env.local .env
       python manage.py migrate            # token_blacklist — LOGIN FAILS WITHOUT THIS
       python manage.py createcachetable   # throttle counters — QUOTES ERROR WITHOUT THIS
+      rm .env                             # or local dev silently runs against production
       ```
+      **`SUPABASE_DB_PASSWORD` is flagged sensitive in Vercel**, so `env pull` writes the literal
+      string `[SENSITIVE]` rather than the value. Paste the real password into `.env` by hand
+      before running migrate, or the connection fails. The same applies to `SECRET_KEY` and
+      `CORS_ALLOWED_ORIGINS` — any placeholder works locally for a migration, but `[SENSITIVE]`
+      itself fails the system check for CORS.
 - [ ] Redeploy the backend
 
 Then on the deployed site:
@@ -197,7 +274,7 @@ Then on the deployed site:
 
 ---
 
-## 6. Known issues, not bugs to report
+## 7. Known issues, not bugs to report
 
 - **Media URLs expire after 1 hour.** Supabase's S3 gateway requires a signed request for every
   object. Fine live; any cached response will have dead image links.
@@ -205,4 +282,9 @@ Then on the deployed site:
 - **`SECURE_HSTS_SECONDS` is unset**, flagged by `manage.py check --deploy`.
 - **`gunicorn` is unused** but still in `requirements.txt`, left from the Render setup.
 - No tests are committed — every `tests.py` is still an empty stub.
-- Projects, Skills, Profile and Quote-request screens are not built; use Django admin for those.
+- **Production is down.** The deployed API 500s on every request: its Supabase project no longer
+  exists (`fbeegpzrbocqgyxeqqtc` has no DNS record). Nothing in §6 can run until that's fixed.
+- `SUPABASE_DB_PORT` is set to **6543** (transaction pooler). Django needs the session pooler on
+  **5432**, or `DISABLE_SERVER_SIDE_CURSORS = True`.
+- The backend Vercel project has **Deployment Protection** enabled. If that covers the domain the
+  frontend calls, the live site can't reach the API even once the database is restored.
