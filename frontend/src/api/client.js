@@ -121,3 +121,17 @@ export const blacklistRefreshToken = (refresh) =>
 export const getCurrentUser = () => apiClient.get('/auth/me/').then((res) => res.data)
 
 export const getQuoteRequests = (params) => apiClient.get('/quotes/', { params }).then((res) => res.data)
+
+/* ----------------------------------------------------------------- blog CMS */
+
+// Payloads are either a plain object (JSON) or FormData when a new cover image
+// is being uploaded. Axios sets the multipart content-type itself when handed
+// FormData, so nothing extra is needed here.
+
+export const createBlogPost = (payload) =>
+  apiClient.post('/blog/posts/', payload).then((res) => res.data)
+
+export const updateBlogPost = (slug, payload) =>
+  apiClient.patch(`/blog/posts/${slug}/`, payload).then((res) => res.data)
+
+export const deleteBlogPost = (slug) => apiClient.delete(`/blog/posts/${slug}/`)

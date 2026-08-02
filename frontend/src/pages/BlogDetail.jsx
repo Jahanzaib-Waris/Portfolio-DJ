@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
 import { getBlogPost } from '../api/client'
+import MarkdownContent from '../components/MarkdownContent'
 import StatusPanel from '../components/StatusPanel'
 import { Skeleton } from '../components/Skeleton'
 
@@ -57,18 +56,9 @@ export default function BlogDetail() {
             <span className="system-heading">{post.published_date}</span>
           </div>
           <h1 className="glow-text mt-2 text-2xl font-bold text-white sm:text-3xl">{post.title}</h1>
-          <div className="markdown-body mt-6 leading-relaxed text-slate-300">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={{
-                // `node` is react-markdown's AST entry — strip it so it doesn't
-                // land on the DOM element as an unknown attribute.
-                a: ({ node: _node, ...props }) => <a {...props} target="_blank" rel="noreferrer" />,
-              }}
-            >
-              {post.content}
-            </ReactMarkdown>
-          </div>
+          <MarkdownContent className="mt-6 leading-relaxed text-slate-300">
+            {post.content}
+          </MarkdownContent>
         </StatusPanel>
       )}
     </div>

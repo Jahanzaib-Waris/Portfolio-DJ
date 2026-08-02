@@ -15,6 +15,10 @@ export default function usePaginatedList(fetcher) {
   const [nextPage, setNextPage] = useState(null)
   const [loadingMore, setLoadingMore] = useState(false)
   const [moreFailed, setMoreFailed] = useState(false)
+  // Bumped to re-run the initial fetch — used by admin screens after a delete.
+  const [reloadToken, setReloadToken] = useState(0)
+
+  const reload = useCallback(() => setReloadToken((n) => n + 1), [])
 
   useEffect(() => {
     let cancelled = false
@@ -33,7 +37,7 @@ export default function usePaginatedList(fetcher) {
     return () => {
       cancelled = true
     }
-  }, [fetcher])
+  }, [fetcher, reloadToken])
 
   const loadMore = useCallback(() => {
     if (!nextPage || loadingMore) return
@@ -58,5 +62,6 @@ export default function usePaginatedList(fetcher) {
     loadingMore,
     moreFailed,
     loadMore,
+    reload,
   }
 }

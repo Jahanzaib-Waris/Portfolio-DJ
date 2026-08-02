@@ -5,7 +5,7 @@ import { useAuth } from '../../auth/authContext'
 
 const nav = [
   { to: '/admin', label: 'Dashboard', end: true, ready: true },
-  { to: '/admin/blog', label: 'Blog posts', ready: false },
+  { to: '/admin/blog', label: 'Blog posts', ready: true },
   { to: '/admin/projects', label: 'Projects', ready: false },
   { to: '/admin/skills', label: 'Skills', ready: false },
   { to: '/admin/profile', label: 'Profile', ready: false },

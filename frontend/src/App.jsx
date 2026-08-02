@@ -9,6 +9,8 @@ import Blogs from './pages/Blogs'
 import BlogDetail from './pages/BlogDetail'
 import Projects from './pages/Projects'
 import AdminLogin from './pages/admin/AdminLogin'
+import BlogEditor from './pages/admin/BlogEditor'
+import BlogList from './pages/admin/BlogList'
 import Dashboard from './pages/admin/Dashboard'
 
 function App() {
@@ -29,6 +31,9 @@ function App() {
         <Route element={<RequireAuth />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="blog" element={<BlogList />} />
+            <Route path="blog/new" element={<BlogEditor />} />
+            <Route path="blog/:slug/edit" element={<BlogEditor />} />
           </Route>
         </Route>
       </Routes>
