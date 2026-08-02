@@ -1,20 +1,18 @@
-import { useEffect, useState } from 'react'
 import { getProjects } from '../api/client'
 import StatusPanel from '../components/StatusPanel'
+import SystemButton from '../components/SystemButton'
 import { CardSkeleton } from '../components/Skeleton'
+import usePaginatedList from '../hooks/usePaginatedList'
 
 export default function Projects() {
-  const [projects, setProjects] = useState([])
-  const [loadState, setLoadState] = useState('loading')
-
-  useEffect(() => {
-    getProjects()
-      .then((data) => {
-        setProjects(data.results ?? data)
-        setLoadState('ready')
-      })
-      .catch(() => setLoadState('error'))
-  }, [])
+  const {
+    items: projects,
+    loadState,
+    hasMore,
+    loadingMore,
+    moreFailed,
+    loadMore,
+  } = usePaginatedList(getProjects)
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
@@ -82,6 +80,15 @@ export default function Projects() {
           </StatusPanel>
         ))}
       </div>
+
+      {hasMore && (
+        <div className="mt-10 flex flex-col items-center gap-3">
+          <SystemButton onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Loading...' : 'Load more projects'}
+          </SystemButton>
+          {moreFailed && <p className="text-sm text-status-red">Couldn&rsquo;t load more. Try again.</p>}
+        </div>
+      )}
     </div>
   )
 }

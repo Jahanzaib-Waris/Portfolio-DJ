@@ -49,16 +49,23 @@ from settings, and runs `collectstatic` automatically during the build — no `P
    - `SUPABASE_STORAGE_BUCKET_NAME`, `SUPABASE_STORAGE_ENDPOINT_URL`,
      `SUPABASE_STORAGE_ACCESS_KEY_ID`, `SUPABASE_STORAGE_SECRET_ACCESS_KEY`,
      `SUPABASE_STORAGE_REGION` (`us-east-1`) → from step 1
+   - `NUM_PROXIES` → `1`, so the quote-form throttle reads the real client IP from
+     Vercel's `X-Forwarded-For` header rather than a value the caller can spoof
+   - `QUOTE_THROTTLE_RATE` → optional, defaults to `5/hour`
 5. Deploy.
-6. Vercel Functions have no persistent shell, so migrations and `createsuperuser` run locally
-   against the same Supabase database instead:
+6. Vercel Functions have no persistent shell, so migrations, the cache table, and
+   `createsuperuser` run locally against the same Supabase database instead:
    ```
    cd backend
    vercel pull              # writes .env.local with the project's env vars
    cp .env.local .env       # Django's settings.py only reads .env, not .env.local
    python manage.py migrate
+   python manage.py createcachetable
    python manage.py createsuperuser
    ```
+   `createcachetable` is required once. Rate limiting stores its counters in the cache,
+   and each Vercel request runs in a separate short-lived function — an in-memory cache
+   would reset constantly, so the counters live in a shared Postgres table instead.
    (Requires the [Vercel CLI](https://vercel.com/docs/cli): `npm i -g vercel`, then `vercel link`
    once to connect this directory to the project before `vercel pull` works.)
 7. Confirm the API works: visit `https://<your-backend>.vercel.app/api/profile/` (should return

@@ -1,21 +1,19 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getBlogPosts } from '../api/client'
 import StatusPanel from '../components/StatusPanel'
+import SystemButton from '../components/SystemButton'
 import { CardSkeleton } from '../components/Skeleton'
+import usePaginatedList from '../hooks/usePaginatedList'
 
 export default function Blogs() {
-  const [posts, setPosts] = useState([])
-  const [loadState, setLoadState] = useState('loading')
-
-  useEffect(() => {
-    getBlogPosts()
-      .then((data) => {
-        setPosts(data.results ?? data)
-        setLoadState('ready')
-      })
-      .catch(() => setLoadState('error'))
-  }, [])
+  const {
+    items: posts,
+    loadState,
+    hasMore,
+    loadingMore,
+    moreFailed,
+    loadMore,
+  } = usePaginatedList(getBlogPosts)
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
@@ -53,6 +51,15 @@ export default function Blogs() {
           </Link>
         ))}
       </div>
+
+      {hasMore && (
+        <div className="mt-10 flex flex-col items-center gap-3">
+          <SystemButton onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Loading...' : 'Load more posts'}
+          </SystemButton>
+          {moreFailed && <p className="text-sm text-status-red">Couldn&rsquo;t load more. Try again.</p>}
+        </div>
+      )}
     </div>
   )
 }

@@ -186,13 +186,52 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django REST Framework
 
+# Read as a plain string and convert by hand: .env.example ships NUM_PROXIES
+# blank, and casting an empty string straight to int raises.
+_num_proxies = env('NUM_PROXIES', default='').strip()
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    # Only the quote form is throttled (it's the one unauthenticated write endpoint).
+    # The scope's rate lives here; the viewset opts in via `throttle_scope`.
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {
+        'quotes': env('QUOTE_THROTTLE_RATE', default='5/hour'),
+    },
+    # Behind Vercel's proxy the client IP arrives in X-Forwarded-For rather than
+    # REMOTE_ADDR. Telling DRF how many proxies to trust stops a caller from
+    # spoofing the header to dodge the throttle.
+    'NUM_PROXIES': int(_num_proxies) if _num_proxies else None,
 }
+
+
+# Cache
+#
+# DRF stores throttle counters in the cache, so the backend matters: Vercel runs
+# each request in a short-lived function, and the default in-memory cache is
+# per-process, which would reset the counter constantly and make throttling
+# mostly decorative. When Supabase Postgres is configured we use a database
+# cache table instead, which every function instance shares.
+#
+# Requires a one-off `python manage.py createcachetable` — see DEPLOYMENT.md.
+
+if env('SUPABASE_DB_HOST', default=''):
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+            'LOCATION': 'django_cache',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        }
+    }
 
 
 # CORS - allow the Vite dev server (and any extra origins from env) to call the API
