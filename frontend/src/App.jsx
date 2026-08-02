@@ -1,51 +1,38 @@
-import { useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router-dom'
-import NavBar from './components/NavBar'
-import Footer from './components/Footer'
-import RequestQuoteModal from './components/RequestQuoteModal'
+
+import { AuthProvider } from './auth/AuthProvider'
+import PublicLayout from './components/PublicLayout'
+import AdminLayout from './components/admin/AdminLayout'
+import RequireAuth from './components/admin/RequireAuth'
 import Home from './pages/Home'
 import Blogs from './pages/Blogs'
 import BlogDetail from './pages/BlogDetail'
 import Projects from './pages/Projects'
-import { getProfile } from './api/client'
+import AdminLogin from './pages/admin/AdminLogin'
+import Dashboard from './pages/admin/Dashboard'
 
 function App() {
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false)
-  const [profile, setProfile] = useState(null)
-  const [profileState, setProfileState] = useState('loading')
-
-  useEffect(() => {
-    getProfile()
-      .then((data) => {
-        setProfile(data)
-        setProfileState('ready')
-        if (data?.name) document.title = `${data.name} — Portfolio`
-      })
-      .catch(() => setProfileState('empty'))
-  }, [])
-
   return (
-    <div className="flex min-h-screen flex-col">
-      <NavBar profile={profile} onRequestQuote={() => setQuoteModalOpen(true)} />
-
-      <main className="flex-1">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Home profile={profile} profileState={profileState} onRequestQuote={() => setQuoteModalOpen(true)} />
-            }
-          />
+    <AuthProvider>
+      <Routes>
+        {/* Public site */}
+        <Route element={<PublicLayout />}>
+          <Route path="/" element={<Home />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:slug" element={<BlogDetail />} />
           <Route path="/projects" element={<Projects />} />
-        </Routes>
-      </main>
+        </Route>
 
-      <Footer profile={profile} />
+        {/* Login sits outside RequireAuth, or reaching it would be impossible. */}
+        <Route path="/admin/login" element={<AdminLogin />} />
 
-      <RequestQuoteModal open={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />
-    </div>
+        <Route element={<RequireAuth />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+          </Route>
+        </Route>
+      </Routes>
+    </AuthProvider>
   )
 }
 

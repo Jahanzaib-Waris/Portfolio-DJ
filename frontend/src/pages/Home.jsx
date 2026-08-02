@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { getProjects, getSkills, resumeDownloadUrl } from '../api/client'
 import StatusPanel from '../components/StatusPanel'
 import SystemButton from '../components/SystemButton'
 import { Skeleton, CardSkeleton } from '../components/Skeleton'
 
-export default function Home({ profile, profileState, onRequestQuote }) {
+export default function Home() {
+  const { profile, profileState, onRequestQuote } = useOutletContext()
   const [skills, setSkills] = useState([])
   const [skillsState, setSkillsState] = useState('loading')
   const [projects, setProjects] = useState([])
