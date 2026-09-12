@@ -1,26 +1,63 @@
 import { useState } from 'react'
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../auth/authContext'
 
+// Grouped, WordPress-style nav: a top-level item either links directly
+// (Dashboard, Quotes) or holds children that expand under it (Blog,
+// Portfolio, Settings). `ready: false` renders the existing greyed "soon"
+// treatment for sections whose pages don't exist yet.
 const nav = [
-  { to: '/admin', label: 'Dashboard', end: true, ready: true },
-  { to: '/admin/blog', label: 'Blog posts', ready: true },
-  { to: '/admin/projects', label: 'Projects', ready: true },
-  { to: '/admin/skills', label: 'Skills', ready: true },
-  { to: '/admin/profile', label: 'Profile', ready: true },
-  { to: '/admin/quotes', label: 'Quote requests', ready: true },
+  { key: 'dashboard', to: '/admin', label: 'Dashboard', end: true, ready: true },
+  {
+    key: 'blog',
+    label: 'Blog',
+    children: [
+      { to: '/admin/blog', label: 'All posts', end: true, ready: true },
+      { to: '/admin/blog/new', label: 'Add new', ready: true },
+    ],
+  },
+  { key: 'analytics', label: 'Analytics', ready: false },
+  {
+    key: 'portfolio',
+    label: 'Portfolio',
+    children: [
+      { to: '/admin/projects', label: 'Projects', ready: true },
+      { to: '/admin/skills', label: 'Skills', ready: true },
+      { to: '/admin/profile', label: 'Profile', ready: true },
+    ],
+  },
+  { key: 'quotes', to: '/admin/quotes', label: 'Quote requests', ready: true },
+  {
+    key: 'settings',
+    label: 'Settings',
+    children: [
+      { to: '/admin/settings/account', label: 'Account', ready: false },
+      { to: '/admin/settings/branding', label: 'Branding', ready: false },
+    ],
+  },
 ]
+
+function isGroupActive(item, pathname) {
+  if (!item.children) return false
+  return item.children.some((child) => pathname.startsWith(child.to))
+}
 
 export default function AdminLayout() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [openGroups, setOpenGroups] = useState(() =>
+    Object.fromEntries(nav.filter((item) => item.children).map((item) => [item.key, isGroupActive(item, location.pathname)])),
+  )
 
   const handleLogout = async () => {
     await logout()
     navigate('/admin/login', { replace: true })
   }
+
+  const toggleGroup = (key) => setOpenGroups((open) => ({ ...open, [key]: !open[key] }))
 
   const linkClass = ({ isActive }) =>
     `block rounded-md px-3 py-2 text-sm transition-colors ${
@@ -29,12 +66,61 @@ export default function AdminLayout() {
         : 'text-slate-300 hover:bg-panel-edge/40 hover:text-neon-blue'
     }`
 
+  const soonItem = (label) => (
+    <span
+      className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-slate-600"
+      title="Not built yet"
+    >
+      {label}
+      <span className="text-[10px] uppercase tracking-wide text-slate-700">soon</span>
+    </span>
+  )
+
   const navItems = (
     <nav className="flex flex-col gap-1">
-      {nav.map((item) =>
-        item.ready ? (
+      {nav.map((item) => {
+        if (item.children) {
+          const active = isGroupActive(item, location.pathname)
+          const open = openGroups[item.key] ?? active
+          return (
+            <div key={item.key}>
+              <button
+                type="button"
+                onClick={() => toggleGroup(item.key)}
+                aria-expanded={open}
+                className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-sm transition-colors ${
+                  active ? 'text-neon-blue' : 'text-slate-300 hover:bg-panel-edge/40 hover:text-neon-blue'
+                }`}
+              >
+                {item.label}
+                <span className={`text-xs transition-transform ${open ? 'rotate-90' : ''}`}>&rsaquo;</span>
+              </button>
+              {open && (
+                <div className="ml-3 flex flex-col gap-1 border-l border-panel-edge/60 pl-3">
+                  {item.children.map((child) =>
+                    child.ready ? (
+                      <NavLink
+                        key={child.to}
+                        to={child.to}
+                        end={child.end}
+                        className={linkClass}
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        {child.label}
+                      </NavLink>
+                    ) : (
+                      <div key={child.to}>{soonItem(child.label)}</div>
+                    ),
+                  )}
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        return item.ready ? (
           <NavLink
-            key={item.to}
+            key={item.key}
             to={item.to}
             end={item.end}
             className={linkClass}
@@ -43,16 +129,9 @@ export default function AdminLayout() {
             {item.label}
           </NavLink>
         ) : (
-          <span
-            key={item.to}
-            className="flex items-center justify-between rounded-md px-3 py-2 text-sm text-slate-600"
-            title="Not built yet"
-          >
-            {item.label}
-            <span className="text-[10px] uppercase tracking-wide text-slate-700">soon</span>
-          </span>
-        ),
-      )}
+          <div key={item.key}>{soonItem(item.label)}</div>
+        )
+      })}
     </nav>
   )
 
