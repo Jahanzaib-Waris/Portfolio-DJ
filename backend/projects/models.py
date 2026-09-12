@@ -12,6 +12,10 @@ class Project(models.Model):
     repo_url = models.URLField(blank=True)
     live_url = models.URLField(blank=True)
     display_order = models.PositiveIntegerField(default=0)
+    is_featured = models.BooleanField(
+        default=False,
+        help_text='Shown in the home page "Featured Work" section.',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

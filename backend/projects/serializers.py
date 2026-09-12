@@ -10,5 +10,5 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = [
             'id', 'title', 'description', 'tech_stack', 'tech_stack_list',
-            'thumbnail', 'repo_url', 'live_url', 'display_order', 'created_at',
+            'thumbnail', 'repo_url', 'live_url', 'display_order', 'is_featured', 'created_at',
         ]

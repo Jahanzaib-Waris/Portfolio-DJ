@@ -96,6 +96,11 @@ export default function ProjectList() {
                 <span className="rounded-full bg-panel-edge/50 px-2 py-0.5 text-[10px] text-slate-400">
                   #{project.display_order}
                 </span>
+                {project.is_featured && (
+                  <span className="rounded-full bg-neon-blue/10 px-2 py-0.5 text-[10px] text-neon-blue">
+                    Featured
+                  </span>
+                )}
               </div>
               {project.tech_stack_list?.length > 0 && (
                 <p className="mt-1 truncate text-xs text-slate-500">

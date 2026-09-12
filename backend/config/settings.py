@@ -34,6 +34,16 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
 
+    # HSTS: tell browsers to only ever reach this host over HTTPS. Vercel
+    # serves everything over TLS already, so this just closes the window
+    # where a stale bookmark/link to a plain http:// URL would work at all.
+    # PRELOAD defaults off — submitting to the browser preload list is a
+    # separate, much harder to reverse decision the site owner should make
+    # deliberately (via hstspreload.org), not something to flip on by default.
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', default=31536000)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = env.bool('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True)
+    SECURE_HSTS_PRELOAD = env.bool('SECURE_HSTS_PRELOAD', default=False)
+
 
 # Application definition
 

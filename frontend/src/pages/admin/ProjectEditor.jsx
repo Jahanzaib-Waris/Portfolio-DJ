@@ -17,6 +17,7 @@ const empty = {
   repo_url: '',
   live_url: '',
   display_order: 0,
+  is_featured: false,
 }
 
 export default function ProjectEditor() {
@@ -65,6 +66,7 @@ export default function ProjectEditor() {
           repo_url: project.repo_url || '',
           live_url: project.live_url || '',
           display_order: project.display_order ?? 0,
+          is_featured: project.is_featured ?? false,
         })
         setExistingThumb(project.thumbnail || null)
         setLoadState('ready')
@@ -261,6 +263,20 @@ export default function ProjectEditor() {
             />
           </Field>
 
+          <Field label="Featured" hint="(shown on the home page)">
+            <label className="flex items-center gap-2 pt-2 text-sm text-slate-300">
+              <input
+                type="checkbox"
+                checked={form.is_featured}
+                onChange={(e) => update({ is_featured: e.target.checked })}
+                className="h-4 w-4 rounded border-panel-edge bg-abyss/60 accent-neon-blue"
+              />
+              Show in Featured Work
+            </label>
+          </Field>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Thumbnail" error={messageFor(fieldErrors, 'thumbnail')}>
             <input
               ref={fileRef}

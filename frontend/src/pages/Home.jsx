@@ -22,7 +22,11 @@ export default function Home() {
 
     getProjects()
       .then((data) => {
-        setProjects((data.results ?? data).slice(0, 2))
+        const all = data.results ?? data
+        // Prefer projects explicitly marked featured; if none are, fall back
+        // to the first two by display_order so the section isn't empty by default.
+        const featured = all.filter((p) => p.is_featured)
+        setProjects((featured.length > 0 ? featured : all).slice(0, 2))
         setProjectsState('ready')
       })
       .catch(() => setProjectsState('error'))
