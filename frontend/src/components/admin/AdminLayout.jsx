@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
+import { getBranding } from '../../api/client'
 import { useAuth } from '../../auth/authContext'
 
 // Grouped, WordPress-style nav: a top-level item either links directly
@@ -32,8 +33,8 @@ const nav = [
     key: 'settings',
     label: 'Settings',
     children: [
-      { to: '/admin/settings/account', label: 'Account', ready: false },
-      { to: '/admin/settings/branding', label: 'Branding', ready: false },
+      { to: '/admin/settings/account', label: 'Account', ready: true },
+      { to: '/admin/settings/branding', label: 'Branding', ready: true },
     ],
   },
 ]
@@ -48,6 +49,13 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [siteName, setSiteName] = useState(null)
+
+  useEffect(() => {
+    getBranding()
+      .then((data) => setSiteName(data.site_name))
+      .catch(() => {})
+  }, [])
   const [openGroups, setOpenGroups] = useState(() =>
     Object.fromEntries(nav.filter((item) => item.children).map((item) => [item.key, isGroupActive(item, location.pathname)])),
   )
@@ -148,8 +156,8 @@ export default function AdminLayout() {
             >
               <span className="text-lg leading-none">{menuOpen ? '×' : '≡'}</span>
             </button>
-            <Link to="/admin" className="system-heading glow-text text-base text-neon-blue">
-              Control Panel
+            <Link to="/admin" className="system-heading text-base text-neon-blue">
+              {siteName ? `${siteName} — Control Panel` : 'Control Panel'}
             </Link>
           </div>
 

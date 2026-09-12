@@ -1,3 +1,4 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -31,3 +32,23 @@ class CurrentUserSerializer(serializers.Serializer):
     email = serializers.EmailField(read_only=True)
     is_staff = serializers.BooleanField(read_only=True)
     is_superuser = serializers.BooleanField(read_only=True)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    """Self-service password change: current + new, no email flow.
+
+    Single-admin site, so a full forgot-password-via-email flow was judged
+    unnecessary — this covers the "Settings -> Account" screen instead.
+    """
+
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_current_password(self, value):
+        if not self.context['request'].user.check_password(value):
+            raise serializers.ValidationError('Current password is incorrect.')
+        return value
+
+    def validate_new_password(self, value):
+        validate_password(value, user=self.context['request'].user)
+        return value

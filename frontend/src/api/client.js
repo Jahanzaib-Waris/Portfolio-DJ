@@ -98,6 +98,8 @@ export default apiClient
 
 export const getProfile = () => apiClient.get('/profile/').then((res) => res.data)
 
+export const getBranding = () => apiClient.get('/settings/branding/').then((res) => res.data)
+
 export const getSkills = (params) => apiClient.get('/profile/skills/', { params }).then((res) => res.data)
 
 export const getBlogPosts = (params) => apiClient.get('/blog/posts/', { params }).then((res) => res.data)
@@ -119,6 +121,11 @@ export const blacklistRefreshToken = (refresh) =>
   authClient.post('/auth/token/blacklist/', { refresh })
 
 export const getCurrentUser = () => apiClient.get('/auth/me/').then((res) => res.data)
+
+export const changePassword = (payload) => apiClient.post('/auth/change-password/', payload).then((res) => res.data)
+
+export const updateBranding = (payload) =>
+  apiClient.patch('/settings/branding/', payload).then((res) => res.data)
 
 export const getQuoteRequests = (params) => apiClient.get('/quotes/', { params }).then((res) => res.data)
 

@@ -25,6 +25,8 @@ const ProjectEditor = lazy(() => import('./pages/admin/ProjectEditor'))
 const ProjectList = lazy(() => import('./pages/admin/ProjectList'))
 const QuoteInbox = lazy(() => import('./pages/admin/QuoteInbox'))
 const SkillsManager = lazy(() => import('./pages/admin/SkillsManager'))
+const AccountSettings = lazy(() => import('./pages/admin/settings/AccountSettings'))
+const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSettings'))
 
 function AdminLoading() {
   return (
@@ -65,6 +67,8 @@ function App() {
               <Route path="skills" element={<SkillsManager />} />
               <Route path="profile" element={<ProfileEditor />} />
               <Route path="quotes" element={<QuoteInbox />} />
+              <Route path="settings/account" element={<AccountSettings />} />
+              <Route path="settings/branding" element={<BrandingSettings />} />
             </Route>
           </Route>
         </Routes>

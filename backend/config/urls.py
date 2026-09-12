@@ -12,6 +12,7 @@ urlpatterns = [
     path('api/blog/', include('blog.urls')),
     path('api/projects/', include('projects.urls')),
     path('api/quotes/', include('quotes.urls')),
+    path('api/settings/', include('sitesettings.urls')),
 ]
 
 if settings.DEBUG:
