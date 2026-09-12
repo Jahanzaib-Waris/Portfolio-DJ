@@ -17,7 +17,7 @@ Portfolio-DJ/
 ├── DEPLOYMENT.md            step-by-step Vercel + Supabase deployment
 │
 ├── backend/                 Django project
-│   ├── .python-version      pins Python 3.13.14 (Django 6.0 requires >=3.12)
+│   ├── .python-version      pins Python 3.13 (Django 6.0 requires >=3.12)
 │   ├── requirements.txt
 │   ├── vercel.json          function config (maxDuration 30)
 │   ├── manage.py
@@ -289,7 +289,7 @@ The site is dark-only (`color-scheme: dark`).
 
 ## 8. Local development
 
-Requires Python ≥3.12 (pinned to 3.13.14 via `backend/.python-version`) and Node.
+Requires Python ≥3.12 (pinned to 3.13 via `backend/.python-version`) and Node.
 
 ```bash
 cd backend
