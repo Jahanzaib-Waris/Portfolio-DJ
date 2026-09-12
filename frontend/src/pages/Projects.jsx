@@ -16,8 +16,7 @@ export default function Projects() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
-      <p className="eyebrow system-heading text-xs text-neon-indigo">// Selected Work</p>
-      <h1 className="mt-3 text-3xl text-white sm:text-4xl">Projects</h1>
+      <h1 className="text-3xl text-white sm:text-4xl">Projects</h1>
       <p className="mt-2 max-w-lg text-slate-400">A few things I&rsquo;ve designed, built, and shipped.</p>
 
       {loadState === 'error' && (
@@ -47,7 +46,7 @@ export default function Projects() {
                 {project.tech_stack_list.map((tag) => (
                   <span
                     key={tag}
-                    className="border border-neon-indigo/50 px-2 py-0.5 text-[10px] text-neon-indigo"
+                    className="rounded-full border border-neon-indigo/30 bg-neon-indigo/10 px-2.5 py-0.5 text-xs text-neon-blue"
                   >
                     {tag}
                   </span>

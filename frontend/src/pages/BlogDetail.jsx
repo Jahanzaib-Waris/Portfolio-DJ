@@ -24,7 +24,7 @@ export default function BlogDetail() {
     <div className="mx-auto max-w-3xl px-6 py-16">
       <Link
         to="/blogs"
-        className="system-heading mb-6 inline-flex items-center gap-1 text-xs text-neon-blue hover:glow-text"
+        className="system-heading mb-6 inline-flex items-center gap-1 text-xs text-neon-blue hover:underline"
       >
         &larr; Back to Blog
       </Link>
@@ -55,7 +55,7 @@ export default function BlogDetail() {
             <span className="h-1.5 w-1.5 rounded-full bg-neon-indigo" />
             <span className="system-heading">{post.published_date}</span>
           </div>
-          <h1 className="glow-text mt-2 text-2xl font-bold text-white sm:text-3xl">{post.title}</h1>
+          <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">{post.title}</h1>
           <MarkdownContent className="mt-6 leading-relaxed text-slate-300">
             {post.content}
           </MarkdownContent>

@@ -41,7 +41,7 @@ export default function RequestQuoteModal({ open, onClose }) {
       setForm(initialForm)
     } catch {
       setStatus('idle')
-      setError('Transmission failed. Please try again.')
+      setError('Something went wrong. Please try again.')
     }
   }
 
@@ -58,7 +58,7 @@ export default function RequestQuoteModal({ open, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="system-heading glow-text text-xl text-neon-blue">Request a Quote</h2>
+          <h2 className="system-heading text-xl text-neon-blue">Request a Quote</h2>
           <button onClick={handleClose} className="text-slate-400 hover:text-neon-blue" aria-label="Close">
             ✕
           </button>
@@ -67,7 +67,7 @@ export default function RequestQuoteModal({ open, onClose }) {
         {status === 'success' ? (
           <div className="space-y-4">
             <p className="text-status-green">
-              Quest submitted. Your request has been logged &mdash; expect a reply soon.
+              Message sent &mdash; thanks for reaching out. I&rsquo;ll get back to you soon.
             </p>
             <SystemButton onClick={handleClose}>Close</SystemButton>
           </div>

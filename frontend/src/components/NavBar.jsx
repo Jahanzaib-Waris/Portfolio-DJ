@@ -13,7 +13,7 @@ export default function NavBar({ profile, onRequestQuote }) {
 
   const linkClass = ({ isActive }) =>
     `system-heading text-sm tracking-wide transition-colors ${
-      isActive ? 'text-neon-blue glow-text' : 'text-slate-300 hover:text-neon-blue'
+      isActive ? 'text-neon-blue' : 'text-slate-300 hover:text-neon-blue'
     }`
 
   return (
@@ -21,7 +21,7 @@ export default function NavBar({ profile, onRequestQuote }) {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <NavLink
           to="/"
-          className="system-heading glow-text flex items-center gap-2 text-lg font-bold text-neon-blue"
+          className="system-heading flex items-center gap-2 text-lg font-bold text-neon-blue"
           onClick={() => setMenuOpen(false)}
         >
           {profile?.photo ? (

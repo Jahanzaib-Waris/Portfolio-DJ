@@ -32,9 +32,6 @@ export default function Home() {
     <div className="space-y-24 pb-24">
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute -left-32 -top-32 h-80 w-80 rounded-full bg-neon-blue/20 blur-3xl" />
-        <div className="pointer-events-none absolute -right-32 top-10 h-80 w-80 rounded-full bg-neon-indigo/20 blur-3xl" />
-
         <div className="relative mx-auto flex max-w-5xl flex-col-reverse items-center gap-12 px-6 pb-10 pt-16 sm:flex-row sm:pb-16 sm:pt-24">
           <div className="flex-1 space-y-5 text-center sm:text-left">
             {profileState === 'loading' && (
@@ -53,9 +50,8 @@ export default function Home() {
 
             {profileState === 'ready' && profile && (
               <>
-                <p className="eyebrow system-heading text-xs text-neon-indigo">// Status Window</p>
                 <h1 className="text-4xl leading-tight text-white sm:text-5xl">
-                  Hi, I&rsquo;m <span className="glow-text text-neon-blue">{profile.name}</span>
+                  Hi, I&rsquo;m <span className="text-neon-blue">{profile.name}</span>
                 </h1>
                 {profile.tagline && <p className="text-lg text-neon-blue/90 sm:text-xl">{profile.tagline}</p>}
                 {profile.bio && (
@@ -77,30 +73,12 @@ export default function Home() {
           </div>
 
           {profile?.photo && (
-            <div className="relative shrink-0">
-              {/* ambient glow behind the frame */}
-              <div className="absolute inset-0 scale-110 rounded-[2rem] bg-gradient-to-br from-neon-blue/30 via-neon-indigo/20 to-transparent blur-3xl" />
-
-              {/* gradient-ring frame */}
-              <div className="relative rounded-[1.75rem] bg-gradient-to-br from-neon-blue via-neon-indigo to-neon-deep p-[3px] shadow-[0_0_40px_rgba(63,208,255,0.35)]">
-                <img
-                  src={profile.photo}
-                  alt={profile.name}
-                  className="h-64 w-56 rounded-[1.6rem] object-cover sm:h-96 sm:w-80"
-                />
-              </div>
-
-              {/* HUD corner brackets */}
-              <span className="pointer-events-none absolute -left-3 -top-3 h-8 w-8 border-l-2 border-t-2 border-neon-blue" />
-              <span className="pointer-events-none absolute -right-3 -top-3 h-8 w-8 border-r-2 border-t-2 border-neon-blue" />
-              <span className="pointer-events-none absolute -bottom-3 -left-3 h-8 w-8 border-b-2 border-l-2 border-neon-blue" />
-              <span className="pointer-events-none absolute -bottom-3 -right-3 h-8 w-8 border-b-2 border-r-2 border-neon-blue" />
-
-              {/* floating status badge */}
-              <div className="absolute -bottom-5 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full border border-panel-edge bg-void/90 px-4 py-1.5 text-xs text-slate-200 shadow-lg backdrop-blur">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-status-green" />
-                <span className="system-heading">System Online</span>
-              </div>
+            <div className="shrink-0">
+              <img
+                src={profile.photo}
+                alt={profile.name}
+                className="h-64 w-56 rounded-xl border border-panel-edge object-cover sm:h-80 sm:w-72"
+              />
             </div>
           )}
         </div>
@@ -109,8 +87,8 @@ export default function Home() {
       {/* Tech stack */}
       {skillsState !== 'error' && (skillsState === 'loading' || skills.length > 0) && (
         <section className="mx-auto max-w-5xl px-6">
-          <p className="eyebrow eyebrow-center system-heading mb-8 text-center text-xs text-neon-indigo">
-            // Tech Stack
+          <p className="system-heading mb-8 text-center text-xs uppercase tracking-wide text-slate-400">
+            Tech Stack
           </p>
           <div className="grid gap-5 sm:grid-cols-3">
             {skillsState === 'loading'
@@ -134,8 +112,8 @@ export default function Home() {
       {projectsState !== 'error' && (projectsState === 'loading' || projects.length > 0) && (
         <section className="mx-auto max-w-5xl px-6">
           <div className="mb-8 flex items-center justify-between">
-            <p className="eyebrow system-heading text-xs text-neon-indigo">// Featured Work</p>
-            <Link to="/projects" className="text-sm text-neon-blue hover:glow-text">
+            <p className="system-heading text-xs uppercase tracking-wide text-slate-400">Featured Work</p>
+            <Link to="/projects" className="text-sm text-neon-blue hover:underline">
               View all projects &rarr;
             </Link>
           </div>
@@ -143,10 +121,7 @@ export default function Home() {
             {projectsState === 'loading'
               ? [1, 2].map((i) => <CardSkeleton key={i} />)
               : projects.map((project) => (
-                  <StatusPanel
-                    key={project.id}
-                    className="h-full overflow-hidden transition-transform hover:-translate-y-1"
-                  >
+                  <StatusPanel key={project.id} className="h-full overflow-hidden">
                     {project.thumbnail && (
                       <img
                         src={project.thumbnail}
@@ -162,7 +137,7 @@ export default function Home() {
                         {project.tech_stack_list.slice(0, 4).map((tag) => (
                           <span
                             key={tag}
-                            className="border border-neon-indigo/50 px-2 py-0.5 text-[10px] text-neon-indigo"
+                            className="rounded-full border border-neon-indigo/30 bg-neon-indigo/10 px-2.5 py-0.5 text-xs text-neon-blue"
                           >
                             {tag}
                           </span>

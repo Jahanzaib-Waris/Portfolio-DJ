@@ -17,8 +17,7 @@ export default function Blogs() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
-      <p className="eyebrow system-heading text-xs text-neon-indigo">// Field Notes</p>
-      <h1 className="mt-3 text-3xl text-white sm:text-4xl">Blog</h1>
+      <h1 className="text-3xl text-white sm:text-4xl">Blog</h1>
       <p className="mt-2 max-w-lg text-slate-400">Write-ups on what I&rsquo;m building, breaking, and learning.</p>
 
       {loadState === 'error' && (

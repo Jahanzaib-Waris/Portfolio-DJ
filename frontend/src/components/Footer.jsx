@@ -35,9 +35,7 @@ export default function Footer({ profile }) {
 
   return (
     <footer className="border-t border-panel-edge/60 bg-void/80 px-6 py-10 text-center">
-      <div className="mx-auto h-px w-16 bg-gradient-to-r from-neon-blue to-neon-indigo" />
-
-      <p className="system-heading mt-6 text-sm text-white">{profile?.name || 'Portfolio'}</p>
+      <p className="system-heading text-sm text-white">{profile?.name || 'Portfolio'}</p>
       {profile?.tagline && <p className="mt-1 text-xs text-slate-400">{profile.tagline}</p>}
 
       {links.length > 0 && (
