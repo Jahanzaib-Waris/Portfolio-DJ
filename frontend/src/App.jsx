@@ -1,8 +1,10 @@
-import { Suspense, lazy } from 'react'
+import { Suspense, lazy, useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 
+import { getTheme } from './api/client'
 import { AuthProvider } from './auth/AuthProvider'
 import PublicLayout from './components/PublicLayout'
+import applyTheme from './utils/applyTheme'
 import Home from './pages/Home'
 import Blogs from './pages/Blogs'
 import Projects from './pages/Projects'
@@ -28,6 +30,7 @@ const SkillsManager = lazy(() => import('./pages/admin/SkillsManager'))
 const Analytics = lazy(() => import('./pages/admin/Analytics'))
 const AccountSettings = lazy(() => import('./pages/admin/settings/AccountSettings'))
 const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSettings'))
+const ThemeEditor = lazy(() => import('./pages/admin/settings/ThemeEditor'))
 
 function AdminLoading() {
   return (
@@ -41,6 +44,13 @@ function AdminLoading() {
 }
 
 function App() {
+  // Applied once at boot, for both the public site and the admin panel —
+  // there's one shared theme, not a per-surface one. index.css ships with
+  // matching defaults, so a slow/failed fetch just means the default look.
+  useEffect(() => {
+    getTheme().then(applyTheme).catch(() => {})
+  }, [])
+
   return (
     <AuthProvider>
       <Suspense fallback={<AdminLoading />}>
@@ -71,6 +81,7 @@ function App() {
               <Route path="quotes" element={<QuoteInbox />} />
               <Route path="settings/account" element={<AccountSettings />} />
               <Route path="settings/branding" element={<BrandingSettings />} />
+              <Route path="settings/theme" element={<ThemeEditor />} />
             </Route>
           </Route>
         </Routes>

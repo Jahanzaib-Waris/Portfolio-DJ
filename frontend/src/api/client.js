@@ -132,6 +132,10 @@ export const changePassword = (payload) => apiClient.post('/auth/change-password
 export const updateBranding = (payload) =>
   apiClient.patch('/settings/branding/', payload).then((res) => res.data)
 
+export const getTheme = () => apiClient.get('/settings/theme/').then((res) => res.data)
+
+export const updateTheme = (payload) => apiClient.patch('/settings/theme/', payload).then((res) => res.data)
+
 export const getQuoteRequests = (params) => apiClient.get('/quotes/', { params }).then((res) => res.data)
 
 export const getAnalyticsSummary = (params) =>

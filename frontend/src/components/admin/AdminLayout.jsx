@@ -35,6 +35,7 @@ const nav = [
     children: [
       { to: '/admin/settings/account', label: 'Account', ready: true },
       { to: '/admin/settings/branding', label: 'Branding', ready: true },
+      { to: '/admin/settings/theme', label: 'Theme', ready: true },
     ],
   },
 ]
