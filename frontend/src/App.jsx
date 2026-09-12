@@ -25,6 +25,7 @@ const ProjectEditor = lazy(() => import('./pages/admin/ProjectEditor'))
 const ProjectList = lazy(() => import('./pages/admin/ProjectList'))
 const QuoteInbox = lazy(() => import('./pages/admin/QuoteInbox'))
 const SkillsManager = lazy(() => import('./pages/admin/SkillsManager'))
+const Analytics = lazy(() => import('./pages/admin/Analytics'))
 const AccountSettings = lazy(() => import('./pages/admin/settings/AccountSettings'))
 const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSettings'))
 
@@ -61,6 +62,7 @@ function App() {
               <Route path="blog" element={<BlogList />} />
               <Route path="blog/new" element={<BlogEditor />} />
               <Route path="blog/:slug/edit" element={<BlogEditor />} />
+              <Route path="analytics" element={<Analytics />} />
               <Route path="projects" element={<ProjectList />} />
               <Route path="projects/new" element={<ProjectEditor />} />
               <Route path="projects/:id/edit" element={<ProjectEditor />} />

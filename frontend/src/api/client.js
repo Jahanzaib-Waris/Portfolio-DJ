@@ -100,6 +100,11 @@ export const getProfile = () => apiClient.get('/profile/').then((res) => res.dat
 
 export const getBranding = () => apiClient.get('/settings/branding/').then((res) => res.data)
 
+// Fire-and-forget: callers don't await this, so a failure (throttled, offline)
+// should never surface as an error anywhere in the public site.
+export const trackPageView = (path, referrer) =>
+  apiClient.post('/analytics/track/', { path, referrer }).catch(() => {})
+
 export const getSkills = (params) => apiClient.get('/profile/skills/', { params }).then((res) => res.data)
 
 export const getBlogPosts = (params) => apiClient.get('/blog/posts/', { params }).then((res) => res.data)
@@ -128,6 +133,9 @@ export const updateBranding = (payload) =>
   apiClient.patch('/settings/branding/', payload).then((res) => res.data)
 
 export const getQuoteRequests = (params) => apiClient.get('/quotes/', { params }).then((res) => res.data)
+
+export const getAnalyticsSummary = (params) =>
+  apiClient.get('/analytics/summary/', { params }).then((res) => res.data)
 
 /* ----------------------------------------------------------------- blog CMS */
 

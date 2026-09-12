@@ -18,7 +18,7 @@ const nav = [
       { to: '/admin/blog/new', label: 'Add new', ready: true },
     ],
   },
-  { key: 'analytics', label: 'Analytics', ready: false },
+  { key: 'analytics', to: '/admin/analytics', label: 'Analytics', ready: true },
   {
     key: 'portfolio',
     label: 'Portfolio',

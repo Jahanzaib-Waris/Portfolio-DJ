@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 
-import { getBranding, getProfile } from '../api/client'
+import { getBranding, getProfile, trackPageView } from '../api/client'
 import Footer from './Footer'
 import NavBar from './NavBar'
 import RequestQuoteModal from './RequestQuoteModal'
@@ -26,6 +26,7 @@ function applyFavicon(url) {
  * and shouldn't render the marketing navigation.
  */
 export default function PublicLayout() {
+  const location = useLocation()
   const [quoteModalOpen, setQuoteModalOpen] = useState(false)
   const [profile, setProfile] = useState(null)
   const [profileState, setProfileState] = useState('loading')
@@ -65,6 +66,12 @@ export default function PublicLayout() {
       cancelled = true
     }
   }, [])
+
+  // One beacon per route change. This layout only wraps public routes, so
+  // admin panel navigation never inflates these stats.
+  useEffect(() => {
+    trackPageView(location.pathname, document.referrer)
+  }, [location.pathname])
 
   const openQuoteModal = useCallback(() => setQuoteModalOpen(true), [])
 

@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'projects',
     'quotes',
     'sitesettings',
+    'analytics',
 ]
 
 MIDDLEWARE = [
@@ -214,6 +215,9 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [],
     'DEFAULT_THROTTLE_RATES': {
         'quotes': env('QUOTE_THROTTLE_RATE', default='5/hour'),
+        # Generous enough for a real visitor browsing several pages, still a
+        # real cap against a bot hammering the tracking beacon.
+        'analytics': env('ANALYTICS_THROTTLE_RATE', default='120/hour'),
     },
     # Behind Vercel's proxy the client IP arrives in X-Forwarded-For rather than
     # REMOTE_ADDR. Telling DRF how many proxies to trust stops a caller from
