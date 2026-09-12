@@ -218,6 +218,10 @@ REST_FRAMEWORK = {
         # Generous enough for a real visitor browsing several pages, still a
         # real cap against a bot hammering the tracking beacon.
         'analytics': env('ANALYTICS_THROTTLE_RATE', default='120/hour'),
+        # Brute-force protection on the admin login. A real user mistyping
+        # their password a few times never hits this; a script guessing
+        # passwords does.
+        'login': env('LOGIN_THROTTLE_RATE', default='5/minute'),
     },
     # Behind Vercel's proxy the client IP arrives in X-Forwarded-For rather than
     # REMOTE_ADDR. Telling DRF how many proxies to trust stops a caller from

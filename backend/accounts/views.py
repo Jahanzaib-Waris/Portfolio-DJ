@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -8,9 +9,17 @@ from .serializers import AdminTokenObtainPairSerializer, ChangePasswordSerialize
 
 
 class AdminTokenObtainPairView(TokenObtainPairView):
-    """POST username + password -> access + refresh tokens. Staff only."""
+    """POST username + password -> access + refresh tokens. Staff only.
+
+    Throttled per IP — this is the one endpoint where an unlimited attempt
+    budget would matter, since it's the whole brute-force surface for the
+    admin password. Same ScopedRateThrottle/DEFAULT_THROTTLE_RATES pattern
+    already used for quotes and analytics.
+    """
 
     serializer_class = AdminTokenObtainPairSerializer
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = 'login'
 
 
 class CurrentUserView(APIView):
