@@ -64,7 +64,6 @@ INSTALLED_APPS = [
     'corsheaders',
     'accounts',
     'profiles',
-    'blog',
     'projects',
     'quotes',
     'sitesettings',
@@ -166,7 +165,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files (resume PDF, profile photo, project/blog images)
+# Media files (resume PDF, profile photo, project images)
 #
 # Defaults to local disk so the project runs immediately with zero setup.
 # Set SUPABASE_STORAGE_BUCKET_NAME (and friends) in .env to serve/store media

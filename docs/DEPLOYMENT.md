@@ -95,13 +95,13 @@ Log into `https://<your-backend>.vercel.app/admin/` with the superuser from step
 - **Profile** (name, tagline, bio, photo, resume, social links) — uploads go to Supabase
   Storage, so they'll persist across redeploys.
 - **Skill** entries (shown on the home page tech stack section)
-- **Blog posts** and **Projects**
+- **Projects**
 
 ## 6. Verify end-to-end
 
 - Home page loads your real profile, skills, and featured projects
-- Blog/Projects pages list real content
-- Uploaded photo/resume/cover images actually render (confirms Supabase Storage is wired up)
+- Projects page lists real content
+- Uploaded photo/resume/thumbnail images actually render (confirms Supabase Storage is wired up)
 - Request Quote form submits successfully (check Django admin → Quote requests)
 - Mobile nav menu works
 - Django admin login works over HTTPS (confirms `CSRF_TRUSTED_ORIGINS` is correct)

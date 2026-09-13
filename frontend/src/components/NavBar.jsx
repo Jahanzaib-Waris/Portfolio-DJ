@@ -4,7 +4,6 @@ import SystemButton from './SystemButton'
 
 const links = [
   { to: '/', label: 'Home' },
-  { to: '/blogs', label: 'Blogs' },
   { to: '/projects', label: 'Projects' },
 ]
 

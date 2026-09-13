@@ -40,7 +40,7 @@ class ChangePasswordView(APIView):
 
     Staff only, same as everything else in the panel. Validation errors
     (wrong current password, weak new password) land on their field via the
-    same shape the Blog/Project editors already expect.
+    same shape the Project editor already expects.
     """
 
     permission_classes = [IsAdminUser]

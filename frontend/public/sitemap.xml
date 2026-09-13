@@ -1,19 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Static and intentionally minimal: only the three top-level routes.
-  Individual blog post URLs aren't listed here because they're dynamic
-  content this static file can't know about at build time — Google's
-  crawler (which does execute JS) discovers them by following the links
-  from /blogs regardless. A fully enumerated sitemap would need either a
-  server-rendered endpoint or a build-time data fetch, which this static
-  Vite SPA doesn't currently have wired up.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://portfolio-dj-j1sv.vercel.app/</loc>
-  </url>
-  <url>
-    <loc>https://portfolio-dj-j1sv.vercel.app/blogs</loc>
   </url>
   <url>
     <loc>https://portfolio-dj-j1sv.vercel.app/projects</loc>

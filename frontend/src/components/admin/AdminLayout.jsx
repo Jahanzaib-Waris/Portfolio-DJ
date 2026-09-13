@@ -5,19 +5,11 @@ import { getBranding } from '../../api/client'
 import { useAuth } from '../../auth/authContext'
 
 // Grouped, WordPress-style nav: a top-level item either links directly
-// (Dashboard, Quotes) or holds children that expand under it (Blog,
-// Portfolio, Settings). `ready: false` renders the existing greyed "soon"
-// treatment for sections whose pages don't exist yet.
+// (Dashboard, Quotes) or holds children that expand under it (Portfolio,
+// Settings). `ready: false` renders the existing greyed "soon" treatment
+// for sections whose pages don't exist yet.
 const nav = [
   { key: 'dashboard', to: '/admin', label: 'Dashboard', end: true, ready: true },
-  {
-    key: 'blog',
-    label: 'Blog',
-    children: [
-      { to: '/admin/blog', label: 'All posts', end: true, ready: true },
-      { to: '/admin/blog/new', label: 'Add new', ready: true },
-    ],
-  },
   { key: 'analytics', to: '/admin/analytics', label: 'Analytics', ready: true },
   {
     key: 'portfolio',

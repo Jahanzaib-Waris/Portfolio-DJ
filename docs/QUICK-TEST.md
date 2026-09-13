@@ -8,8 +8,7 @@ Site: `https://portfolio-dj-j1sv.vercel.app` · Admin: `https://portfolio-dj-j1s
 ## 1. Public site (5 min)
 
 - [ ] Homepage loads — hero, tech stack, featured work, footer all show up
-- [ ] Nav links work: Home, Blogs, Projects
-- [ ] Open a blog post from the list — content renders correctly (headings, links, code blocks)
+- [ ] Nav links work: Home, Projects
 - [ ] Open a project card — thumbnail, tags, repo/live links all present
 - [ ] Click "Request Quote" (or the hero button) → fill the form → submit → see a success message
 - [ ] Visit a made-up URL (e.g. add `/does-not-exist` to the site URL) → see a proper "Page not
@@ -19,10 +18,8 @@ Site: `https://portfolio-dj-j1sv.vercel.app` · Admin: `https://portfolio-dj-j1s
 
 - [ ] Log in at `/admin/login`
 - [ ] Dashboard shows content counts and a small traffic chart
-- [ ] Blog → open an existing post or create one → save → check it shows/updates on the public
-      `/blogs` page
 - [ ] Projects → toggle "Featured" on one → confirm it appears in Home's "Featured Work"
-- [ ] Type something in the search box on Blog, Projects, or Quotes → list narrows correctly
+- [ ] Type something in the search box on Projects or Quotes → list narrows correctly
 - [ ] Quotes → the request you submitted in step 1 shows up here
 - [ ] Settings → Theme → change a color → Save → confirm the public site's button/accent color
       actually changed (no reload needed)
@@ -34,8 +31,8 @@ Site: `https://portfolio-dj-j1sv.vercel.app` · Admin: `https://portfolio-dj-j1s
 - [ ] Try logging in with a wrong password 6 times fast → the 6th attempt should be blocked
       ("too many attempts"), not just "wrong password" again
 - [ ] Visit `/robots.txt` and `/sitemap.xml` directly → both should show plain text/XML, not 404
-- [ ] Open a couple of different pages (Home, Blogs, a blog post) and check the browser tab
-      title changes for each — it shouldn't be the same generic title everywhere
+- [ ] Open Home and Projects and check the browser tab title changes for each — it shouldn't
+      be the same generic title everywhere
 
 ## If something fails
 

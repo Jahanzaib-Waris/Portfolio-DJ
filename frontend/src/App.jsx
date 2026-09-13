@@ -6,13 +6,8 @@ import { AuthProvider } from './auth/AuthProvider'
 import PublicLayout from './components/PublicLayout'
 import applyTheme from './utils/applyTheme'
 import Home from './pages/Home'
-import Blogs from './pages/Blogs'
 import Projects from './pages/Projects'
 import NotFound from './pages/NotFound'
-
-// Split out on its own: it's the only public page that needs the Markdown
-// renderer, which is a large dependency most visitors never reach.
-const BlogDetail = lazy(() => import('./pages/BlogDetail'))
 
 // The panel is only ever used by one person, but it's most of the bundle. Lazy
 // loading keeps it out of the download for the visitors who will never see it;
@@ -20,8 +15,6 @@ const BlogDetail = lazy(() => import('./pages/BlogDetail'))
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'))
 const RequireAuth = lazy(() => import('./components/admin/RequireAuth'))
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'))
-const BlogEditor = lazy(() => import('./pages/admin/BlogEditor'))
-const BlogList = lazy(() => import('./pages/admin/BlogList'))
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'))
 const ProfileEditor = lazy(() => import('./pages/admin/ProfileEditor'))
 const ProjectEditor = lazy(() => import('./pages/admin/ProjectEditor'))
@@ -60,8 +53,6 @@ function App() {
           {/* Public site */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/blogs" element={<Blogs />} />
-            <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="*" element={<NotFound />} />
           </Route>
@@ -72,9 +63,6 @@ function App() {
           <Route element={<RequireAuth />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Dashboard />} />
-              <Route path="blog" element={<BlogList />} />
-              <Route path="blog/new" element={<BlogEditor />} />
-              <Route path="blog/:slug/edit" element={<BlogEditor />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="projects" element={<ProjectList />} />
               <Route path="projects/new" element={<ProjectEditor />} />

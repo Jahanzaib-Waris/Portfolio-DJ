@@ -15,7 +15,7 @@ export default function Home() {
 
   useDocumentMeta(
     profile?.name ? `${profile.name} — Portfolio` : 'Portfolio',
-    profile?.tagline || profile?.bio || 'Full-stack developer portfolio — projects, blog, and how to get in touch.',
+    profile?.tagline || profile?.bio || 'Full-stack developer portfolio — projects and how to get in touch.',
   )
 
   useEffect(() => {

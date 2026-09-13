@@ -1,8 +1,5 @@
 import hashlib
-import re
 from datetime import date
-
-BLOG_POST_PATH = re.compile(r'^/blogs/([^/]+)/?$')
 
 
 def client_ip(request):
@@ -25,12 +22,3 @@ def session_key_for(request):
 
     raw = f"{client_ip(request)}:{request.META.get('HTTP_USER_AGENT', '')}:{date.today().isoformat()}"
     return hashlib.sha256(raw.encode()).hexdigest()[:32]
-
-
-def classify_path(path):
-    """Returns (is_blog_post, slug) for a tracked path."""
-
-    match = BLOG_POST_PATH.match(path)
-    if match:
-        return True, match.group(1)
-    return False, ''

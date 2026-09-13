@@ -5,10 +5,9 @@ from .models import PageView
 
 @admin.register(PageView)
 class PageViewAdmin(admin.ModelAdmin):
-    list_display = ('path', 'referrer', 'is_blog_post', 'created_at')
-    list_filter = ('is_blog_post',)
+    list_display = ('path', 'referrer', 'created_at')
     date_hierarchy = 'created_at'
-    search_fields = ('path', 'referrer', 'slug')
+    search_fields = ('path', 'referrer')
 
     def has_add_permission(self, request):
         return False

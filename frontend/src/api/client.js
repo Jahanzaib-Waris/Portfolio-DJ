@@ -107,10 +107,6 @@ export const trackPageView = (path, referrer) =>
 
 export const getSkills = (params) => apiClient.get('/profile/skills/', { params }).then((res) => res.data)
 
-export const getBlogPosts = (params) => apiClient.get('/blog/posts/', { params }).then((res) => res.data)
-
-export const getBlogPost = (slug) => apiClient.get(`/blog/posts/${slug}/`).then((res) => res.data)
-
 export const getProjects = (params) => apiClient.get('/projects/', { params }).then((res) => res.data)
 
 export const submitQuoteRequest = (payload) => apiClient.post('/quotes/', payload).then((res) => res.data)
@@ -140,28 +136,6 @@ export const getQuoteRequests = (params) => apiClient.get('/quotes/', { params }
 
 export const getAnalyticsSummary = (params) =>
   apiClient.get('/analytics/summary/', { params }).then((res) => res.data)
-
-/* ----------------------------------------------------------------- blog CMS */
-
-// Payloads are either a plain object (JSON) or FormData when a new cover image
-// is being uploaded. Axios sets the multipart content-type itself when handed
-// FormData, so nothing extra is needed here.
-
-export const createBlogPost = (payload) =>
-  apiClient.post('/blog/posts/', payload).then((res) => res.data)
-
-export const updateBlogPost = (slug, payload) =>
-  apiClient.patch(`/blog/posts/${slug}/`, payload).then((res) => res.data)
-
-export const deleteBlogPost = (slug) => apiClient.delete(`/blog/posts/${slug}/`)
-
-// Inline image upload for the rich-text editor's content body — distinct from
-// a post's own cover_image field, since a post can hold any number of these.
-export const uploadBlogImage = (file) => {
-  const data = new FormData()
-  data.append('image', file)
-  return apiClient.post('/blog/posts/upload_image/', data).then((res) => res.data)
-}
 
 /* ------------------------------------------------------------------ projects */
 
