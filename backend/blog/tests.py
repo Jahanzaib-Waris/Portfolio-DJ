@@ -1,9 +1,20 @@
+import io
+
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from PIL import Image
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from .models import BlogPost
+
+
+def make_test_image():
+    buffer = io.BytesIO()
+    Image.new('RGB', (10, 10), color='blue').save(buffer, format='PNG')
+    buffer.seek(0)
+    return SimpleUploadedFile('test.png', buffer.read(), content_type='image/png')
 
 
 def make_post(**kwargs):
@@ -99,3 +110,33 @@ class BlogPostWriteTests(APITestCase):
         response = self.client.delete(f'/api/blog/posts/{post.slug}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(BlogPost.objects.filter(pk=post.pk).exists())
+
+
+class BlogImageUploadTests(APITestCase):
+    """The rich-text editor's inline image upload — distinct from cover_image."""
+
+    def setUp(self):
+        self.staff = User.objects.create_user('staffuser', password='pass', is_staff=True)
+
+    def test_anonymous_cannot_upload(self):
+        response = self.client.post('/api/blog/posts/upload_image/', {'image': make_test_image()})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_staff_can_upload_and_gets_a_url_back(self):
+        self.client.force_authenticate(self.staff)
+        response = self.client.post('/api/blog/posts/upload_image/', {'image': make_test_image()})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(response.data['url'].startswith('http'))
+
+    def test_missing_file_is_rejected(self):
+        self.client.force_authenticate(self.staff)
+        response = self.client.post('/api/blog/posts/upload_image/', {})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_upload_url_is_not_mistaken_for_a_slug(self):
+        # Regression check for the routing concern noted in the view's docstring.
+        make_post(slug='upload_image')
+        self.client.force_authenticate(self.staff)
+        response = self.client.post('/api/blog/posts/upload_image/', {'image': make_test_image()})
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn('url', response.data)

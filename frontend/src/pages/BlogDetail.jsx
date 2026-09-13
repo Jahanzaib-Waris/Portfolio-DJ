@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getBlogPost } from '../api/client'
-import MarkdownContent from '../components/MarkdownContent'
+import RichTextContent from '../components/RichTextContent'
 import StatusPanel from '../components/StatusPanel'
 import { Skeleton } from '../components/Skeleton'
 import useDocumentMeta from '../hooks/useDocumentMeta'
@@ -59,9 +59,9 @@ export default function BlogDetail() {
             <span className="system-heading">{post.published_date}</span>
           </div>
           <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">{post.title}</h1>
-          <MarkdownContent className="mt-6 leading-relaxed text-slate-300">
+          <RichTextContent className="mt-6 leading-relaxed text-slate-300">
             {post.content}
-          </MarkdownContent>
+          </RichTextContent>
         </StatusPanel>
       )}
     </div>

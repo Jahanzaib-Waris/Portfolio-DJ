@@ -155,6 +155,14 @@ export const updateBlogPost = (slug, payload) =>
 
 export const deleteBlogPost = (slug) => apiClient.delete(`/blog/posts/${slug}/`)
 
+// Inline image upload for the rich-text editor's content body — distinct from
+// a post's own cover_image field, since a post can hold any number of these.
+export const uploadBlogImage = (file) => {
+  const data = new FormData()
+  data.append('image', file)
+  return apiClient.post('/blog/posts/upload_image/', data).then((res) => res.data)
+}
+
 /* ------------------------------------------------------------------ projects */
 
 export const getProject = (id) => apiClient.get(`/projects/${id}/`).then((res) => res.data)

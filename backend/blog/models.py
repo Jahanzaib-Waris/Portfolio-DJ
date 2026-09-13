@@ -6,7 +6,7 @@ class BlogPost(models.Model):
     title = models.CharField(max_length=200)
     slug = models.SlugField(max_length=220, unique=True)
     excerpt = models.CharField(max_length=300, blank=True)
-    content = models.TextField(help_text='Markdown or plain text.')
+    content = models.TextField(help_text='Rich text (HTML), written with the admin panel\'s WYSIWYG editor.')
     cover_image = models.ImageField(upload_to='blog/covers/', blank=True, null=True)
     published_date = models.DateField(default=timezone.now)
     is_published = models.BooleanField(default=False)

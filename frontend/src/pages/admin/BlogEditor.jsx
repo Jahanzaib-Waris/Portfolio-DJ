@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { createBlogPost, getBlogPost, updateBlogPost } from '../../api/client'
-import MarkdownEditor from '../../components/admin/MarkdownEditor'
+import RichTextEditor from '../../components/admin/RichTextEditor'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -313,7 +313,7 @@ export default function BlogEditor() {
         </StatusPanel>
 
         <StatusPanel glow={false} className="p-5">
-          <MarkdownEditor value={form.content} onChange={(content) => update({ content })} />
+          <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
           {errorFor('content')}
         </StatusPanel>
       </div>
