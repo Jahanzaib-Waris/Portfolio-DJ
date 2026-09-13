@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
-import { getBlogPosts, getProjects, getQuoteRequests, getSkills } from '../../api/client'
+import { getAnalyticsSummary, getBlogPosts, getProjects, getQuoteRequests, getSkills } from '../../api/client'
 import { useAuth } from '../../auth/authContext'
+import AnalyticsChart from '../../components/admin/AnalyticsChart'
 import StatusPanel from '../../components/StatusPanel'
 import { Skeleton } from '../../components/Skeleton'
 
@@ -18,6 +20,8 @@ export default function Dashboard() {
   const { user } = useAuth()
   const [counts, setCounts] = useState({})
   const [loadState, setLoadState] = useState('loading')
+  const [analytics, setAnalytics] = useState(null)
+  const [analyticsState, setAnalyticsState] = useState('loading')
 
   useEffect(() => {
     document.title = 'Dashboard — Control Panel'
@@ -37,6 +41,14 @@ export default function Dashboard() {
       setCounts(Object.fromEntries(entries))
       setLoadState('ready')
     })
+
+    getAnalyticsSummary({ days: 7 })
+      .then((data) => {
+        if (cancelled) return
+        setAnalytics(data)
+        setAnalyticsState('ready')
+      })
+      .catch(() => !cancelled && setAnalyticsState('error'))
 
     return () => {
       cancelled = true
@@ -70,17 +82,41 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <StatusPanel className="mt-8 p-6">
-        <h2 className="system-heading text-sm text-white">What&rsquo;s next</h2>
-        <p className="mt-2 text-sm text-slate-400">
-          The API behind this panel already supports full create, update and delete for posts,
-          projects, skills and the profile. The editing screens are the next thing to build &mdash;
-          the sidebar items marked <span className="text-slate-500">soon</span> are the queue.
-        </p>
-        <p className="mt-3 text-sm text-slate-400">
-          Until then, <span className="text-slate-300">/admin/</span> on the backend still runs the
-          Django admin as a fallback.
-        </p>
+      <StatusPanel glow={false} className="mt-8 p-6">
+        <div className="flex items-center justify-between">
+          <p className="system-heading text-sm text-white">Traffic — last 7 days</p>
+          <Link to="/admin/analytics" className="text-xs text-neon-blue hover:underline">
+            Full analytics &rarr;
+          </Link>
+        </div>
+
+        {analyticsState === 'loading' && <Skeleton className="mt-4 h-40 w-full" />}
+        {analyticsState === 'error' && (
+          <p className="mt-4 text-sm text-status-red">Traffic data could not be loaded.</p>
+        )}
+        {analyticsState === 'ready' && analytics && (
+          <>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-slate-400">Page views</p>
+                <p className="mt-1 text-2xl text-neon-blue">{analytics.total_views}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Unique visitors</p>
+                <p className="mt-1 text-2xl text-neon-blue">{analytics.total_visitors}</p>
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Quote leads</p>
+                <p className="mt-1 text-2xl text-neon-blue">
+                  {analytics.quotes_trend.reduce((sum, d) => sum + d.count, 0)}
+                </p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <AnalyticsChart data={analytics.series} />
+            </div>
+          </>
+        )}
       </StatusPanel>
     </div>
   )
