@@ -13,10 +13,12 @@ Last updated: 2026-09-12.
 
 ```
 Portfolio-DJ/
-├── ARCHITECTURE.md          this file
+├── CLAUDE.md                entry point for AI coding sessions — read this first
 ├── README.md                setup instructions
-├── DEPLOYMENT.md             step-by-step Vercel + Supabase deployment
-├── TESTING.md                manual test checklist for the admin panel / public site
+├── docs/
+│   ├── ARCHITECTURE.md      this file
+│   ├── DEPLOYMENT.md        step-by-step Vercel + Supabase deployment
+│   └── TESTING.md           manual test checklist for the admin panel / public site
 │
 ├── backend/                 Django project
 │   ├── .python-version      pins Python 3.13 (Django 6.0 requires >=3.12)
@@ -421,7 +423,7 @@ Run the backend test suite with `.venv/bin/python manage.py test` (62 tests acro
 ## 9. Deployment
 
 Two separate Vercel projects from the same repo (root directories `backend` and `frontend`),
-plus Supabase for Postgres and Storage. Full walkthrough in `DEPLOYMENT.md`.
+plus Supabase for Postgres and Storage. Full walkthrough in `docs/DEPLOYMENT.md`.
 
 Vercel has zero-config Django support — it detects `manage.py`, reads `WSGI_APPLICATION`, and
 runs `collectstatic` during the build. Because functions have no persistent shell, `migrate`,

@@ -57,4 +57,4 @@ All content (profile, blog posts, projects, quote requests) is managed through t
 
 ## Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for the full step-by-step guide to deploying the backend and frontend as two separate Vercel projects, and wiring both up to Supabase (Postgres + Storage).
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full step-by-step guide to deploying the backend and frontend as two separate Vercel projects, and wiring both up to Supabase (Postgres + Storage).
