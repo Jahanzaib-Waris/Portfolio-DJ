@@ -59,7 +59,10 @@ rm .env   # or local dev silently runs against production
 
 Then `vercel deploy --prod` from the repo root (the linked project's root directory is
 `backend`, so running from inside `backend/` double-resolves the path — always deploy from the
-repo root).
+repo root) — **or just `git push`**. Both Vercel projects have git-integration auto-deploy
+connected, confirmed by watching `vercel ls <project>` right after a push: a new deployment
+appears within seconds without ever running `vercel deploy`. A manual deploy is only for
+re-triggering without a new commit (e.g. after only running `migrate` against prod).
 
 **Gotcha already hit once:** Supabase's free tier auto-pauses a project after ~1 week idle, and
 a paused project briefly stops resolving in DNS — this looks identical to the project being
@@ -117,3 +120,21 @@ an already-blacklisted token and fail. Both requests must await one shared promi
 under a completely separate layout (`AdminLayout`) that never mounts `PublicLayout`. If you ever
 need admin routes to share chrome with the public layout, revisit whether that beacon should
 fire there too.
+
+**Each public page owns its document title/description outright** (`useDocumentMeta`, called
+from Home/Blogs/Projects/BlogDetail) — `PublicLayout` deliberately does *not* set
+`document.title` itself anymore. It used to, and raced with whichever page mounted: the profile
+fetch resolving late would stomp a page's title back to the generic one. Don't reintroduce a
+second writer of `document.title`.
+
+**A route's specificity, not its order, decides 404 fallthrough.** Two separate catch-alls
+exist — `<Route path="*">` under the public tree (`NotFound`) and another as the *last child*
+under `/admin` (`AdminNotFound`). React Router ranks the nested one higher for any `/admin/*`
+path since it requires matching the literal `admin` segment first; a bare top-level `*` would
+otherwise win by list position alone in some router setups, which isn't the case here but is
+easy to get backwards when adding a new catch-all.
+
+**`DEFAULT_RENDERER_CLASSES` drops `BrowsableAPIRenderer` when `DEBUG=False`** — production only
+ever serves JSON. This was a real, verified finding (the interactive HTML API browser, including
+forms for public write endpoints, was reachable on prod before this). Don't reach for
+`Accept: text/html` to debug against the deployed API; use local dev, where it's still enabled.

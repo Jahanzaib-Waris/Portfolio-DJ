@@ -5,7 +5,7 @@ Framework API + React (Vite) single-page frontend, deployed as two separate Verc
 backed by Supabase. The admin panel is a custom WordPress-style control panel: grouped
 sidebar, live analytics, content CRUD, site settings, and a single runtime-editable theme.
 
-Last updated: 2026-09-12.
+Last updated: 2026-09-13.
 
 ---
 
@@ -53,7 +53,8 @@ Portfolio-DJ/
         │   ├── authContext.js    context + useAuth hook
         │   └── AuthProvider.jsx  session boot, login, logout
         ├── hooks/
-        │   └── usePaginatedList.js   "Load more" pagination with URL-shareable depth
+        │   ├── usePaginatedList.js   "Load more" pagination with URL-shareable depth
+        │   └── useDocumentMeta.js    sets tab title + meta description; each public page owns its own
         ├── utils/
         │   ├── apiErrors.js      DRF error-shape helpers for forms
         │   ├── buildPayload.js   JSON-vs-multipart payload builder for file fields
@@ -67,11 +68,14 @@ Portfolio-DJ/
         │       ├── RequireAuth.jsx      route guard
         │       ├── AdminLayout.jsx      grouped, collapsible sidebar shell
         │       ├── Field.jsx, formStyles.js, ConfirmDialog.jsx, MarkdownEditor.jsx
+        │       ├── SearchInput.jsx      client-side filter over already-loaded list items
         │       └── AnalyticsChart.jsx   single-series line+area chart, no library
         └── pages/
             ├── Home, Blogs, BlogDetail, Projects
+            ├── NotFound.jsx     public-styled 404 (catch-all under PublicLayout)
             └── admin/
-                ├── AdminLogin.jsx, Dashboard.jsx
+                ├── AdminLogin.jsx, Dashboard.jsx (counts + a 7-day traffic widget)
+                ├── AdminNotFound.jsx   admin-styled 404 (last child route under AdminLayout)
                 ├── BlogList.jsx, BlogEditor.jsx
                 ├── ProjectList.jsx, ProjectEditor.jsx
                 ├── SkillsManager.jsx, ProfileEditor.jsx
@@ -95,8 +99,8 @@ chart, CSS custom properties for the theme).
 
 | Package | Version | Why it's here |
 |---|---|---|
-| `Django` | 6.0.6 | Web framework. **Requires Python ≥3.12** |
-| `djangorestframework` | 3.17.1 | The API layer — serializers, viewsets, pagination, throttling |
+| `Django` | 6.0.8 | Web framework. **Requires Python ≥3.12** |
+| `djangorestframework` | 3.17.2 | The API layer — serializers, viewsets, pagination, throttling |
 | `djangorestframework-simplejwt` | 5.5.1 | JWT auth for the admin panel |
 | `django-environ` | 0.14.0 | Reads config from `.env` / environment |
 | `psycopg2-binary` | 2.9.12 | PostgreSQL driver (Supabase) |
@@ -257,6 +261,19 @@ Two things make throttling real in production rather than decorative:
 - **Client IP.** Behind Vercel the real IP is in `X-Forwarded-For`, which is spoofable.
   `NUM_PROXIES=1` tells DRF how many hops to trust.
 
+**Production hardening, from a full security sweep (pip-audit, npm audit, a live check of
+every endpoint, `manage.py check --deploy`, a git-history secret scan):**
+
+- `REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES']` drops `BrowsableAPIRenderer` when `DEBUG=False`
+  — verified live that anyone sending `Accept: text/html` used to get the full interactive HTML
+  API browser (including forms for public write endpoints like quotes) on production. JSON-only
+  in prod now; the browsable API still works locally for dev convenience.
+- `SECURE_SSL_REDIRECT=True` in production, alongside the `SECURE_PROXY_SSL_HEADER` that already
+  tells Django how to detect HTTPS behind Vercel's proxy.
+- Dependency versions get bumped promptly when `pip-audit`/`npm audit` flag something, even when
+  the underlying code path isn't actually exercised by this app (e.g. GeoDjango CVEs — this app
+  has no GeoDjango) — free safety margin costs nothing.
+
 ---
 
 ## 6. Configuration
@@ -274,6 +291,7 @@ no `.env` means SQLite, local-disk media, in-memory cache, `DEBUG=True`.
 | `ANALYTICS_THROTTLE_RATE` | Defaults to `120/hour` |
 | `LOGIN_THROTTLE_RATE` | Defaults to `5/minute` |
 | `NUM_PROXIES` | Set to `1` on Vercel |
+| `SECURE_SSL_REDIRECT` | Defaults to `True` when `DEBUG=False` |
 | `SECURE_HSTS_SECONDS` | Defaults to `31536000` (1 year) when `DEBUG=False` |
 | `SECURE_HSTS_INCLUDE_SUBDOMAINS` | Defaults to `True` when `DEBUG=False` |
 | `SECURE_HSTS_PRELOAD` | Defaults to `False` — opt-in only; submitting to the browser preload list is a separate, much harder to reverse decision than the rest of HSTS |
@@ -297,8 +315,9 @@ When `DEBUG=False`, `settings.py` additionally turns on `SECURE_PROXY_SSL_HEADER
 | `/blogs` | `Blogs` | Public | Card grid + Load more (`?page=` tracks depth) |
 | `/blogs/:slug` | `BlogDetail` | Public | Markdown-rendered post |
 | `/projects` | `Projects` | Public | Card grid + Load more |
+| `*` (public tree) | `NotFound` | Public | 404, marketing chrome |
 | `/admin/login` | `AdminLogin` | none | Outside the guard, or it'd be unreachable |
-| `/admin` | `Dashboard` | Admin | Content counts |
+| `/admin` | `Dashboard` | Admin | Content counts + 7-day traffic widget |
 | `/admin/blog`, `/admin/blog/new`, `/admin/blog/:slug/edit` | Blog CMS | Admin | List, create, edit |
 | `/admin/analytics` | `Analytics` | Admin | Stat tiles, traffic chart, top pages/posts/referrers |
 | `/admin/projects`, `/admin/projects/new`, `/admin/projects/:id/edit` | Projects | Admin | |
@@ -308,6 +327,7 @@ When `DEBUG=False`, `settings.py` additionally turns on `SECURE_PROXY_SSL_HEADER
 | `/admin/settings/account` | `AccountSettings` | Admin | Password change |
 | `/admin/settings/branding` | `BrandingSettings` | Admin | Site name, logo, favicon |
 | `/admin/settings/theme` | `ThemeEditor` | Admin | Live preview + save |
+| `*` (last child under `/admin`) | `AdminNotFound` | Admin | 404, sidebar chrome — outranks the public wildcard for any `/admin/*` path since it's nested under the literal `admin` segment |
 
 `App.jsx` fetches the site theme once at boot (`getTheme().then(applyTheme)`) and applies it to
 `document.documentElement` before rendering routes — one shared theme for both the public site
@@ -363,6 +383,25 @@ silently resetting to the first 10 items.
 
 `api/client.js` holds every API call. `VITE_API_BASE_URL` is unset in dev (Vite proxies `/api`
 to Django) and points at the deployed API in production.
+
+`hooks/useDocumentMeta.js` gives each public page its own browser tab title and meta
+description (Home, Blogs, Projects, BlogDetail all call it) — sourced from real content
+(profile tagline, post excerpt) rather than one static title shared across the whole site.
+`PublicLayout` no longer sets `document.title` itself, which also removes a latent race that
+used to exist between it and whichever page mounted.
+
+`components/admin/SearchInput.jsx` is a client-side filter over whatever's already loaded on
+screen (BlogList, ProjectList, QuoteInbox each use it) — **not** a server-side search. With
+"Load more" pagination, a term only matches items fetched so far. A real server-side search
+would need a query param on the list endpoints; not needed yet at this scale.
+
+SEO basics: `index.html` carries a static meta description + Open Graph/Twitter Card tags (for
+when the root URL itself is shared), plus `public/robots.txt` and a static `public/sitemap.xml`
+listing only the three top-level routes. Per-blog-post OG previews aren't achievable without
+SSR or a server-side proxy — link-preview bots (Twitter/Facebook/Slack) don't execute JS, so a
+plain client-rendered SPA can't give them a per-post title/image. Google's own crawler does
+execute JS and picks up `useDocumentMeta`'s per-page titles, and discovers blog post URLs by
+following links from `/blogs` even without them being individually listed in the sitemap.
 
 ### Theming
 
@@ -453,6 +492,13 @@ dashboard for a "Paused" state before assuming the database is gone.
 - **HSTS preload.** `SECURE_HSTS_PRELOAD` defaults off — submitting to the browser preload list
   is a one-way door (see `hstspreload.org`) that the site owner should opt into deliberately,
   not something turned on automatically.
+- **Toast notifications.** Editors currently show save feedback as inline text ("Saved",
+  "Unsaved changes") rather than a shared toast system. Considered and explicitly deferred —
+  the inline pattern already works consistently across every editor; a toast refactor is
+  stylistic polish, not a fix.
+- **Bulk actions.** No multi-select delete anywhere (e.g. the Quote inbox) — one at a time via
+  the existing `ConfirmDialog`. No backend bulk-delete endpoint exists either; would need either
+  sequential per-row requests or a new endpoint.
 
 ## Known quirks
 
