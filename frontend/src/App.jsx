@@ -8,6 +8,7 @@ import applyTheme from './utils/applyTheme'
 import Home from './pages/Home'
 import Blogs from './pages/Blogs'
 import Projects from './pages/Projects'
+import NotFound from './pages/NotFound'
 
 // Split out on its own: it's the only public page that needs the Markdown
 // renderer, which is a large dependency most visitors never reach.
@@ -31,6 +32,7 @@ const Analytics = lazy(() => import('./pages/admin/Analytics'))
 const AccountSettings = lazy(() => import('./pages/admin/settings/AccountSettings'))
 const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSettings'))
 const ThemeEditor = lazy(() => import('./pages/admin/settings/ThemeEditor'))
+const AdminNotFound = lazy(() => import('./pages/admin/AdminNotFound'))
 
 function AdminLoading() {
   return (
@@ -61,6 +63,7 @@ function App() {
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
 
           {/* Login sits outside RequireAuth, or reaching it would be impossible. */}
@@ -82,6 +85,7 @@ function App() {
               <Route path="settings/account" element={<AccountSettings />} />
               <Route path="settings/branding" element={<BrandingSettings />} />
               <Route path="settings/theme" element={<ThemeEditor />} />
+              <Route path="*" element={<AdminNotFound />} />
             </Route>
           </Route>
         </Routes>
