@@ -33,6 +33,10 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # Belt-and-suspenders alongside Vercel's own edge redirect: Django checks
+    # SECURE_PROXY_SSL_HEADER (above) to know a request arrived over HTTPS,
+    # and redirects it itself if not, rather than relying solely on the platform.
+    SECURE_SSL_REDIRECT = env.bool('SECURE_SSL_REDIRECT', default=True)
 
     # HSTS: tell browsers to only ever reach this host over HTTPS. Vercel
     # serves everything over TLS already, so this just closes the window
@@ -220,6 +224,16 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_PAGINATION_CLASS': 'config.pagination.StandardPagination',
     'PAGE_SIZE': 10,
+    # BrowsableAPIRenderer is convenient in dev (DRF's default) but has no
+    # reason to be reachable in production: it renders the full interactive
+    # HTML API browser (including forms for public write endpoints like
+    # quotes) to anyone who asks for text/html, which is attack surface with
+    # zero benefit once the real frontend exists.
+    'DEFAULT_RENDERER_CLASSES': (
+        ['rest_framework.renderers.JSONRenderer']
+        if not DEBUG
+        else ['rest_framework.renderers.JSONRenderer', 'rest_framework.renderers.BrowsableAPIRenderer']
+    ),
     # Only the quote form is throttled (it's the one unauthenticated write endpoint).
     # The scope's rate lives here; the viewset opts in via `throttle_scope`.
     'DEFAULT_THROTTLE_CLASSES': [],
