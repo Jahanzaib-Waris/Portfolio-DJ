@@ -41,8 +41,9 @@ npm run build    # production build (also the fastest way to typecheck-by-proxy 
 npm run lint     # oxlint
 ```
 
-No dedicated frontend test runner exists — verification is manual (see `docs/TESTING.md`) or,
-for visual/behavioral changes, driving a headless browser against the dev server.
+No dedicated frontend test runner exists — verification is manual. `docs/QUICK-TEST.md` is a
+15-minute surface-level pass against the live site; `docs/TESTING.md` is the full field-by-field
+checklist. For visual/behavioral changes, drive a headless browser against the dev server.
 
 ### Production deploys need a manual migration step
 

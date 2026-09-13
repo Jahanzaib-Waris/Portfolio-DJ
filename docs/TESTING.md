@@ -1,5 +1,7 @@
 # Manual test checklist
 
+For a fast 15-minute sanity pass instead of this full checklist, see `QUICK-TEST.md`.
+
 Everything built but not verified by hand. Anything already proven is listed under
 **Verified** at the end of each section, so you don't repeat work.
 
