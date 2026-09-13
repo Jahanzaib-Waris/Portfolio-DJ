@@ -3,9 +3,12 @@ import { getBlogPosts } from '../api/client'
 import StatusPanel from '../components/StatusPanel'
 import SystemButton from '../components/SystemButton'
 import { CardSkeleton } from '../components/Skeleton'
+import useDocumentMeta from '../hooks/useDocumentMeta'
 import usePaginatedList from '../hooks/usePaginatedList'
 
 export default function Blogs() {
+  useDocumentMeta('Blog — Portfolio', "Write-ups on what I'm building, breaking, and learning.")
+
   const {
     items: posts,
     loadState,

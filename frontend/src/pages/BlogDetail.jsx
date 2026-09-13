@@ -4,11 +4,14 @@ import { getBlogPost } from '../api/client'
 import MarkdownContent from '../components/MarkdownContent'
 import StatusPanel from '../components/StatusPanel'
 import { Skeleton } from '../components/Skeleton'
+import useDocumentMeta from '../hooks/useDocumentMeta'
 
 export default function BlogDetail() {
   const { slug } = useParams()
   const [post, setPost] = useState(null)
   const [loadState, setLoadState] = useState('loading')
+
+  useDocumentMeta(post ? `${post.title} — Blog` : undefined, post?.excerpt)
 
   useEffect(() => {
     setLoadState('loading')

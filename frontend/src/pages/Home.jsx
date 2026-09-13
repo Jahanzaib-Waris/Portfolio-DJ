@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { getProjects, getSkills, resumeDownloadUrl } from '../api/client'
+import useDocumentMeta from '../hooks/useDocumentMeta'
 import StatusPanel from '../components/StatusPanel'
 import SystemButton from '../components/SystemButton'
 import { Skeleton, CardSkeleton } from '../components/Skeleton'
@@ -11,6 +12,11 @@ export default function Home() {
   const [skillsState, setSkillsState] = useState('loading')
   const [projects, setProjects] = useState([])
   const [projectsState, setProjectsState] = useState('loading')
+
+  useDocumentMeta(
+    profile?.name ? `${profile.name} — Portfolio` : 'Portfolio',
+    profile?.tagline || profile?.bio || 'Full-stack developer portfolio — projects, blog, and how to get in touch.',
+  )
 
   useEffect(() => {
     getSkills()

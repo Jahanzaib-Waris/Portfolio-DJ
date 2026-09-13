@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://portfolio-dj-j1sv.vercel.app/sitemap.xml

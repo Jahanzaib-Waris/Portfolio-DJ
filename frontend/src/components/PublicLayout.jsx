@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 
 import { getBranding, getProfile, trackPageView } from '../api/client'
@@ -30,20 +30,16 @@ export default function PublicLayout() {
   const [quoteModalOpen, setQuoteModalOpen] = useState(false)
   const [profile, setProfile] = useState(null)
   const [profileState, setProfileState] = useState('loading')
-  // Whichever of profile/branding resolves first shouldn't have its title
-  // choice clobbered by the other arriving later — a ref survives both
-  // `.then` callbacks regardless of which order they settle in.
-  const profileNameRef = useRef(null)
 
   useEffect(() => {
     let cancelled = false
 
-    // Branding provides the fallback title/favicon; the profile name (once
-    // loaded) takes over the title, matching the existing behaviour below.
+    // Favicon only — the tab *title* is owned entirely by whichever page
+    // component is mounted (see useDocumentMeta), so there's no race between
+    // this fetch resolving late and a page having already set its own title.
     getBranding()
       .then((data) => {
         if (cancelled) return
-        if (!profileNameRef.current) document.title = `${data.site_name} — Portfolio`
         applyFavicon(data.favicon)
       })
       .catch(() => {})
@@ -53,10 +49,6 @@ export default function PublicLayout() {
         if (cancelled) return
         setProfile(data)
         setProfileState('ready')
-        if (data?.name) {
-          profileNameRef.current = data.name
-          document.title = `${data.name} — Portfolio`
-        }
       })
       .catch(() => {
         if (!cancelled) setProfileState('empty')
