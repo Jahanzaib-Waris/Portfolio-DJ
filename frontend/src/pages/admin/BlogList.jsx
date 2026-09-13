@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { deleteBlogPost, getBlogPosts } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import SearchInput from '../../components/admin/SearchInput'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -12,6 +13,13 @@ export default function BlogList() {
   // Signed in as staff, this endpoint returns drafts as well as published posts.
   const { items: posts, loadState, hasMore, loadingMore, moreFailed, loadMore, reload } =
     usePaginatedList(getBlogPosts)
+
+  const [query, setQuery] = useState('')
+  const filteredPosts = posts.filter((post) => {
+    const term = query.trim().toLowerCase()
+    if (!term) return true
+    return post.title.toLowerCase().includes(term) || post.slug.toLowerCase().includes(term)
+  })
 
   const [pendingDelete, setPendingDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -66,7 +74,17 @@ export default function BlogList() {
         </StatusPanel>
       )}
 
-      <div className="mt-8 space-y-3">
+      {loadState === 'ready' && posts.length > 0 && (
+        <div className="mt-6">
+          <SearchInput value={query} onChange={setQuery} placeholder="Search posts..." />
+        </div>
+      )}
+
+      {loadState === 'ready' && posts.length > 0 && filteredPosts.length === 0 && (
+        <p className="mt-6 text-sm text-slate-400">No posts match &ldquo;{query}&rdquo;.</p>
+      )}
+
+      <div className="mt-4 space-y-3">
         {loadState === 'loading' &&
           [1, 2, 3].map((i) => (
             <StatusPanel key={i} glow={false} className="p-4">
@@ -75,7 +93,7 @@ export default function BlogList() {
             </StatusPanel>
           ))}
 
-        {posts.map((post) => (
+        {filteredPosts.map((post) => (
           <StatusPanel key={post.id} className="flex flex-wrap items-center gap-4 p-4">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { deleteProject, getProjects } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import SearchInput from '../../components/admin/SearchInput'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -11,6 +12,16 @@ import usePaginatedList from '../../hooks/usePaginatedList'
 export default function ProjectList() {
   const { items: projects, loadState, hasMore, loadingMore, moreFailed, loadMore, reload } =
     usePaginatedList(getProjects)
+
+  const [query, setQuery] = useState('')
+  const filteredProjects = projects.filter((project) => {
+    const term = query.trim().toLowerCase()
+    if (!term) return true
+    return (
+      project.title.toLowerCase().includes(term) ||
+      project.tech_stack.toLowerCase().includes(term)
+    )
+  })
 
   const [pendingDelete, setPendingDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -67,7 +78,17 @@ export default function ProjectList() {
         </StatusPanel>
       )}
 
-      <div className="mt-8 space-y-3">
+      {loadState === 'ready' && projects.length > 0 && (
+        <div className="mt-6">
+          <SearchInput value={query} onChange={setQuery} placeholder="Search projects..." />
+        </div>
+      )}
+
+      {loadState === 'ready' && projects.length > 0 && filteredProjects.length === 0 && (
+        <p className="mt-6 text-sm text-slate-400">No projects match &ldquo;{query}&rdquo;.</p>
+      )}
+
+      <div className="mt-4 space-y-3">
         {loadState === 'loading' &&
           [1, 2, 3].map((i) => (
             <StatusPanel key={i} glow={false} className="p-4">
@@ -76,7 +97,7 @@ export default function ProjectList() {
             </StatusPanel>
           ))}
 
-        {projects.map((project) => (
+        {filteredProjects.map((project) => (
           <StatusPanel key={project.id} className="flex flex-wrap items-center gap-4 p-4">
             {project.thumbnail ? (
               <img

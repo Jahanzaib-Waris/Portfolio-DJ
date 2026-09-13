@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import { deleteQuoteRequest, getQuoteRequests } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import SearchInput from '../../components/admin/SearchInput'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -26,6 +27,17 @@ export default function QuoteInbox() {
     usePaginatedList(getQuoteRequests)
 
   const [expanded, setExpanded] = useState(null)
+  const [query, setQuery] = useState('')
+  const filteredQuotes = quotes.filter((quote) => {
+    const term = query.trim().toLowerCase()
+    if (!term) return true
+    return (
+      quote.name.toLowerCase().includes(term) ||
+      quote.email.toLowerCase().includes(term) ||
+      quote.project_details.toLowerCase().includes(term)
+    )
+  })
+
   const [pendingDelete, setPendingDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
@@ -71,7 +83,17 @@ export default function QuoteInbox() {
         </StatusPanel>
       )}
 
-      <div className="mt-8 space-y-3">
+      {loadState === 'ready' && quotes.length > 0 && (
+        <div className="mt-6">
+          <SearchInput value={query} onChange={setQuery} placeholder="Search requests..." />
+        </div>
+      )}
+
+      {loadState === 'ready' && quotes.length > 0 && filteredQuotes.length === 0 && (
+        <p className="mt-6 text-sm text-slate-400">No requests match &ldquo;{query}&rdquo;.</p>
+      )}
+
+      <div className="mt-4 space-y-3">
         {loadState === 'loading' &&
           [1, 2, 3].map((i) => (
             <StatusPanel key={i} glow={false} className="p-4">
@@ -80,7 +102,7 @@ export default function QuoteInbox() {
             </StatusPanel>
           ))}
 
-        {quotes.map((quote) => {
+        {filteredQuotes.map((quote) => {
           const isOpen = expanded === quote.id
           return (
             <StatusPanel key={quote.id} className="p-4">
