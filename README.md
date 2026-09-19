@@ -1,16 +1,12 @@
-# Developer Portfolio
+# Solo Leveling Developer Portfolio
 
-A personal developer portfolio with a clean, GitHub-dark visual system. Django REST Framework
-backend + React (Vite) frontend, with a custom WordPress-style admin panel (JWT auth, live
-theme editor, self-built analytics) for managing content. No blog — that runs separately on
-WordPress; see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full system reference.
+A personal developer portfolio site with a Solo Leveling anime-inspired visual theme (dark base, glowing blue neon accents, "system window" style panels). Django REST Framework backend + React (Vite) frontend.
 
 ## Project structure
 
 ```
-backend/    Django + DRF project (config) with apps: accounts, profiles, projects, quotes,
-            sitesettings, analytics
-frontend/   React (Vite) + Tailwind CSS app — public site + admin panel, consumes the Django API
+backend/    Django + DRF project (config) with apps: profiles, blog, projects, quotes
+frontend/   React (Vite) + Tailwind CSS app, consumes the Django API
 ```
 
 ## Backend setup
@@ -29,8 +25,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-The API runs at `http://127.0.0.1:8000/`. Django admin is at `http://127.0.0.1:8000/admin/`
-(kept as a fallback; day-to-day editing happens through the custom panel below).
+The API runs at `http://127.0.0.1:8000/`. Django admin is at `http://127.0.0.1:8000/admin/`.
 
 By default the backend uses local SQLite. To use Supabase Postgres instead, set `SUPABASE_DB_HOST` (and the related `SUPABASE_DB_*` vars) in `backend/.env` — see `.env.example` for the full list.
 
@@ -42,19 +37,23 @@ npm install
 npm run dev
 ```
 
-The dev server runs at `http://localhost:5173/` and proxies `/api` and `/media` requests to the Django backend at `127.0.0.1:8000`. The admin panel is at `http://localhost:5173/admin`.
+The dev server runs at `http://localhost:5173/` and proxies `/api` and `/media` requests to the Django backend at `127.0.0.1:8000`.
 
 ## API endpoints
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#4-api-reference) for the full endpoint reference (auth, content, settings, analytics) with permissions and throttling notes.
+| Endpoint | Description |
+|---|---|
+| `GET /api/profile/` | Profile info (name, tagline, bio, photo, links) |
+| `GET /api/profile/skills/` | List skills (home page tech stack section) |
+| `GET /api/profile/resume/` | Download resume PDF |
+| `GET /api/blog/posts/` | List published blog posts |
+| `GET /api/blog/posts/<slug>/` | Blog post detail |
+| `GET /api/projects/` | List projects |
+| `POST /api/quotes/` | Submit a quote request |
 
 ## Content management
 
-Content (profile, projects, skills, quote requests, site branding, and the site theme) is managed through the custom admin panel at `/admin` on the frontend — see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it's built. The Django admin at `/admin/` on the backend is kept as a fallback.
-
-## Testing
-
-[docs/QUICK-TEST.md](docs/QUICK-TEST.md) is a 15-minute sanity pass; [docs/TESTING.md](docs/TESTING.md) is the full manual checklist.
+All content (profile, blog posts, projects, quote requests) is managed through the Django admin at `/admin/`. No frontend auth or CMS UI is required for the MVP.
 
 ## Deployment
 

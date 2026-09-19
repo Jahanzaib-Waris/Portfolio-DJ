@@ -127,14 +127,23 @@ export default function Analytics() {
             </StatusPanel>
 
             <StatusPanel glow={false} className="p-5">
-              <p className="system-heading mb-3 text-sm text-white">Top referrers</p>
+              <p className="system-heading mb-3 text-sm text-white">Top blog posts</p>
               <RankedTable
-                rows={data.top_referrers}
-                empty="No referrer traffic recorded yet — most visits came directly."
-                renderLabel={(row) => row.referrer}
+                rows={data.top_posts}
+                empty="No blog post views recorded yet."
+                renderLabel={(row) => row.title}
               />
             </StatusPanel>
           </div>
+
+          <StatusPanel glow={false} className="p-5">
+            <p className="system-heading mb-3 text-sm text-white">Top referrers</p>
+            <RankedTable
+              rows={data.top_referrers}
+              empty="No referrer traffic recorded yet — most visits came directly."
+              renderLabel={(row) => row.referrer}
+            />
+          </StatusPanel>
         </div>
       )}
     </div>

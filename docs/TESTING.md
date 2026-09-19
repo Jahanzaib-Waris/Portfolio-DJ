@@ -43,8 +43,8 @@ API → http://127.0.0.1:8000/ · Django admin → http://127.0.0.1:8000/admin/
 
 - [ ] **Reload while signed in** → stays signed in, briefly showing "Restoring session...".
       If this bounces you to login, the boot-time refresh is broken.
-- [ ] Visit `/admin/projects` signed out → redirected to login → after signing in, land on
-      `/admin/projects` rather than the dashboard
+- [ ] Visit `/admin/blog` signed out → redirected to login → after signing in, land on
+      `/admin/blog` rather than the dashboard
 - [ ] **Log out → browser Back** → must NOT show the panel
 - [ ] Log out, then reload → still logged out (refresh token was blacklisted server-side)
 - [ ] **Leave the tab idle >15 min, then click around.** The access token expires at 15
@@ -55,18 +55,76 @@ API → http://127.0.0.1:8000/ · Django admin → http://127.0.0.1:8000/admin/
 
 ### Dashboard and layout
 
-- [ ] Cards show counts matching Django admin, plus a 7-day traffic widget below them
+- [ ] Four cards show counts matching Django admin
 - [ ] A card shows a red `—` rather than blanking the page if one endpoint fails
       (stop the backend mid-load)
 - [ ] Sidebar on desktop, hamburger below `lg`
 - [ ] Public navbar/footer do **not** appear on admin pages
 
-**Verified:** `/admin`, `/admin/projects`, `/admin/projects/new` all redirect to login when
-signed out; bad credentials show "Incorrect username or password."
+**Verified:** `/admin`, `/admin/blog`, `/admin/blog/new` all redirect to login when signed
+out; bad credentials show "Incorrect username or password."
 
 ---
 
-## 2. Projects, Skills, Profile, Quote inbox — untested
+## 2. Blog CMS — entirely untested
+
+The whole editor is unexercised. This is the highest-value section.
+
+### Creating a post
+
+- [ ] `/admin/blog` → "New post" opens an empty editor
+- [ ] Typing a title fills the slug automatically (`My First Post` → `my-first-post`)
+- [ ] **Edit the slug by hand, then keep typing the title** → the slug must stop following it
+- [ ] Accents and punctuation are stripped (`Café & Crème!` → `cafe-creme`)
+- [ ] Excerpt counter increments and stops at 300
+- [ ] Save → redirects to the edit URL for the new slug
+- [ ] **Save a second post with a duplicate slug** → the error appears *under the slug field*,
+      not as a generic message
+
+### Editing
+
+- [ ] Opening an existing post loads every field including the Markdown body
+- [ ] **The slug does NOT auto-rewrite when you change the title of an existing post** (it's a
+      published URL — silently changing it would break links)
+- [ ] Changing the slug and saving → the browser URL updates to the new slug, and reloading
+      that URL works
+- [ ] "Unsaved changes" appears once you type, and clears after saving
+- [ ] **Type something, then close the tab** → browser warns about unsaved changes
+
+### Markdown editor
+
+- [ ] Preview updates live as you type
+- [ ] Preview matches the published page exactly (they share one component — if these differ,
+      something is wrong)
+- [ ] Below `lg` width the panes become Write/Preview tabs and both work
+- [ ] Wide code block scrolls inside the preview pane without stretching the layout
+
+### Cover image
+
+- [ ] Choosing a file shows a thumbnail preview before saving
+- [ ] Save → image persists and appears on the public post
+- [ ] Replacing the image on an existing post works
+- [ ] "Remove" → shows "Cover will be removed on save", and after saving the image is gone
+- [ ] **Save a post with an existing cover but no new file** → the cover survives. (This is the
+      JSON-vs-multipart branch; if the cover vanishes, that logic is wrong.)
+
+### Publish state
+
+- [ ] New posts default to Draft
+- [ ] "Save & publish" → badge flips to Published, post appears on the public `/blogs`
+- [ ] "Unpublish" → badge flips to Draft, post disappears from public `/blogs`
+- [ ] A draft is listed in `/admin/blog` but not on the public site
+- [ ] Visiting a draft's slug while signed out gives 404
+
+### Deleting
+
+- [ ] Delete → confirm dialog naming the post
+- [ ] Escape and clicking the backdrop both cancel
+- [ ] Confirming removes it and the list refreshes without a manual reload
+
+---
+
+## 3. Projects, Skills, Profile, Quote inbox — also untested
 
 ### Projects
 
@@ -122,12 +180,26 @@ signed out; bad credentials show "Incorrect username or password."
 
 ---
 
-## 3. Public site
+## 4. Public site
+
+**Verified in the browser against seeded content:**
+
+- All Markdown renders — headings, bold, italic, inline code, fenced blocks, lists,
+  blockquote, table, hr
+- Links carry `target="_blank" rel="noreferrer"`
+- A deliberately wide code block scrolls in its own box (`overflow-x: auto`) and the page does
+  **not** scroll sideways
+- Pagination on `/blogs`: 10 posts → Load more → 12 appended, no duplicates, button disappears
+  on the last page
+- `BlogDetail` is now lazy-loaded and still renders Markdown correctly after that change
 
 Residual checks — these were **not** covered:
 
-- [ ] Pagination on `/projects`: 10 items → Load more → more appended, no duplicates, button
-      disappears on the last page, and reloading a `?page=N` URL restores that depth
+- [ ] Same Markdown page on a **narrow phone viewport** (the scroll check was at 1280px)
+- [ ] **Raw HTML in post content stays inert.** Paste `<script>alert(1)</script>` into a post
+      and confirm no alert fires and the tag is not rendered as HTML
+- [ ] Table renders with visible borders and scrolls when too wide
+- [ ] Pagination on `/projects` (needs 11+ projects) — only `/blogs` was tested
 - [ ] Double-clicking Load more fast doesn't double-load
 - [ ] Stop the backend, then click Load more → existing items stay and an inline
       "Couldn't load more" appears
@@ -145,15 +217,15 @@ throttled request persisting no row.
 
 ---
 
-## 4. API authorisation
+## 5. API authorisation
 
-*Covered by the automated test suite (`manage.py test`, 50 tests)* — anonymous reads succeed
-and writes 401, staff CRUD works, non-staff can't obtain a token, the quote inbox is
-unthrottled for staff. Re-check by hand only if something looks wrong.
+*Covered by 11 automated tests that passed* — anonymous reads succeed and writes 401, staff
+CRUD works, non-staff can't obtain a token, drafts stay hidden, the quote inbox is unthrottled
+for staff. Re-check by hand only if something looks wrong.
 
 ---
 
-## 5. Production deploy — required before the live site works
+## 6. Production deploy — required before the live site works
 
 > **Blocked.** The deployed API currently 500s on every request — the Supabase project it points
 > at no longer exists. Confirmed 2026-08-02 from Vercel runtime logs:
@@ -204,7 +276,7 @@ Then on the deployed site:
 
 ---
 
-## 6. Known issues, not bugs to report
+## 7. Known issues, not bugs to report
 
 - **Media URLs expire after 1 hour.** Supabase's S3 gateway requires a signed request for every
   object. Fine live; any cached response will have dead image links.

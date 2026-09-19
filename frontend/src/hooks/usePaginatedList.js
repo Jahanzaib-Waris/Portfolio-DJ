@@ -8,7 +8,7 @@ const MAX_INITIAL_DEPTH = 50
 /**
  * Loads a DRF-paginated list endpoint one page at a time.
  *
- * The API pages at PAGE_SIZE (10), so without this the 11th project or quote
+ * The API pages at PAGE_SIZE (10), so without this the 11th blog post or project
  * is simply unreachable. Falls back to treating the payload as a plain array if
  * pagination is ever turned off server-side.
  *

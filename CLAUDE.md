@@ -4,13 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A personal developer portfolio: Django REST Framework API (`backend/`) + React/Vite SPA
+A personal developer portfolio + blog: Django REST Framework API (`backend/`) + React/Vite SPA
 (`frontend/`), deployed as two separate Vercel projects backed by Supabase (Postgres + S3-style
-Storage). No blog — that runs on a separate WordPress site; this project lists its own admin
-dashboard as a portfolio project instead. The frontend has a public marketing site and a custom
-admin panel (JWT-authenticated, staff-only) that replaces the Django admin for day-to-day
-content editing — including a runtime-editable site theme (colors/fonts/borders/button style,
-applied via CSS custom properties with no rebuild) and self-built traffic analytics.
+Storage). The frontend has a public marketing site and a custom admin panel (JWT-authenticated,
+staff-only) that replaces the Django admin for day-to-day content editing — including a
+runtime-editable site theme (colors/fonts/borders/button style, applied via CSS custom
+properties with no rebuild) and self-built traffic analytics.
 
 **Read `docs/ARCHITECTURE.md` before making non-trivial changes.** It's the maintained system
 reference — full data model, every API endpoint and its permissions, how JWT auth and
@@ -25,8 +24,8 @@ multiple files; ARCHITECTURE.md has the detail.
 ```bash
 .venv/bin/python manage.py runserver              # dev server, http://127.0.0.1:8000/
 .venv/bin/python manage.py test                   # full suite
-.venv/bin/python manage.py test projects          # one app
-.venv/bin/python manage.py test projects.tests.ProjectReadTests.test_tech_stack_list_splits_and_strips  # one test
+.venv/bin/python manage.py test blog              # one app
+.venv/bin/python manage.py test blog.tests.BlogPostReadTests.test_anonymous_list_excludes_drafts  # one test
 .venv/bin/python manage.py makemigrations <app>   # after any models.py change
 .venv/bin/python manage.py migrate                # local SQLite by default (zero setup, no .env needed)
 .venv/bin/python manage.py check --deploy         # production security checklist
@@ -82,7 +81,7 @@ needs branding/theme on every page load and there's no meaningful "not configure
 those two. Follow whichever precedent matches a new singleton's actual usage pattern.
 
 **Public-read/staff-write is the default permission shape**
-(`config/permissions.py::IsAdminUserOrReadOnly`), applied to Profile, Skill, Project,
+(`config/permissions.py::IsAdminUserOrReadOnly`), applied to Profile, Skill, BlogPost, Project,
 SiteBranding, SiteTheme. Quotes inverts it (`quotes/views.py::CreatePublicReadStaff`) — the
 *write* is the public part (the contact form), reads are staff-only. When adding a new
 content type, decide which shape it needs rather than assuming the default.
@@ -124,7 +123,7 @@ need admin routes to share chrome with the public layout, revisit whether that b
 fire there too.
 
 **Each public page owns its document title/description outright** (`useDocumentMeta`, called
-from Home and Projects) — `PublicLayout` deliberately does *not* set
+from Home/Blogs/Projects/BlogDetail) — `PublicLayout` deliberately does *not* set
 `document.title` itself anymore. It used to, and raced with whichever page mounted: the profile
 fetch resolving late would stomp a page's title back to the generic one. Don't reintroduce a
 second writer of `document.title`.

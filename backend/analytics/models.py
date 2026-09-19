@@ -11,6 +11,9 @@ class PageView(models.Model):
 
     path = models.CharField(max_length=255)
     referrer = models.CharField(max_length=255, blank=True)
+    # Cheap filter for "blog performance" without parsing `path` at query time.
+    is_blog_post = models.BooleanField(default=False)
+    slug = models.CharField(max_length=255, blank=True)
     session_key = models.CharField(max_length=64)
     created_at = models.DateTimeField(auto_now_add=True)
 

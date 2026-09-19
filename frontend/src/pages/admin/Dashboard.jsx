@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { getAnalyticsSummary, getProjects, getQuoteRequests, getSkills } from '../../api/client'
+import { getAnalyticsSummary, getBlogPosts, getProjects, getQuoteRequests, getSkills } from '../../api/client'
 import { useAuth } from '../../auth/authContext'
 import AnalyticsChart from '../../components/admin/AnalyticsChart'
 import StatusPanel from '../../components/StatusPanel'
@@ -10,6 +10,7 @@ import { Skeleton } from '../../components/Skeleton'
 // `count` comes from DRF's pagination envelope, so page_size=1 fetches the
 // total without pulling every row down.
 const sources = [
+  { key: 'posts', label: 'Blog posts', fetch: () => getBlogPosts({ page_size: 1 }) },
   { key: 'projects', label: 'Projects', fetch: () => getProjects({ page_size: 1 }) },
   { key: 'skills', label: 'Skills', fetch: () => getSkills({ page_size: 1 }) },
   { key: 'quotes', label: 'Quote requests', fetch: () => getQuoteRequests({ page_size: 1 }) },
@@ -62,7 +63,7 @@ export default function Dashboard() {
       </h1>
       <p className="mt-2 text-sm text-slate-400">Content currently published on the site.</p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {sources.map((source) => (
           <StatusPanel key={source.key} className="p-5">
             <p className="system-heading text-xs text-slate-400">{source.label}</p>

@@ -9,11 +9,12 @@ from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from blog.models import BlogPost
 from quotes.models import QuoteRequest
 
 from .models import PageView
 from .serializers import PageViewCreateSerializer
-from .utils import session_key_for
+from .utils import classify_path, session_key_for
 
 
 class TrackView(APIView):
@@ -32,9 +33,14 @@ class TrackView(APIView):
         serializer = PageViewCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        path = serializer.validated_data['path']
+        is_blog_post, slug = classify_path(path)
+
         PageView.objects.create(
-            path=serializer.validated_data['path'],
+            path=path,
             referrer=serializer.validated_data.get('referrer', ''),
+            is_blog_post=is_blog_post,
+            slug=slug,
             session_key=session_key_for(request),
         )
         return Response(status=status.HTTP_201_CREATED)
@@ -74,6 +80,21 @@ class AnalyticsSummaryView(APIView):
             views_qs.values('path').annotate(count=Count('id')).order_by('-count')[:10]
         )
 
+        top_posts_raw = list(
+            views_qs.filter(is_blog_post=True)
+            .exclude(slug='')
+            .values('slug')
+            .annotate(count=Count('id'))
+            .order_by('-count')[:10]
+        )
+        titles = dict(
+            BlogPost.objects.filter(slug__in=[row['slug'] for row in top_posts_raw]).values_list('slug', 'title')
+        )
+        top_posts = [
+            {'slug': row['slug'], 'title': titles.get(row['slug'], row['slug']), 'count': row['count']}
+            for row in top_posts_raw
+        ]
+
         top_referrers = list(
             views_qs.exclude(referrer='')
             .values('referrer')
@@ -81,7 +102,7 @@ class AnalyticsSummaryView(APIView):
             .order_by('-count')[:10]
         )
 
-        # Ties traffic analytics to the existing Quotes feature — no new
+        # Ties blog/traffic analytics to the existing Quotes feature — no new
         # model needed, QuoteRequest.submitted_at already has what's needed
         # for a "leads over time" series alongside page views.
         quotes_trend = list(
@@ -98,6 +119,7 @@ class AnalyticsSummaryView(APIView):
             'total_visitors': total_visitors,
             'series': series,
             'top_pages': top_pages,
+            'top_posts': top_posts,
             'top_referrers': top_referrers,
             'quotes_trend': quotes_trend,
         })

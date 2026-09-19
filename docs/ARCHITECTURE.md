@@ -1,10 +1,9 @@
 # Portfolio-DJ — Project Reference
 
-A personal developer portfolio (no blog — that runs separately on WordPress) with a clean,
-GitHub-dark visual system. Django REST Framework API + React (Vite) single-page frontend,
-deployed as two separate Vercel projects backed by Supabase. The admin panel is a custom
-WordPress-style control panel: grouped sidebar, live analytics, content CRUD, site settings,
-and a single runtime-editable theme.
+A personal developer portfolio and blog with a clean, GitHub-dark visual system. Django REST
+Framework API + React (Vite) single-page frontend, deployed as two separate Vercel projects
+backed by Supabase. The admin panel is a custom WordPress-style control panel: grouped
+sidebar, live analytics, content CRUD, site settings, and a single runtime-editable theme.
 
 Last updated: 2026-09-13.
 
@@ -34,6 +33,7 @@ Portfolio-DJ/
 │   │   └── wsgi.py / asgi.py
 │   ├── accounts/             JWT auth + change-password (no models)
 │   ├── profiles/              Profile (singleton) + Skill
+│   ├── blog/                 BlogPost
 │   ├── projects/              Project (has `is_featured`)
 │   ├── quotes/                QuoteRequest
 │   ├── sitesettings/          SiteBranding (singleton) + SiteTheme (singleton)
@@ -55,7 +55,6 @@ Portfolio-DJ/
         ├── hooks/
         │   ├── usePaginatedList.js   "Load more" pagination with URL-shareable depth
         │   └── useDocumentMeta.js    sets tab title + meta description; each public page owns its own
-        │                             (used by Home and Projects)
         ├── utils/
         │   ├── apiErrors.js      DRF error-shape helpers for forms
         │   ├── buildPayload.js   JSON-vs-multipart payload builder for file fields
@@ -68,15 +67,16 @@ Portfolio-DJ/
         │   └── admin/
         │       ├── RequireAuth.jsx      route guard
         │       ├── AdminLayout.jsx      grouped, collapsible sidebar shell
-        │       ├── Field.jsx, formStyles.js, ConfirmDialog.jsx
+        │       ├── Field.jsx, formStyles.js, ConfirmDialog.jsx, MarkdownEditor.jsx
         │       ├── SearchInput.jsx      client-side filter over already-loaded list items
         │       └── AnalyticsChart.jsx   single-series line+area chart, no library
         └── pages/
-            ├── Home, Projects
+            ├── Home, Blogs, BlogDetail, Projects
             ├── NotFound.jsx     public-styled 404 (catch-all under PublicLayout)
             └── admin/
                 ├── AdminLogin.jsx, Dashboard.jsx (counts + a 7-day traffic widget)
                 ├── AdminNotFound.jsx   admin-styled 404 (last child route under AdminLayout)
+                ├── BlogList.jsx, BlogEditor.jsx
                 ├── ProjectList.jsx, ProjectEditor.jsx
                 ├── SkillsManager.jsx, ProfileEditor.jsx
                 ├── QuoteInbox.jsx
@@ -118,6 +118,8 @@ chart, CSS custom properties for the theme).
 | `react` / `react-dom` | ^19.2.7 | UI |
 | `react-router-dom` | ^7.18.1 | Client-side routing |
 | `axios` | ^1.18.1 | HTTP client |
+| `react-markdown` | ^10.1.0 | Renders blog post bodies |
+| `remark-gfm` | ^4.0.1 | GitHub-flavoured Markdown — tables, strikethrough, task lists |
 | `vite` | ^8.1.1 | Build tool and dev server |
 | `tailwindcss` + `@tailwindcss/vite` | ^4.3.2 | Styling (Tailwind v4, config lives in CSS) |
 | `oxlint` | ^1.71.0 | Linter (`npm run lint`) |
@@ -132,6 +134,11 @@ created, and the admin hides the "Add" button once one exists.
 
 **`profiles.Skill`** — the home page tech-stack cards.
 `name`, `description`, `display_order`
+
+**`blog.BlogPost`**
+`title`, `slug` (unique), `excerpt`, `content` (Markdown), `cover_image`,
+`published_date`, `is_published`, `created_at`, `updated_at`
+Ordered by `-published_date`. **Looked up by slug, not id.**
 
 **`projects.Project`**
 `title`, `description`, `tech_stack` (comma-separated string), `thumbnail`,
@@ -158,9 +165,9 @@ theme gallery. Every field mirrors a CSS custom property in `index.css`.
 `button_style` (solid/outline/soft), `card_style` (clean/accent), `updated_at`
 
 **`analytics.PageView`** — one row per tracked page view.
-`path`, `referrer`, `session_key` (a same-day hash of IP + User-Agent — enough to dedupe repeat
-views into a rough "unique visitors" count with no cookies/PII), `created_at`. Indexed on
-`created_at` and `path`.
+`path`, `referrer`, `is_blog_post`, `slug`, `session_key` (a same-day hash of IP + User-Agent —
+enough to dedupe repeat views into a rough "unique visitors" count with no cookies/PII),
+`created_at`. Indexed on `created_at` and `path`.
 
 ---
 
@@ -190,6 +197,9 @@ are `{count, next, previous, results}`.
 | GET | `/api/profile/skills/` | public | List |
 | POST | `/api/profile/skills/` | staff | Create |
 | GET/PATCH/PUT/DELETE | `/api/profile/skills/<id>/` | mixed | Read public, writes staff |
+| GET | `/api/blog/posts/` | public | Published only; **staff also see drafts** |
+| POST | `/api/blog/posts/` | staff | Create |
+| GET/PATCH/PUT/DELETE | `/api/blog/posts/<slug>/` | mixed | Read public, writes staff. Draft slugs 404 for anonymous |
 | GET | `/api/projects/` | public | List, includes `is_featured` |
 | POST | `/api/projects/` | staff | Create |
 | GET/PATCH/PUT/DELETE | `/api/projects/<id>/` | mixed | Read public, writes staff |
@@ -201,7 +211,7 @@ are `{count, next, previous, results}`.
 | GET | `/api/settings/theme/` | public | The one theme's current values. Auto-creates with defaults |
 | PATCH/PUT | `/api/settings/theme/` | staff | Update — applies site-wide immediately, no rebuild |
 | POST | `/api/analytics/track/` | **public, throttled** | Tracking beacon; fired once per route change from `PublicLayout` |
-| GET | `/api/analytics/summary/?days=` | staff | Aggregated totals, daily series, top pages/referrers, quotes trend |
+| GET | `/api/analytics/summary/?days=` | staff | Aggregated totals, daily series, top pages/posts/referrers, quotes trend |
 
 `/admin/` — Django admin, still mounted. It is the fallback whenever the custom panel breaks.
 
@@ -209,10 +219,10 @@ are `{count, next, previous, results}`.
 
 ## 5. How authorisation works
 
-**`config/permissions.py` → `IsAdminUserOrReadOnly`** is applied to Profile, Skill, Project, and
-the two `sitesettings` models: safe methods are open to everyone, everything else requires
-`is_staff`. Note the bar is **staff**, not merely authenticated — an ordinary Django user cannot
-edit content.
+**`config/permissions.py` → `IsAdminUserOrReadOnly`** is applied to Profile, Skill, BlogPost,
+Project, and the two `sitesettings` models: safe methods are open to everyone, everything else
+requires `is_staff`. Note the bar is **staff**, not merely authenticated — an ordinary Django
+user cannot edit content.
 
 **Quotes invert this.** `CreatePublicReadStaff` in `quotes/views.py` allows anonymous `create`
 but requires staff for read and delete, because the submissions are private and the *write* is
@@ -222,6 +232,11 @@ the public part.
 `BLACKLIST_AFTER_ROTATION` — a refresh token is single-use, so a stolen one only works until
 the real session next refreshes. Blacklisting is why `rest_framework_simplejwt.token_blacklist`
 is in `INSTALLED_APPS` and why deploys need `migrate`.
+
+**Drafts.** `blog/views.py` filters `is_published` inside `get_queryset()` based on the
+requester rather than using a static queryset, so the panel edits drafts at the same URLs the
+public site reads. Anonymous requests for a draft return **404, not 403** — that avoids
+confirming the post exists.
 
 **Throttling.** Three independent scopes, all via DRF's `ScopedRateThrottle` /
 `DEFAULT_THROTTLE_RATES`:
@@ -297,11 +312,14 @@ When `DEBUG=False`, `settings.py` additionally turns on `SECURE_PROXY_SSL_HEADER
 | Path | Page | Layout | Notes |
 |---|---|---|---|
 | `/` | `Home` | Public | Hero, tech stack, featured work, CTA |
-| `/projects` | `Projects` | Public | Card grid + Load more (`?page=` tracks depth) |
+| `/blogs` | `Blogs` | Public | Card grid + Load more (`?page=` tracks depth) |
+| `/blogs/:slug` | `BlogDetail` | Public | Markdown-rendered post |
+| `/projects` | `Projects` | Public | Card grid + Load more |
 | `*` (public tree) | `NotFound` | Public | 404, marketing chrome |
 | `/admin/login` | `AdminLogin` | none | Outside the guard, or it'd be unreachable |
 | `/admin` | `Dashboard` | Admin | Content counts + 7-day traffic widget |
-| `/admin/analytics` | `Analytics` | Admin | Stat tiles, traffic chart, top pages/referrers |
+| `/admin/blog`, `/admin/blog/new`, `/admin/blog/:slug/edit` | Blog CMS | Admin | List, create, edit |
+| `/admin/analytics` | `Analytics` | Admin | Stat tiles, traffic chart, top pages/posts/referrers |
 | `/admin/projects`, `/admin/projects/new`, `/admin/projects/:id/edit` | Projects | Admin | |
 | `/admin/skills` | `SkillsManager` | Admin | |
 | `/admin/profile` | `ProfileEditor` | Admin | |
@@ -317,8 +335,8 @@ and the admin panel, not a per-surface one.
 
 Two separate route trees: public routes nest under `PublicLayout`, admin routes under
 `RequireAuth` → `AdminLayout`. The admin panel deliberately does **not** render the marketing
-navbar or footer. `AdminLayout`'s sidebar is grouped and collapsible (Portfolio and Settings
-expand to their children) rather than a flat list.
+navbar or footer. `AdminLayout`'s sidebar is grouped and collapsible (Blog, Portfolio, Settings
+each expand to their children) rather than a flat list.
 
 `PublicLayout` fetches the profile and branding once, drives dynamic branding (nav avatar,
 name, `document.title`, favicon), and fires the analytics tracking beacon
@@ -367,19 +385,23 @@ silently resetting to the first 10 items.
 to Django) and points at the deployed API in production.
 
 `hooks/useDocumentMeta.js` gives each public page its own browser tab title and meta
-description (Home and Projects call it) — sourced from real content (profile tagline) rather
-than one static title shared across the whole site. `PublicLayout` no longer sets
-`document.title` itself, which also removes a latent race that used to exist between it and
-whichever page mounted.
+description (Home, Blogs, Projects, BlogDetail all call it) — sourced from real content
+(profile tagline, post excerpt) rather than one static title shared across the whole site.
+`PublicLayout` no longer sets `document.title` itself, which also removes a latent race that
+used to exist between it and whichever page mounted.
 
 `components/admin/SearchInput.jsx` is a client-side filter over whatever's already loaded on
-screen (ProjectList, QuoteInbox use it) — **not** a server-side search. With "Load more"
-pagination, a term only matches items fetched so far. A real server-side search would need a
-query param on the list endpoints; not needed yet at this scale.
+screen (BlogList, ProjectList, QuoteInbox each use it) — **not** a server-side search. With
+"Load more" pagination, a term only matches items fetched so far. A real server-side search
+would need a query param on the list endpoints; not needed yet at this scale.
 
 SEO basics: `index.html` carries a static meta description + Open Graph/Twitter Card tags (for
 when the root URL itself is shared), plus `public/robots.txt` and a static `public/sitemap.xml`
-listing the two top-level routes.
+listing only the three top-level routes. Per-blog-post OG previews aren't achievable without
+SSR or a server-side proxy — link-preview bots (Twitter/Facebook/Slack) don't execute JS, so a
+plain client-rendered SPA can't give them a per-post title/image. Google's own crawler does
+execute JS and picks up `useDocumentMeta`'s per-page titles, and discovers blog post URLs by
+following links from `/blogs` even without them being individually listed in the sitemap.
 
 ### Theming
 
@@ -402,8 +424,8 @@ CSS-custom-property approach both assume this; a future theme *gallery* would be
 larger feature.
 
 Component classes: `.system-panel`, `.system-panel-glow`, `.system-heading`, `.eyebrow`,
-`.system-button` / `.system-button-primary`, `.skeleton`. The site is dark-only
-(`color-scheme: dark`) — no light mode.
+`.system-button` / `.system-button-primary`, `.skeleton`, and `.markdown-body` for rendered
+post content. The site is dark-only (`color-scheme: dark`) — no light mode.
 
 ---
 
@@ -433,7 +455,7 @@ needed locally.
 Note: throttle counters live in memory locally, so **restarting the Django server resets
 them** — useful if you lock yourself out of the quote form or login while testing.
 
-Run the backend test suite with `.venv/bin/python manage.py test` (50 tests across every app).
+Run the backend test suite with `.venv/bin/python manage.py test` (62 tests across every app).
 
 ---
 
@@ -456,11 +478,6 @@ dashboard for a "Paused" state before assuming the database is gone.
 
 ## 10. Not built yet / deliberately deferred
 
-- **No blog, by design.** A `blog` app (Markdown, later a TipTap/ProseMirror WYSIWYG editor with
-  inline image upload) existed and was fully removed — blogging now runs on a separate
-  WordPress site, and this project's own admin dashboard is listed as a portfolio **project**
-  entry instead. Recoverable from git history (the commit removing it names both prior states)
-  if blogging is ever brought back in-repo, but that's not the current plan.
 - **Email on quote submission.** Submissions land in the database silently — nothing notifies
   you. Explicitly deprioritized (not forgotten).
 - **Forgot-password email flow.** `change-password` is self-service only (current + new
