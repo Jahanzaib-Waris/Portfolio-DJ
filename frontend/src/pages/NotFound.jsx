@@ -10,9 +10,9 @@ export default function NotFound() {
   return (
     <div className="mx-auto max-w-lg px-6 py-24 text-center">
       <StatusPanel glow={false} className="p-10">
-        <p className="system-heading text-xs uppercase tracking-wide text-slate-400">404</p>
+        <p className="fb-kicker">404</p>
         <h1 className="mt-3 text-2xl text-white sm:text-3xl">Page not found</h1>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-[#A1A7CA]">
           The page you were looking for doesn&rsquo;t exist, or may have moved.
         </p>
         <SystemButton as={Link} to="/" variant="primary" className="mt-6 inline-block">

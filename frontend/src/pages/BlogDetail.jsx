@@ -27,7 +27,7 @@ export default function BlogDetail() {
     <div className="mx-auto max-w-3xl px-6 py-16">
       <Link
         to="/blogs"
-        className="system-heading mb-6 inline-flex items-center gap-1 text-xs text-neon-blue hover:underline"
+        className="mb-8 inline-flex items-center gap-2 text-sm text-[#38BDF8] hover:text-white transition-colors"
       >
         &larr; Back to Blog
       </Link>
@@ -46,23 +46,24 @@ export default function BlogDetail() {
       {loadState === 'error' && <p className="text-status-red">Blog post not found.</p>}
 
       {loadState === 'ready' && post && (
-        <StatusPanel className="overflow-hidden">
+        <article className="overflow-hidden">
           {post.cover_image && (
             <img
               src={post.cover_image}
               alt={post.title}
-              className="-mx-6 -mt-6 mb-6 h-64 w-[calc(100%+3rem)] object-cover"
+              className="mb-8 h-auto w-full object-cover rounded-[24px] border border-panel-edge"
             />
           )}
-          <div className="flex items-center gap-2 text-xs text-neon-indigo">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-indigo" />
-            <span className="system-heading">{post.published_date}</span>
+          <div className="mb-4 text-xs">
+            <span className="fb-kicker">{post.published_date}</span>
           </div>
-          <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">{post.title}</h1>
-          <RichTextContent className="mt-6 leading-relaxed text-slate-300">
-            {post.content}
-          </RichTextContent>
-        </StatusPanel>
+          <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl">{post.title}</h1>
+          <div className="mt-10 border-t border-panel-edge pt-10">
+            <RichTextContent className="markdown-body">
+              {post.content}
+            </RichTextContent>
+          </div>
+        </article>
       )}
     </div>
   )
