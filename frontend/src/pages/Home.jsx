@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useOutletContext, useNavigate } from 'react-router-dom'
 import { getProjects, getSkills } from '../api/client'
 import useDocumentMeta from '../hooks/useDocumentMeta'
@@ -160,10 +160,28 @@ export default function Home() {
   const [projects, setProjects] = useState([])
   const navigate = useNavigate()
 
+  const flowRef = useRef(null)
+
   useDocumentMeta(
-    profile?.name ? `${profile.name} — FlutterFlow & Flutter Developer` : 'FlowBase — FlutterFlow & Flutter Developer',
+    profile?.name ? `${profile.name} — FlutterFlow & Flutter Developer` : 'Jahanzaib Waris — FlutterFlow & Flutter Developer',
     profile?.tagline || 'Practical FlutterFlow fixes, custom Dart code and hands-on help building production mobile apps.',
   )
+
+  useEffect(() => {
+    const el = flowRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('is-visible')
+          observer.unobserve(el)
+        }
+      },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     getSkills()
@@ -206,7 +224,7 @@ export default function Home() {
                 'Practical fixes for real FlutterFlow problems, custom Dart code you can paste straight into your project, and hands-on help when you need an app built, rescued or connected.'}
             </p>
 
-            <div className="flex flex-col sm:flex-row justify-center gap-4 pt-2 lg:justify-start">
+            <div className="fb-hero-actions flex flex-col sm:flex-row justify-center gap-4 pt-2 lg:justify-start">
               <SystemButton onClick={onRequestQuote} size="lg" variant="primary">
                 Get help with your app
               </SystemButton>
@@ -290,7 +308,7 @@ export default function Home() {
                 Most of my work is the part of FlutterFlow that goes beyond drag and drop: custom Dart code, Firebase and Supabase backends, RevenueCat subscriptions, and OpenAI features like chatbots, speech-to-text and AI image moderation.
               </p>
               <p>
-                Recent builds include a property management app, an AI-powered English learning platform and a swipe-based car marketplace. FlowBase is where I write up the problems I solve along the way, so you can fix yours faster.
+                Recent builds include a property management app, an AI-powered English learning platform and a swipe-based car marketplace. This portfolio is where I write up the problems I solve along the way, so you can fix yours faster.
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
                 <SystemButton onClick={onRequestQuote} size="lg" variant="primary">
@@ -352,7 +370,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="fb-flow">
+          <div ref={flowRef} className="fb-flow">
             <div className="fb-flow__steps">
               {processSteps.map((step) => (
                 <div key={step.num} className="fb-flow__step">

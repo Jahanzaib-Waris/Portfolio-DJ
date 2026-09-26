@@ -40,18 +40,13 @@ export default function Footer({ profile }) {
           {/* Brand info */}
           <div className="md:col-span-5 lg:col-span-5">
             <div className="flex items-center gap-2.5">
-              <svg viewBox="0 0 32 32" className="h-8 w-8 rounded-lg shrink-0" aria-hidden="true" focusable="false">
-                <rect width="32" height="32" rx="8" fill="#6D5AF6" />
-                <path d="M11 23V10.5h10.5M11 16.5h5.2" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="21.2" cy="16.5" r="2.3" fill="#fff" />
-              </svg>
-              <span className="system-heading text-lg font-bold text-white">FlowBase</span>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-neon-indigo to-neon-blue font-mono-ui text-xs font-bold text-white shadow-[0_0_12px_rgba(124,108,255,0.4)]">
+                {(profile?.name ? profile.name.slice(0, 2) : 'JW').toUpperCase()}
+              </span>
+              <span className="system-heading text-lg font-bold text-white">{profile?.name || 'Jahanzaib Waris'}</span>
             </div>
             <p className="mt-4 text-sm text-[#A1A7CA] max-w-sm leading-relaxed">
-              Practical FlutterFlow fixes, custom Dart code and hands-on help getting your app built, rescued or connected.
-            </p>
-            <p className="mt-2 text-xs text-[#A1A7CA]/70">
-              Built by {profile?.name || 'Jahanzaib Waris'}
+              Mobile application developer specializing in FlutterFlow, Flutter, and scalable cross-platform apps.
             </p>
           </div>
 
@@ -127,7 +122,7 @@ export default function Footer({ profile }) {
 
         <div className="mt-16 flex flex-col md:flex-row items-center justify-between border-t border-panel-edge pt-8 text-xs text-[#A1A7CA]">
           <p>
-            &copy; {new Date().getFullYear()} FlowBase. All rights reserved.
+            &copy; {new Date().getFullYear()} {profile?.name || 'Jahanzaib Waris'}. All rights reserved.
           </p>
           <p className="mt-2 md:mt-0">
             Not affiliated with FlutterFlow or Google.

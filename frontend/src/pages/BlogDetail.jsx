@@ -96,7 +96,7 @@ export default function BlogDetail() {
 
   const effectivePost = post || fallbackPostDetails[slug]
 
-  useDocumentMeta(effectivePost ? `${effectivePost.title} — FlowBase` : undefined, effectivePost?.excerpt)
+  useDocumentMeta(effectivePost ? `${effectivePost.title} — Jahanzaib Waris` : undefined, effectivePost?.excerpt)
 
   useEffect(() => {
     setLoadState('loading')

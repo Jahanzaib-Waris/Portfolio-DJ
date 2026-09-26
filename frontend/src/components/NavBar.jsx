@@ -33,13 +33,11 @@ export default function NavBar({ profile, onRequestQuote }) {
               className="h-8 w-8 rounded-lg border border-neon-indigo/50 object-cover"
             />
           ) : (
-            <svg viewBox="0 0 32 32" className="h-8 w-8 rounded-lg shrink-0" aria-hidden="true" focusable="false">
-              <rect width="32" height="32" rx="8" fill="#6D5AF6" />
-              <path d="M11 23V10.5h10.5M11 16.5h5.2" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="21.2" cy="16.5" r="2.3" fill="#fff" />
-            </svg>
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-neon-indigo to-neon-blue font-mono-ui text-xs font-bold text-white shadow-[0_0_12px_rgba(124,108,255,0.4)]">
+              {(profile?.name ? profile.name.slice(0, 2) : 'JW').toUpperCase()}
+            </span>
           )}
-          <span>{profile?.name ? profile.name.split(' ')[0] : 'FlowBase'}</span>
+          <span>{profile?.name || 'Jahanzaib Waris'}</span>
         </Link>
 
         {/* Desktop nav */}

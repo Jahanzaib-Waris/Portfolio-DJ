@@ -41,7 +41,7 @@ const fallbackPosts = [
 ]
 
 export default function Blogs() {
-  useDocumentMeta('Blog — FlowBase', 'Practical FlutterFlow fixes, custom Dart code, and tutorials.')
+  useDocumentMeta('Blog — Jahanzaib Waris', 'Practical FlutterFlow fixes, custom Dart code, and tutorials.')
 
   const {
     items: posts,

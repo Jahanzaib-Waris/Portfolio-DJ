@@ -36,7 +36,7 @@ const fallbackProjects = [
 ]
 
 export default function Projects() {
-  useDocumentMeta('Projects — FlowBase', "A showcase of production FlutterFlow and Flutter applications I've designed, built, and shipped.")
+  useDocumentMeta('Projects — Jahanzaib Waris', "A showcase of production FlutterFlow and Flutter applications I've designed, built, and shipped.")
 
   const {
     items: projects,
