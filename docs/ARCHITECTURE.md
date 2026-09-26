@@ -1,11 +1,12 @@
 # Portfolio-DJ — Project Reference
 
-A personal developer portfolio and blog with a clean, GitHub-dark visual system. Django REST
+A personal developer portfolio and blog with a modern, developer-focused FlowBase visual system
+(deep navy canvas, violet primary, sky blue accents, self-hosted typography). Django REST
 Framework API + React (Vite) single-page frontend, deployed as two separate Vercel projects
 backed by Supabase. The admin panel is a custom WordPress-style control panel: grouped
 sidebar, live analytics, content CRUD, site settings, and a single runtime-editable theme.
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-26.
 
 ---
 
@@ -43,6 +44,8 @@ Portfolio-DJ/
     ├── vercel.json           SPA rewrite (all paths -> index.html)
     ├── vite.config.js        dev proxy: /api and /media -> 127.0.0.1:8000
     ├── .oxlintrc.json
+    ├── public/
+    │   └── fonts/            self-hosted Manrope and Fira Code variable woff2 fonts
     └── src/
         ├── main.jsx          entry
         ├── App.jsx           route table + applies the site theme once at boot
@@ -406,8 +409,11 @@ following links from `/blogs` even without them being individually listed in the
 ### Theming
 
 Tailwind v4, configured in CSS via `@theme` in `index.css` — there is no `tailwind.config.js`.
-The visual system is a flat, GitHub-dark palette (solid `#0d1117` canvas, `#161b22` cards,
-`#58a6ff` blue accent, `#238636` green primary buttons) — no glow/blur/HUD effects.
+The visual system is the **FlowBase** developer-focused palette:
+- **Canvas / base:** `#0A0C16` (near-black with faint blue tint) with fixed radial background glows (`#7C6CFF` violet top, `#38BDF8` sky right).
+- **Cards / panels:** `#11142A` (surface) to `#171B35` (raised gradient), with 1px `#232848` borders.
+- **Accents:** `#6D5AF6` primary buttons (with inset highlight + violet glow shadow), `#7C6CFF` decorative violet, and `#38BDF8` sky blue links / kickers.
+- **Typography:** Self-hosted variable woff2 fonts (`Manrope` display/body, `Fira Code` monospace in `frontend/public/fonts/`).
 
 Every themeable value is a CSS custom property with a default matching the shipped look:
 `--color-void`, `--color-panel`, `--color-panel-edge`, `--color-neon-blue`,
@@ -423,9 +429,21 @@ Deliberately **one theme, not a multi-theme gallery** — the singleton `SiteThe
 CSS-custom-property approach both assume this; a future theme *gallery* would be a different,
 larger feature.
 
-Component classes: `.system-panel`, `.system-panel-glow`, `.system-heading`, `.eyebrow`,
-`.system-button` / `.system-button-primary`, `.skeleton`, and `.markdown-body` for rendered
-post content. The site is dark-only (`color-scheme: dark`) — no light mode.
+Component classes:
+- `.system-panel`, `.system-panel-glow`: Cards with subtle top-to-bottom surface gradients, hover lift (`translateY(-3px)`), and violet border/shadow transitions.
+- `.system-heading`: Display typography with tight tracking and balanced wraps.
+- `.eyebrow`: Capsule pill with a glowing gradient dot (`#7C6CFF` → `#38BDF8`).
+- `.fb-kicker`: Monospace uppercase technical label in sky blue (`#38BDF8`).
+- `.fb-grad-text`: Brand gradient text clipping (`#7C6CFF` to `#38BDF8`) for hero headline highlights.
+- `.fb-lead`: Balanced, muted body lead paragraph.
+- `.fb-window`: Illustrated code editor window with macOS-style window controls, syntax highlighting tokens (`.c`, `.k`, `.t`, `.f`, `.s`, `.n`), and status footer.
+- `.fb-cta`: Wide closing call-to-action banner with dual radial corner glows and 28px border radius.
+- `.fb-stat`, `.fb-icon`, `.fb-chip`: Metric card, icon container, and monospace tech tag pills.
+- `.system-button`: Outlined / ghost variant, plus `.system-button-primary` with solid `#6D5AF6` and glow shadow.
+- `.skeleton`: Animated placeholder shimmer matching FlowBase panel contrast.
+- `.markdown-body`: Rendered post content with violet left-edge blockquotes, sky blue links with underlines, and tinted inline code chips.
+
+The site is dark-only (`color-scheme: dark`) — no light mode.
 
 ---
 

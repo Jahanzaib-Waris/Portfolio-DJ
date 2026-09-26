@@ -6,10 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A personal developer portfolio + blog: Django REST Framework API (`backend/`) + React/Vite SPA
 (`frontend/`), deployed as two separate Vercel projects backed by Supabase (Postgres + S3-style
-Storage). The frontend has a public marketing site and a custom admin panel (JWT-authenticated,
-staff-only) that replaces the Django admin for day-to-day content editing — including a
-runtime-editable site theme (colors/fonts/borders/button style, applied via CSS custom
-properties with no rebuild) and self-built traffic analytics.
+Storage). The frontend has a public marketing site built with the developer-focused FlowBase design
+system (near-black `#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted
+Manrope & Fira Code variable fonts) and a custom admin panel (JWT-authenticated, staff-only)
+that replaces the Django admin for day-to-day content editing — including a runtime-editable site
+theme (colors/fonts/borders/button style, applied via CSS custom properties with no rebuild) and
+self-built traffic analytics.
 
 **Read `docs/ARCHITECTURE.md` before making non-trivial changes.** It's the maintained system
 reference — full data model, every API endpoint and its permissions, how JWT auth and
@@ -96,8 +98,9 @@ touch a throttled endpoint must `cache.clear()` in `setUp` or an earlier test's 
 through.
 
 **The theme system is CSS-custom-property-driven, not a build-time theme.** `index.css`'s
-`@theme` block and component classes read values like `var(--theme-radius, 0.5rem)` with
-fallbacks matching the shipped look. `frontend/src/utils/applyTheme.js` resolves the
+`@theme` block and component classes read values like `var(--theme-radius, 16px)` with
+fallbacks matching the shipped FlowBase look (`#0A0C16` canvas, `#6D5AF6` primary buttons,
+`#11142A` cards, `#38BDF8` sky accents). `frontend/src/utils/applyTheme.js` resolves the
 `SiteTheme` API response into concrete values for those same custom properties and calls
 `document.documentElement.style.setProperty(...)` once at `App.jsx` boot — this is what makes a
 saved theme change apply site-wide immediately with no rebuild. Any new themeable visual

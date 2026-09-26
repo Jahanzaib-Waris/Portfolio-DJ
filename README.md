@@ -1,6 +1,6 @@
-# Solo Leveling Developer Portfolio
-
-A personal developer portfolio site with a Solo Leveling anime-inspired visual theme (dark base, glowing blue neon accents, "system window" style panels). Django REST Framework backend + React (Vite) frontend.
+# FlowBase Developer Portfolio
+ 
+A personal developer portfolio and blog with a developer-focused FlowBase visual system (near-black `#0A0C16` canvas, violet `#6D5AF6` primary buttons, sky blue `#38BDF8` links, code window showcase, and self-hosted variable typography). Django REST Framework backend + React (Vite) frontend.
 
 ## Project structure
 
