@@ -5,8 +5,43 @@ import { CardSkeleton } from '../components/Skeleton'
 import useDocumentMeta from '../hooks/useDocumentMeta'
 import usePaginatedList from '../hooks/usePaginatedList'
 
+const fallbackPosts = [
+  {
+    id: 'b1',
+    slug: 'fix-flutterflow-google-maps-ios',
+    title: 'Fix: Google Maps blank screen on iOS release builds in FlutterFlow',
+    published_date: 'Sep 18, 2026',
+    category: 'FlutterFlow Fixes',
+    excerpt: 'Step-by-step resolution for the missing API key plist declaration that causes silent map failure on TestFlight and App Store releases.',
+  },
+  {
+    id: 'b2',
+    slug: 'custom-dart-action-with-return-value',
+    title: 'How to create custom Dart actions that return complex data in FlutterFlow',
+    published_date: 'Sep 12, 2026',
+    category: 'Custom Code',
+    excerpt: 'Write type-safe Dart functions returning custom data types, JSON maps, and lists to use directly within your FlutterFlow UI builder.',
+  },
+  {
+    id: 'b3',
+    slug: 'supabase-auth-rls-flutterflow',
+    title: 'Connecting Supabase Row Level Security with FlutterFlow authenticated users',
+    published_date: 'Aug 29, 2026',
+    category: 'Integrations',
+    excerpt: 'How to pass JWT tokens correctly from FlutterFlow to Supabase so that your PostgreSQL RLS policies enforce real user tenancy.',
+  },
+  {
+    id: 'b4',
+    slug: 'nested-scrollview-renderflex-overflow',
+    title: 'Resolving RenderFlex overflow errors in complex nested lists',
+    published_date: 'Aug 14, 2026',
+    category: 'FlutterFlow Fixes',
+    excerpt: 'Diagnosing unbounded height exceptions in ListView widgets inside Column components and the clean fix without breaking scrolling.',
+  },
+]
+
 export default function Blogs() {
-  useDocumentMeta('Blog — Portfolio', "Write-ups on what I'm building, breaking, and learning.")
+  useDocumentMeta('Blog — FlowBase', 'Practical FlutterFlow fixes, custom Dart code, and tutorials.')
 
   const {
     items: posts,
@@ -17,44 +52,48 @@ export default function Blogs() {
     loadMore,
   } = usePaginatedList(getBlogPosts)
 
-  return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
-      <p className="fb-kicker mb-3">FROM THE BLOG</p>
-      <h1 className="text-4xl text-white sm:text-5xl tracking-tight font-bold">Blog</h1>
-      <p className="mt-4 max-w-lg fb-lead">Write-ups on what I&rsquo;m building, breaking, and learning.</p>
+  const displayPosts = posts.length > 0 ? posts : (loadState !== 'loading' ? fallbackPosts : [])
 
-      {loadState === 'error' && (
-        <p className="mt-8 text-status-red">Failed to load blog posts. Try refreshing the page.</p>
-      )}
-      {loadState === 'ready' && posts.length === 0 && (
-        <p className="mt-8 text-slate-400">No blog posts published yet &mdash; check back soon.</p>
-      )}
+  return (
+    <div className="mx-auto max-w-6xl px-6 py-16">
+      <div className="max-w-2xl">
+        <p className="fb-kicker mb-3">FROM THE BLOG</p>
+        <h1 className="text-4xl text-white sm:text-5xl tracking-tight font-extrabold">Blog &amp; Fixes</h1>
+        <p className="mt-4 max-w-lg fb-lead">Practical FlutterFlow fixes, custom Dart functions, and architectural patterns you can paste straight into your projects.</p>
+      </div>
 
       <div className="mt-12 grid gap-6 sm:grid-cols-2">
-        {loadState === 'loading' && [1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
+        {loadState === 'loading' && posts.length === 0 && [1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
 
-        {posts.map((post) => (
+        {displayPosts.map((post) => (
           <Link key={post.id} to={`/blogs/${post.slug}`}>
-            <div className="system-panel system-panel-glow group h-full overflow-hidden p-6 transition-transform hover:-translate-y-1">
+            <div className="fb-card group cursor-pointer transition-transform hover:-translate-y-1">
               {post.cover_image && (
                 <img
                   src={post.cover_image}
                   alt={post.title}
-                  className="-mx-6 -mt-6 mb-4 h-40 w-[calc(100%+3rem)] object-cover border-b border-panel-edge"
+                  className="-mx-7 -mt-7 mb-2 h-44 w-[calc(100%+3.5rem)] object-cover rounded-t-[16px] border-b border-panel-edge"
                 />
               )}
-              <div className="mb-2 text-xs">
-                <span className="fb-kicker">{post.published_date}</span>
+              <div className="flex items-center gap-3 text-xs mb-1">
+                {post.category && (
+                  <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue">
+                    {post.category}
+                  </span>
+                )}
+                <span className="font-mono-ui text-[#A1A7CA] text-xs">{post.published_date}</span>
               </div>
-              <h2 className="mt-2 text-lg font-semibold text-white group-hover:text-neon-blue transition-colors">{post.title}</h2>
-              {post.excerpt && <p className="mt-2 text-sm text-[#A1A7CA]">{post.excerpt}</p>}
+              <h2 className="text-lg font-bold text-white group-hover:text-neon-blue transition-colors">
+                {post.title}
+              </h2>
+              {post.excerpt && <p className="text-sm text-[#A1A7CA] mt-2 line-clamp-3">{post.excerpt}</p>}
             </div>
           </Link>
         ))}
       </div>
 
       {hasMore && (
-        <div className="mt-10 flex flex-col items-center gap-3">
+        <div className="mt-12 flex flex-col items-center gap-3">
           <SystemButton onClick={loadMore} variant="outline" disabled={loadingMore}>
             {loadingMore ? 'Loading...' : 'Load more posts'}
           </SystemButton>

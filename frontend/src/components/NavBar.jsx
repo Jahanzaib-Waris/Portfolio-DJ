@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import SystemButton from './SystemButton'
 
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/blogs', label: 'Blogs' },
+const navLinks = [
+  { to: '/blogs', label: 'Blog' },
+  { to: '/#services', label: 'Services', isAnchor: true },
+  { to: '/#about', label: 'About', isAnchor: true },
+  { to: '/#process', label: 'Process', isAnchor: true },
   { to: '/projects', label: 'Projects' },
 ]
 
@@ -18,35 +20,47 @@ export default function NavBar({ profile, onRequestQuote }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-panel-edge bg-void/72 backdrop-blur-[14px] backdrop-saturate-[160%]">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <NavLink
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
+        <Link
           to="/"
-          className="system-heading flex items-center gap-2 text-lg font-bold text-white"
+          className="system-heading flex items-center gap-2.5 text-lg font-bold text-white"
           onClick={() => setMenuOpen(false)}
         >
           {profile?.photo ? (
             <img
               src={profile.photo}
               alt={profile.name}
-              className="h-8 w-8 rounded-full border border-neon-blue/50 object-cover"
+              className="h-8 w-8 rounded-lg border border-neon-indigo/50 object-cover"
             />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neon-blue/50 bg-neon-blue/10 text-sm text-neon-blue">
-              {(profile?.name?.[0] || 'P').toUpperCase()}
-            </span>
+            <svg viewBox="0 0 32 32" className="h-8 w-8 rounded-lg shrink-0" aria-hidden="true" focusable="false">
+              <rect width="32" height="32" rx="8" fill="#6D5AF6" />
+              <path d="M11 23V10.5h10.5M11 16.5h5.2" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              <circle cx="21.2" cy="16.5" r="2.3" fill="#fff" />
+            </svg>
           )}
-          {profile?.name || 'Portfolio'}
-        </NavLink>
+          <span>{profile?.name ? profile.name.split(' ')[0] : 'FlowBase'}</span>
+        </Link>
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-6 sm:flex">
-          {links.map((link) => (
-            <NavLink key={link.to} to={link.to} end={link.to === '/'} className={linkClass}>
-              {link.label}
-            </NavLink>
-          ))}
+          {navLinks.map((link) =>
+            link.isAnchor ? (
+              <a
+                key={link.to}
+                href={link.to}
+                className="system-heading text-sm tracking-wide text-[#A1A7CA] hover:text-white [WebkitTapHighlightColor:transparent]"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <NavLink key={link.to} to={link.to} className={linkClass}>
+                {link.label}
+              </NavLink>
+            ),
+          )}
           <SystemButton variant="primary" size="sm" onClick={onRequestQuote}>
-            Request Quote
+            Start a project
           </SystemButton>
         </div>
 
@@ -73,17 +87,27 @@ export default function NavBar({ profile, onRequestQuote }) {
       {menuOpen && (
         <div className="border-t border-panel-edge px-6 py-4 sm:hidden bg-[#0A0C16]">
           <div className="flex flex-col gap-4">
-            {links.map((link) => (
-              <NavLink
-                key={link.to}
-                to={link.to}
-                end={link.to === '/'}
-                className={linkClass}
-                onClick={() => setMenuOpen(false)}
-              >
-                {link.label}
-              </NavLink>
-            ))}
+            {navLinks.map((link) =>
+              link.isAnchor ? (
+                <a
+                  key={link.to}
+                  href={link.to}
+                  onClick={() => setMenuOpen(false)}
+                  className="system-heading text-sm tracking-wide text-[#A1A7CA] hover:text-white"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  className={linkClass}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {link.label}
+                </NavLink>
+              ),
+            )}
             <SystemButton
               variant="primary"
               size="sm"
@@ -93,7 +117,7 @@ export default function NavBar({ profile, onRequestQuote }) {
               }}
               className="w-full text-center"
             >
-              Request Quote
+              Start a project
             </SystemButton>
           </div>
         </div>
