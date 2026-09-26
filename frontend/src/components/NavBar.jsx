@@ -12,16 +12,16 @@ export default function NavBar({ profile, onRequestQuote }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const linkClass = ({ isActive }) =>
-    `system-heading text-sm tracking-wide transition-colors ${
-      isActive ? 'text-neon-blue' : 'text-slate-300 hover:text-neon-blue'
+    `system-heading text-sm tracking-wide [WebkitTapHighlightColor:transparent] ${
+      isActive ? 'text-white' : 'text-[#A1A7CA] hover:text-white'
     }`
 
   return (
-    <header className="sticky top-0 z-40 border-b border-panel-edge/60 bg-void/80 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-panel-edge bg-void/72 backdrop-blur-[14px] backdrop-saturate-[160%]">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <NavLink
           to="/"
-          className="system-heading flex items-center gap-2 text-lg font-bold text-neon-blue"
+          className="system-heading flex items-center gap-2 text-lg font-bold text-white"
           onClick={() => setMenuOpen(false)}
         >
           {profile?.photo ? (
@@ -31,7 +31,7 @@ export default function NavBar({ profile, onRequestQuote }) {
               className="h-8 w-8 rounded-full border border-neon-blue/50 object-cover"
             />
           ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neon-blue/50 bg-neon-blue/10 text-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full border border-neon-blue/50 bg-neon-blue/10 text-sm text-neon-blue">
               {(profile?.name?.[0] || 'P').toUpperCase()}
             </span>
           )}
@@ -45,7 +45,7 @@ export default function NavBar({ profile, onRequestQuote }) {
               {link.label}
             </NavLink>
           ))}
-          <SystemButton variant="primary" onClick={onRequestQuote}>
+          <SystemButton variant="primary" size="sm" onClick={onRequestQuote}>
             Request Quote
           </SystemButton>
         </div>
@@ -71,7 +71,7 @@ export default function NavBar({ profile, onRequestQuote }) {
 
       {/* Mobile menu panel */}
       {menuOpen && (
-        <div className="border-t border-panel-edge/60 px-6 py-4 sm:hidden">
+        <div className="border-t border-panel-edge px-6 py-4 sm:hidden bg-[#0A0C16]">
           <div className="flex flex-col gap-4">
             {links.map((link) => (
               <NavLink
@@ -86,6 +86,7 @@ export default function NavBar({ profile, onRequestQuote }) {
             ))}
             <SystemButton
               variant="primary"
+              size="sm"
               onClick={() => {
                 setMenuOpen(false)
                 onRequestQuote()

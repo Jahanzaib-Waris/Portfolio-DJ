@@ -74,35 +74,35 @@ export default function RequestQuoteModal({ open, onClose }) {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="system-heading mb-1 block text-xs text-slate-400">Name</label>
+              <label className="mb-1 block text-xs font-semibold text-slate-400">Name</label>
               <input
                 required
                 name="name"
                 value={form.name}
                 onChange={handleChange}
-                className="w-full border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-blue"
+                className="w-full rounded-[10px] border border-panel-edge bg-[#0D1024] px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-indigo focus:ring-4 focus:ring-[rgb(124_108_255_/_0.18)]"
               />
             </div>
             <div>
-              <label className="system-heading mb-1 block text-xs text-slate-400">Email</label>
+              <label className="mb-1 block text-xs font-semibold text-slate-400">Email</label>
               <input
                 required
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-blue"
+                className="w-full rounded-[10px] border border-panel-edge bg-[#0D1024] px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-indigo focus:ring-4 focus:ring-[rgb(124_108_255_/_0.18)]"
               />
             </div>
             <div>
-              <label className="system-heading mb-1 block text-xs text-slate-400">Project Details</label>
+              <label className="mb-1 block text-xs font-semibold text-slate-400">Project Details</label>
               <textarea
                 required
                 name="project_details"
                 rows={4}
                 value={form.project_details}
                 onChange={handleChange}
-                className="w-full border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-blue"
+                className="w-full rounded-[10px] border border-panel-edge bg-[#0D1024] px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-indigo focus:ring-4 focus:ring-[rgb(124_108_255_/_0.18)]"
               />
             </div>
             {error && <p className="text-status-red text-sm">{error}</p>}
