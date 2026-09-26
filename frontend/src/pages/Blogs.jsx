@@ -72,6 +72,8 @@ export default function Blogs() {
                 <img
                   src={post.cover_image}
                   alt={post.title}
+                  loading="lazy"
+                  decoding="async"
                   className="-mx-7 -mt-7 mb-2 h-44 w-[calc(100%+3.5rem)] object-cover rounded-t-[16px] border-b border-panel-edge"
                 />
               )}

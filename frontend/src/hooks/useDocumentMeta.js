@@ -1,24 +1,48 @@
 import { useEffect } from 'react'
 
-function setMetaDescription(content) {
-  let tag = document.querySelector('meta[name="description"]')
+function setOrCreateMeta(selector, attributeName, attributeValue, content) {
+  let tag = document.querySelector(selector)
   if (!tag) {
     tag = document.createElement('meta')
-    tag.name = 'description'
+    tag.setAttribute(attributeName, attributeValue)
     document.head.appendChild(tag)
   }
-  tag.content = content
+  tag.setAttribute('content', content)
+}
+
+function setOrCreateCanonical(url) {
+  let link = document.querySelector('link[rel="canonical"]')
+  if (!link) {
+    link = document.createElement('link')
+    link.setAttribute('rel', 'canonical')
+    document.head.appendChild(link)
+  }
+  link.setAttribute('href', url)
 }
 
 /**
- * Sets the browser tab title and meta description for the page it's called
- * from. Each public page owns its own title outright — nothing else writes
- * document.title after mount — so there's no race between this and, say,
- * PublicLayout's profile fetch resolving late.
+ * Sets the browser tab title, meta description, Open Graph tags, Twitter tags,
+ * and canonical URL for the current page.
  */
-export default function useDocumentMeta(title, description) {
+export default function useDocumentMeta(title, description, canonicalPath) {
   useEffect(() => {
-    if (title) document.title = title
-    if (description) setMetaDescription(description)
-  }, [title, description])
+    if (title) {
+      document.title = title
+      setOrCreateMeta('meta[property="og:title"]', 'property', 'og:title', title)
+      setOrCreateMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title)
+    }
+
+    if (description) {
+      setOrCreateMeta('meta[name="description"]', 'name', 'description', description)
+      setOrCreateMeta('meta[property="og:description"]', 'property', 'og:description', description)
+      setOrCreateMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description)
+    }
+
+    const currentUrl = canonicalPath
+      ? `https://portfolio-dj-j1sv.vercel.app${canonicalPath}`
+      : window.location.href.split('?')[0]
+
+    setOrCreateCanonical(currentUrl)
+    setOrCreateMeta('meta[property="og:url"]', 'property', 'og:url', currentUrl)
+  }, [title, description, canonicalPath])
 }
