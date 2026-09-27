@@ -1482,6 +1482,183 @@
     margin: 2.5rem 0;
   }
 
+  /* ---- Data & Comparison Table ---- */
+  .fb-table-wrapper {
+    margin: 1.8rem 0;
+    width: 100%;
+  }
+  .fb-table-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ECEEFB;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+  .fb-table-scroll {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid var(--color-panel-edge);
+    background: rgb(17 20 42 / 0.6);
+    backdrop-filter: blur(8px);
+  }
+  .fb-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.88rem;
+    color: #ECEEFB;
+  }
+  .fb-table th {
+    padding: 0.85rem 1rem;
+    font-weight: 700;
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #c7bfff;
+    border-bottom: 1px solid var(--color-panel-edge);
+    background: rgb(23 27 53 / 0.85);
+  }
+  .fb-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid rgb(255 255 255 / 0.05);
+    color: #cfd3ea;
+    vertical-align: middle;
+  }
+  .fb-table tr:last-child td {
+    border-bottom: none;
+  }
+  .fb-table--striped tbody tr:nth-child(even) {
+    background: rgb(255 255 255 / 0.02);
+  }
+  .fb-table--compact th,
+  .fb-table--compact td {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.82rem;
+  }
+  .fb-table-col-highlight {
+    background: rgb(109 90 246 / 0.08) !important;
+    font-weight: 600;
+    color: #ECEEFB !important;
+  }
+  .fb-table-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 0.35rem;
+  }
+  .fb-table-check.yes {
+    background: rgb(16 185 129 / 0.2);
+    color: #34d399;
+  }
+  .fb-table-check.no {
+    background: rgb(239 68 68 / 0.2);
+    color: #f87171;
+  }
+  .fb-table-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    background: rgb(109 90 246 / 0.25);
+    color: #c7bfff;
+    margin-left: 0.35rem;
+  }
+
+  /* ---- List Block ---- */
+  .fb-list-wrapper {
+    margin: 1.5rem 0;
+  }
+  .fb-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .fb-list-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    font-size: 0.95rem;
+    color: #cfd3ea;
+    line-height: 1.65;
+  }
+  .fb-list--compact .fb-list-item { margin-bottom: 0.35rem; }
+  .fb-list--normal .fb-list-item { margin-bottom: 0.65rem; }
+  .fb-list--relaxed .fb-list-item { margin-bottom: 1rem; }
+  .fb-list-bullet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.18rem;
+    font-size: 0.85rem;
+  }
+  .fb-list-bullet.check {
+    color: var(--color-neon-blue);
+    font-weight: 800;
+  }
+  .fb-list-bullet.arrow {
+    color: #38bdf8;
+    font-weight: 700;
+  }
+  .fb-list-bullet.bolt {
+    color: #f59e0b;
+  }
+  .fb-list-bullet.dot {
+    color: var(--color-neon-blue);
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+  .fb-list-num {
+    font-family: var(--font-mono-ui);
+    font-weight: 700;
+    color: var(--color-neon-blue);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+    min-width: 1.25rem;
+  }
+
+  /* ---- Video Block ---- */
+  .fb-video-block {
+    margin: 2rem 0;
+    width: 100%;
+  }
+  .fb-video-wrapper {
+    position: relative;
+    background: #000;
+    border: 1px solid var(--color-panel-edge);
+  }
+
+  /* ---- Heading Gradients ---- */
+  .fb-heading-gradient--neon h2,
+  .fb-heading-gradient--neon h3,
+  .fb-heading-gradient--neon h4 {
+    background: linear-gradient(135deg, #ffffff 30%, #a78bfa 70%, #6d5af6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .fb-heading-gradient--emerald h2,
+  .fb-heading-gradient--emerald h3,
+  .fb-heading-gradient--emerald h4 {
+    background: linear-gradient(135deg, #ffffff 30%, #34d399 70%, #059669 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .fb-heading-gradient--amber h2,
+  .fb-heading-gradient--amber h3,
+  .fb-heading-gradient--amber h4 {
+    background: linear-gradient(135deg, #ffffff 30%, #fbbf24 70%, #d97706 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
   /* ---- FlowBase Enquiry Form (§9.5) ---- */
   .fb-form-card {
     position: relative;

@@ -1,4 +1,4 @@
-import { renderSvgIcon, getChildLayoutStyles } from '../../utils/blogBlocks'
+import { renderSvgIcon, getChildLayoutStyles, getEmbedVideoUrl } from '../../utils/blogBlocks'
 
 /**
  * Visual Preview of the block on the canvas, rendered with actual FlowBase styles.
@@ -95,9 +95,11 @@ export default function BlockPreviewRenderer({
             : block.align === 'right'
             ? 'text-right'
             : 'text-left'
+        const gradientClass =
+          block.gradient && block.gradient !== 'none' ? `fb-heading-gradient--${block.gradient}` : ''
 
         return (
-          <div className={`fb-block fb-block-heading !my-0 ${alignClass}`}>
+          <div className={`fb-block fb-block-heading !my-0 w-full ${alignClass} ${gradientClass}`}>
             {block.kicker && <span className="fb-block-kicker">{block.kicker}</span>}
             <Tag className="!my-0">{block.text || <span className="text-slate-600 italic">Heading text...</span>}</Tag>
           </div>
@@ -108,7 +110,7 @@ export default function BlockPreviewRenderer({
       case 'text':
       case 'paragraph': {
         return (
-          <div className="fb-block fb-block-text !my-0">
+          <div className="fb-block fb-block-text !my-0 w-full">
             {block.html ? (
               <div dangerouslySetInnerHTML={{ __html: block.html }} />
             ) : (
@@ -122,20 +124,174 @@ export default function BlockPreviewRenderer({
       case 'image': {
         const radClass = `fb-radius-${block.radius || 'md'}`
         const fitClass = block.fit === 'contain' ? 'fb-img-contain' : 'fb-img-cover'
-        const style = block.width && block.width !== '100%' && block.width !== 'auto' ? { width: block.width } : {}
+        const imgStyles = {}
+        if (block.height && block.height !== 'auto') {
+          imgStyles.height = block.height
+        }
+        if (block.aspectRatio && block.aspectRatio !== 'auto') {
+          imgStyles.aspectRatio = block.aspectRatio
+        }
 
         return block.src ? (
-          <figure className={`fb-block fb-atomic-image ${radClass} !my-0`} style={style}>
-            <img src={block.src} alt={block.alt || ''} className={`${fitClass} ${radClass}`} />
+          <figure className={`fb-block fb-atomic-image ${radClass} !my-0 w-full`}>
+            <img
+              src={block.src}
+              alt={block.alt || ''}
+              style={imgStyles}
+              className={`w-full ${fitClass} ${radClass}`}
+            />
             {block.caption && <figcaption className="fb-image-caption">{block.caption}</figcaption>}
           </figure>
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-panel-edge/80 bg-abyss/40 py-6 text-center text-xs text-slate-500">
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-panel-edge/80 bg-abyss/40 py-6 text-center text-xs text-slate-500 w-full">
             <svg className="mb-1.5 h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <span>Empty Image</span>
+            <span className="font-medium text-slate-400">Empty Image</span>
+            <span className="text-[10px] text-slate-600">Select to add URL / upload & control height</span>
           </div>
+        )
+      }
+
+      /* ---- Data & Comparison Table ---- */
+      case 'table': {
+        const columns = Array.isArray(block.columns) ? block.columns : []
+        const rows = Array.isArray(block.rows) ? block.rows : []
+        const stripedClass = block.striped ? 'fb-table--striped' : ''
+        const compactClass = block.compact ? 'fb-table--compact' : ''
+
+        return (
+          <div className="fb-block fb-table-wrapper !my-0 w-full">
+            {block.title && <div className="fb-table-title">{block.title}</div>}
+            <div className="fb-table-scroll">
+              <table className={`fb-table ${stripedClass} ${compactClass}`}>
+                {block.hasHeader !== false && columns.length > 0 && (
+                  <thead>
+                    <tr>
+                      {columns.map((col) => {
+                        const align = col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                        const highlight = col.isHighlight ? 'fb-table-col-highlight' : ''
+                        const colWidth = col.width ? { width: col.width } : {}
+                        return (
+                          <th key={col.id} className={`${align} ${highlight}`} style={colWidth}>
+                            {col.label}
+                          </th>
+                        )
+                      })}
+                    </tr>
+                  </thead>
+                )}
+                <tbody>
+                  {rows.map((row) => (
+                    <tr key={row.id}>
+                      {(row.cells || []).map((cell, cIdx) => {
+                        const col = columns[cIdx] || {}
+                        const align = col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                        const highlight = col.isHighlight ? 'fb-table-col-highlight' : ''
+
+                        return (
+                          <td key={cIdx} className={`${align} ${highlight}`}>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {cell.type === 'check' && (
+                                <span className={`fb-table-check ${cell.status === 'no' ? 'no' : 'yes'}`}>
+                                  {cell.status === 'no' ? '✕' : '✓'}
+                                </span>
+                              )}
+                              <span>{cell.text}</span>
+                              {cell.badge && <span className="fb-table-badge">{cell.badge}</span>}
+                              {cell.imageSrc && (
+                                <img src={cell.imageSrc} alt="" className="h-6 w-6 rounded object-cover inline-block" />
+                              )}
+                            </div>
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )
+      }
+
+      /* ---- List Block ---- */
+      case 'list': {
+        const items = Array.isArray(block.items) ? block.items : []
+        const isOrdered = block.listType === 'ordered'
+        const Tag = isOrdered ? 'ol' : 'ul'
+        const spacingClass = `fb-list--${block.spacing || 'normal'}`
+        const styleClass = `fb-list--${block.style || 'check'}`
+
+        return (
+          <div className="fb-block fb-list-wrapper !my-0 w-full">
+            <Tag className={`fb-list ${styleClass} ${spacingClass}`}>
+              {items.map((item, idx) => (
+                <li key={item.id || idx} className="fb-list-item">
+                  {isOrdered ? (
+                    <span className="fb-list-num">{idx + 1}.</span>
+                  ) : block.style === 'arrow' ? (
+                    <span className="fb-list-bullet arrow">→</span>
+                  ) : block.style === 'bolt' ? (
+                    <span className="fb-list-bullet bolt">⚡</span>
+                  ) : block.style === 'dot' ? (
+                    <span className="fb-list-bullet dot">•</span>
+                  ) : (
+                    <span className="fb-list-bullet check">✓</span>
+                  )}
+                  <span className="fb-list-content">{item.text || 'List item text...'}</span>
+                </li>
+              ))}
+            </Tag>
+          </div>
+        )
+      }
+
+      /* ---- Video Block ---- */
+      case 'video': {
+        if (!block.url) {
+          return (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-panel-edge/80 bg-abyss/40 py-8 text-center text-xs text-slate-500 w-full">
+              <svg className="mb-2 h-7 w-7 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium text-slate-400">Empty Video Block</span>
+              <span className="text-[10px] text-slate-600">Select to add YouTube / Vimeo / MP4 link</span>
+            </div>
+          )
+        }
+
+        const embedUrl = getEmbedVideoUrl(block.url, block.provider)
+        const aspectClass =
+          block.aspectRatio === '4/3'
+            ? 'aspect-[4/3]'
+            : block.aspectRatio === '21/9'
+            ? 'aspect-[21/9]'
+            : block.aspectRatio === '1/1'
+            ? 'aspect-square'
+            : 'aspect-video'
+        const radClass = `fb-radius-${block.radius || 'lg'}`
+
+        return (
+          <figure className={`fb-block fb-video-block ${radClass} !my-0 w-full`}>
+            <div className={`fb-video-wrapper w-full ${aspectClass} ${radClass} overflow-hidden`}>
+              {block.provider === 'mp4' ? (
+                <video src={embedUrl} className="w-full h-full object-cover" controls playsInline />
+              ) : (
+                <iframe
+                  src={embedUrl}
+                  title={block.title || 'Video'}
+                  className="w-full h-full border-0 pointer-events-none"
+                />
+              )}
+            </div>
+            {block.caption && (
+              <figcaption className="fb-video-caption font-mono text-[11px] text-slate-400 text-center mt-2">
+                {block.caption}
+              </figcaption>
+            )}
+          </figure>
         )
       }
 
@@ -161,10 +317,14 @@ export default function BlockPreviewRenderer({
             : block.variant === 'subtle'
             ? 'fb-btn-subtle'
             : 'system-button-primary'
+        const sizeClass = block.size === 'sm' ? 'text-xs py-1 px-2.5' : block.size === 'lg' ? 'text-base py-3 px-6' : ''
+        const fullClass = block.fullWidth ? 'w-full block text-center' : 'inline-block'
 
         return (
-          <div className="fb-block fb-atomic-button !my-0">
-            <span className={`${variant} inline-block pointer-events-none`}>{block.text || 'Action Button'}</span>
+          <div className={`fb-block fb-atomic-button !my-0 ${block.fullWidth ? 'w-full' : ''}`}>
+            <span className={`${variant} ${sizeClass} ${fullClass} pointer-events-none`}>
+              {block.text || 'Action Button'}
+            </span>
           </div>
         )
       }
@@ -204,12 +364,17 @@ export default function BlockPreviewRenderer({
       /* ---- Quote ---- */
       case 'quote': {
         return (
-          <blockquote className="fb-block fb-pull-quote !my-0">
+          <blockquote className={`fb-block fb-pull-quote !my-0 ${block.style === 'card' ? 'fb-pull-quote--card' : ''}`}>
             <p>"{block.quote || 'Quote text...'}"</p>
-            {block.author && (
-              <cite className="fb-quote-author">
-                {block.author}
-                {block.role && <span className="fb-quote-role"> — {block.role}</span>}
+            {(block.author || block.avatar) && (
+              <cite className="fb-quote-author flex items-center mt-2">
+                {block.avatar && (
+                  <img src={block.avatar} alt="" className="h-8 w-8 rounded-full object-cover border border-panel-edge mr-2.5 inline-block" />
+                )}
+                <span>
+                  {block.author}
+                  {block.role && <span className="fb-quote-role"> — {block.role}</span>}
+                </span>
               </cite>
             )}
           </blockquote>

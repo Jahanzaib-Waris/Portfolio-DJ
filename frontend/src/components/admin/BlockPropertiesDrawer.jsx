@@ -1,6 +1,6 @@
 import MiniRichTextEditor from './MiniRichTextEditor'
 import { uploadBlogImage } from '../../api/client'
-import { createDefaultBlock } from '../../utils/blogBlocks'
+import { createDefaultBlock, createBlockId } from '../../utils/blogBlocks'
 
 /**
  * Inspector Drawer that controls either Container layout (flex direction, justify, gap, children)
@@ -457,6 +457,31 @@ function DrawerFields({ block, onUpdate, onSelectBlock }) {
           </div>
 
           <div>
+            <label className="mb-1 block text-xs text-slate-400 font-medium">Text Gradient Accent</label>
+            <div className="grid grid-cols-4 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
+              {[
+                { id: 'none', label: 'Plain' },
+                { id: 'neon', label: 'Neon' },
+                { id: 'emerald', label: 'Emerald' },
+                { id: 'amber', label: 'Amber' },
+              ].map((grad) => (
+                <button
+                  key={grad.id}
+                  type="button"
+                  onClick={() => onUpdate({ gradient: grad.id })}
+                  className={`rounded py-1 text-[11px] capitalize ${
+                    (block.gradient || 'none') === grad.id
+                      ? 'bg-neon-blue text-white font-medium shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {grad.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
             <label className="mb-1 block text-xs text-slate-400 font-medium">Alignment</label>
             <div className="grid grid-cols-3 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
               {['left', 'center', 'right'].map((al) => (
@@ -551,6 +576,40 @@ function DrawerFields({ block, onUpdate, onSelectBlock }) {
               >
                 <option value="cover">Cover (Fill space)</option>
                 <option value="contain">Contain (Full aspect)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">Height Limit</label>
+              <select
+                value={block.height || 'auto'}
+                onChange={(e) => onUpdate({ height: e.target.value })}
+                className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
+              >
+                <option value="auto">Auto (Natural)</option>
+                <option value="180px">180px (Compact)</option>
+                <option value="240px">240px (Small)</option>
+                <option value="300px">300px (Medium)</option>
+                <option value="380px">380px (Standard)</option>
+                <option value="460px">460px (Large)</option>
+                <option value="560px">560px (Hero / Tall)</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">Aspect Ratio</label>
+              <select
+                value={block.aspectRatio || 'auto'}
+                onChange={(e) => onUpdate({ aspectRatio: e.target.value })}
+                className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
+              >
+                <option value="auto">Auto</option>
+                <option value="16/9">16:9 (Widescreen)</option>
+                <option value="4/3">4:3 (Classic)</option>
+                <option value="1/1">1:1 (Square)</option>
+                <option value="21/9">21:9 (Cinematic)</option>
+                <option value="3/2">3:2 (Photo)</option>
               </select>
             </div>
           </div>
@@ -660,17 +719,53 @@ function DrawerFields({ block, onUpdate, onSelectBlock }) {
               className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 outline-none focus:border-neon-blue"
             />
           </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">Button Style</label>
+              <select
+                value={block.variant || 'primary'}
+                onChange={(e) => onUpdate({ variant: e.target.value })}
+                className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
+              >
+                <option value="primary">Primary Solid (#6D5AF6)</option>
+                <option value="secondary">Outline</option>
+                <option value="subtle">Subtle Dark Card</option>
+              </select>
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">Size</label>
+              <select
+                value={block.size || 'md'}
+                onChange={(e) => onUpdate({ size: e.target.value })}
+                className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
+              >
+                <option value="sm">Small</option>
+                <option value="md">Medium</option>
+                <option value="lg">Large</option>
+              </select>
+            </div>
+          </div>
+
           <div>
-            <label className="mb-1 block text-xs text-slate-400 font-medium">Button Style</label>
+            <label className="mb-1 block text-xs text-slate-400 font-medium">Link Target</label>
             <select
-              value={block.variant || 'primary'}
-              onChange={(e) => onUpdate({ variant: e.target.value })}
+              value={block.target || '_self'}
+              onChange={(e) => onUpdate({ target: e.target.value })}
               className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
             >
-              <option value="primary">Primary Solid (#6D5AF6)</option>
-              <option value="secondary">Outline</option>
-              <option value="subtle">Subtle Dark Card</option>
+              <option value="_self">Same Tab (_self)</option>
+              <option value="_blank">New Tab (_blank)</option>
             </select>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-panel-edge bg-abyss/80 px-3 py-2">
+            <span className="text-xs text-slate-300">Expand Full Width</span>
+            <input
+              type="checkbox"
+              checked={block.fullWidth || false}
+              onChange={(e) => onUpdate({ fullWidth: e.target.checked })}
+              className="accent-neon-blue cursor-pointer"
+            />
           </div>
         </div>
       )
@@ -811,8 +906,36 @@ function DrawerFields({ block, onUpdate, onSelectBlock }) {
               className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
             />
           </div>
+          <div>
+            <label className="mb-1 block text-xs text-slate-400 font-medium">Author Avatar URL (Optional)</label>
+            <input
+              type="text"
+              placeholder="https://... avatar image"
+              value={block.avatar || ''}
+              onChange={(e) => onUpdate({ avatar: e.target.value })}
+              className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
+            />
+          </div>
         </div>
       )
+
+    /* =========================================================================
+       ATOMIC: TABLE (Comparison & Benchmarks)
+       ========================================================================= */
+    case 'table':
+      return <TableBlockEditor block={block} onUpdate={onUpdate} />
+
+    /* =========================================================================
+       ATOMIC: LIST (Bullets & Numbered)
+       ========================================================================= */
+    case 'list':
+      return <ListBlockEditor block={block} onUpdate={onUpdate} />
+
+    /* =========================================================================
+       ATOMIC: VIDEO EMBED
+       ========================================================================= */
+    case 'video':
+      return <VideoBlockEditor block={block} onUpdate={onUpdate} />
 
     /* =========================================================================
        DIVIDER
@@ -928,6 +1051,567 @@ function ChildLayoutSection({ block, parentBlock, onUpdate, onSelectBlock }) {
             <option value="stretch">Stretch</option>
           </select>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* =========================================================================
+   TABLE BLOCK EDITOR
+   ========================================================================= */
+function TableBlockEditor({ block, onUpdate }) {
+  const columns = block.columns || []
+  const rows = block.rows || []
+
+  const handleAddColumn = () => {
+    const newColId = createBlockId()
+    const nextColNum = columns.length + 1
+    const newColumns = [
+      ...columns,
+      { id: newColId, label: `Col ${nextColNum}`, align: 'center', width: 'auto' },
+    ]
+    const newRows = rows.map((r) => ({
+      ...r,
+      cells: [...(r.cells || []), { text: '-', type: 'text' }],
+    }))
+    onUpdate({ columns: newColumns, rows: newRows })
+  }
+
+  const handleRemoveColumn = (colIndex) => {
+    if (columns.length <= 1) return
+    const newColumns = columns.filter((_, idx) => idx !== colIndex)
+    const newRows = rows.map((r) => ({
+      ...r,
+      cells: (r.cells || []).filter((_, idx) => idx !== colIndex),
+    }))
+    onUpdate({ columns: newColumns, rows: newRows })
+  }
+
+  const handleUpdateColumn = (colIndex, updates) => {
+    const newColumns = columns.map((c, idx) => (idx === colIndex ? { ...c, ...updates } : c))
+    onUpdate({ columns: newColumns })
+  }
+
+  const handleAddRow = () => {
+    const newRow = {
+      id: createBlockId(),
+      cells: columns.map(() => ({ text: '', type: 'text' })),
+    }
+    onUpdate({ rows: [...rows, newRow] })
+  }
+
+  const handleRemoveRow = (rowIndex) => {
+    if (rows.length <= 1) return
+    onUpdate({ rows: rows.filter((_, idx) => idx !== rowIndex) })
+  }
+
+  const handleUpdateCell = (rowIndex, colIndex, updates) => {
+    const newRows = rows.map((r, rIdx) => {
+      if (rIdx !== rowIndex) return r
+      const newCells = (r.cells || []).map((c, cIdx) =>
+        cIdx === colIndex ? { ...c, ...updates } : c
+      )
+      return { ...r, cells: newCells }
+    })
+    onUpdate({ rows: newRows })
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Table Title & Appearance */}
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">Table Title (Optional)</label>
+        <input
+          type="text"
+          placeholder="e.g. Feature Comparison, Benchmarks"
+          value={block.title || ''}
+          onChange={(e) => onUpdate({ title: e.target.value })}
+          className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <label className="flex items-center justify-between rounded-lg border border-panel-edge bg-abyss/80 px-2.5 py-1.5 text-xs text-slate-300 cursor-pointer">
+          <span>Striped Rows</span>
+          <input
+            type="checkbox"
+            checked={block.striped !== false}
+            onChange={(e) => onUpdate({ striped: e.target.checked })}
+            className="accent-neon-blue cursor-pointer"
+          />
+        </label>
+        <label className="flex items-center justify-between rounded-lg border border-panel-edge bg-abyss/80 px-2.5 py-1.5 text-xs text-slate-300 cursor-pointer">
+          <span>Compact Density</span>
+          <input
+            type="checkbox"
+            checked={block.compact || false}
+            onChange={(e) => onUpdate({ compact: e.target.checked })}
+            className="accent-neon-blue cursor-pointer"
+          />
+        </label>
+      </div>
+
+      {/* Columns Manager */}
+      <div className="rounded-xl border border-panel-edge/80 bg-abyss/40 p-3 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-white">Columns ({columns.length})</span>
+          <button
+            type="button"
+            onClick={handleAddColumn}
+            className="rounded border border-neon-blue/40 bg-neon-blue/15 px-2 py-0.5 text-[11px] font-medium text-neon-blue hover:bg-neon-blue hover:text-white"
+          >
+            + Add Column
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {columns.map((col, colIdx) => (
+            <div
+              key={col.id || colIdx}
+              className="rounded-lg border border-panel-edge bg-abyss/90 p-2 text-xs space-y-1.5"
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Column Header"
+                  value={col.label || ''}
+                  onChange={(e) => handleUpdateColumn(colIdx, { label: e.target.value })}
+                  className="flex-1 rounded border border-panel-edge bg-slate-950 px-2 py-1 text-xs text-slate-100 placeholder-slate-600 focus:border-neon-blue outline-none"
+                />
+                <button
+                  type="button"
+                  disabled={columns.length <= 1}
+                  onClick={() => handleRemoveColumn(colIdx)}
+                  className="rounded p-1 text-slate-500 hover:text-status-red disabled:opacity-20"
+                  title="Delete column"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-2">
+                {/* Alignment */}
+                <div className="flex items-center gap-1">
+                  {['left', 'center', 'right'].map((al) => (
+                    <button
+                      key={al}
+                      type="button"
+                      onClick={() => handleUpdateColumn(colIdx, { align: al })}
+                      className={`rounded px-1.5 py-0.5 text-[10px] capitalize ${
+                        (col.align || 'left') === al
+                          ? 'bg-neon-blue text-white font-medium'
+                          : 'bg-panel-edge/50 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      {al}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Highlight toggle */}
+                <label className="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={col.isHighlight || false}
+                    onChange={(e) => handleUpdateColumn(colIdx, { isHighlight: e.target.checked })}
+                    className="accent-neon-blue"
+                  />
+                  <span>Highlight</span>
+                </label>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Rows & Cells Manager */}
+      <div className="rounded-xl border border-panel-edge/80 bg-abyss/40 p-3 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-white">Table Rows ({rows.length})</span>
+          <button
+            type="button"
+            onClick={handleAddRow}
+            className="rounded border border-neon-blue/40 bg-neon-blue/15 px-2 py-0.5 text-[11px] font-medium text-neon-blue hover:bg-neon-blue hover:text-white"
+          >
+            + Add Row
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {rows.map((row, rowIdx) => (
+            <div
+              key={row.id || rowIdx}
+              className="rounded-lg border border-panel-edge/90 bg-slate-950/70 p-2.5 space-y-2"
+            >
+              <div className="flex items-center justify-between border-b border-panel-edge/50 pb-1.5">
+                <span className="text-[11px] font-mono font-semibold text-slate-300">
+                  Row {rowIdx + 1}
+                </span>
+                <button
+                  type="button"
+                  disabled={rows.length <= 1}
+                  onClick={() => handleRemoveRow(rowIdx)}
+                  className="rounded px-1.5 py-0.5 text-[10px] text-slate-500 hover:bg-status-red/10 hover:text-status-red disabled:opacity-20"
+                >
+                  Delete Row
+                </button>
+              </div>
+
+              {/* Cells for this row */}
+              <div className="space-y-2">
+                {columns.map((col, colIdx) => {
+                  const cell = (row.cells && row.cells[colIdx]) || { text: '', type: 'text' }
+                  return (
+                    <div
+                      key={col.id || colIdx}
+                      className="rounded border border-panel-edge/60 bg-abyss/60 p-1.5 text-xs space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium text-slate-400 truncate max-w-[140px]">
+                          {col.label || `Col ${colIdx + 1}`}
+                        </span>
+                        <select
+                          value={cell.type || 'text'}
+                          onChange={(e) =>
+                            handleUpdateCell(rowIdx, colIdx, {
+                              type: e.target.value,
+                              status: e.target.value === 'check' ? (cell.status || 'yes') : undefined,
+                            })
+                          }
+                          className="rounded border border-panel-edge bg-slate-900 px-1 py-0.5 text-[10px] text-slate-300 outline-none"
+                        >
+                          <option value="text">Text / Badge</option>
+                          <option value="check">Check (✓ / ✕)</option>
+                          <option value="image">Image / Logo</option>
+                        </select>
+                      </div>
+
+                      {cell.type === 'check' ? (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateCell(rowIdx, colIdx, { status: 'yes' })}
+                            className={`flex-1 rounded py-1 text-xs font-semibold ${
+                              cell.status === 'yes'
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                                : 'bg-slate-900 text-slate-500 hover:text-white'
+                            }`}
+                          >
+                            ✓ Yes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleUpdateCell(rowIdx, colIdx, { status: 'no' })}
+                            className={`flex-1 rounded py-1 text-xs font-semibold ${
+                              cell.status === 'no'
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                                : 'bg-slate-900 text-slate-500 hover:text-white'
+                            }`}
+                          >
+                            ✕ No
+                          </button>
+                        </div>
+                      ) : cell.type === 'image' ? (
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            placeholder="Image / Icon URL (https://...)"
+                            value={cell.imageSrc || ''}
+                            onChange={(e) =>
+                              handleUpdateCell(rowIdx, colIdx, { imageSrc: e.target.value })
+                            }
+                            className="w-full rounded border border-panel-edge bg-slate-950 px-2 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-neon-blue outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Optional label text"
+                            value={cell.text || ''}
+                            onChange={(e) =>
+                              handleUpdateCell(rowIdx, colIdx, { text: e.target.value })
+                            }
+                            className="w-full rounded border border-panel-edge bg-slate-950 px-2 py-1 text-xs text-slate-300 placeholder-slate-600 focus:border-neon-blue outline-none"
+                          />
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            placeholder="Cell text..."
+                            value={cell.text || ''}
+                            onChange={(e) =>
+                              handleUpdateCell(rowIdx, colIdx, { text: e.target.value })
+                            }
+                            className="w-full rounded border border-panel-edge bg-slate-950 px-2 py-1 text-xs text-slate-200 placeholder-slate-600 focus:border-neon-blue outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Optional badge tag (e.g. Fast, New)"
+                            value={cell.badge || ''}
+                            onChange={(e) =>
+                              handleUpdateCell(rowIdx, colIdx, { badge: e.target.value })
+                            }
+                            className="w-full rounded border border-panel-edge/80 bg-slate-950/60 px-2 py-0.5 text-[11px] text-amber-300 placeholder-slate-600 focus:border-neon-blue outline-none"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* =========================================================================
+   LIST BLOCK EDITOR
+   ========================================================================= */
+function ListBlockEditor({ block, onUpdate }) {
+  const items = block.items || []
+
+  const handleAddItem = () => {
+    const newItem = { id: createBlockId(), text: '' }
+    onUpdate({ items: [...items, newItem] })
+  }
+
+  const handleRemoveItem = (index) => {
+    if (items.length <= 1) return
+    onUpdate({ items: items.filter((_, idx) => idx !== index) })
+  }
+
+  const handleUpdateItem = (index, text) => {
+    const newItems = items.map((item, idx) => (idx === index ? { ...item, text } : item))
+    onUpdate({ items: newItems })
+  }
+
+  const isOrdered = block.listType === 'ordered'
+
+  return (
+    <div className="space-y-4">
+      {/* Type: Unordered vs Ordered */}
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">List Format</label>
+        <div className="grid grid-cols-2 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => onUpdate({ listType: 'unordered' })}
+            className={`rounded py-1 text-xs font-medium ${
+              !isOrdered
+                ? 'bg-neon-blue text-white font-semibold shadow-xs'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            ✦ Bullet List
+          </button>
+          <button
+            type="button"
+            onClick={() => onUpdate({ listType: 'ordered' })}
+            className={`rounded py-1 text-xs font-medium ${
+              isOrdered
+                ? 'bg-neon-blue text-white font-semibold shadow-xs'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            1. Numbered List
+          </button>
+        </div>
+      </div>
+
+      {/* Bullet Marker Style (if unordered) */}
+      {!isOrdered && (
+        <div>
+          <label className="mb-1 block text-xs text-slate-400 font-medium">Bullet Marker Style</label>
+          <div className="grid grid-cols-4 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
+            {[
+              { id: 'check', label: '✓ Check' },
+              { id: 'arrow', label: '→ Arrow' },
+              { id: 'bolt', label: '⚡ Bolt' },
+              { id: 'dot', label: '• Dot' },
+            ].map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => onUpdate({ style: st.id })}
+                className={`rounded py-1 text-[11px] capitalize ${
+                  (block.style || 'check') === st.id
+                    ? 'bg-neon-blue text-white font-medium shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Item Spacing */}
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">Line Spacing</label>
+        <div className="grid grid-cols-3 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
+          {['compact', 'normal', 'relaxed'].map((sp) => (
+            <button
+              key={sp}
+              type="button"
+              onClick={() => onUpdate({ spacing: sp })}
+              className={`rounded py-1 text-xs capitalize ${
+                (block.spacing || 'normal') === sp
+                  ? 'bg-neon-blue text-white font-medium shadow-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {sp}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Items Manager */}
+      <div className="rounded-xl border border-panel-edge/80 bg-abyss/40 p-3 space-y-2.5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-white">List Items ({items.length})</span>
+          <button
+            type="button"
+            onClick={handleAddItem}
+            className="rounded border border-neon-blue/40 bg-neon-blue/15 px-2 py-0.5 text-[11px] font-medium text-neon-blue hover:bg-neon-blue hover:text-white"
+          >
+            + Add Item
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {items.map((item, idx) => (
+            <div key={item.id || idx} className="flex items-start gap-2">
+              <span className="mt-2 font-mono text-[11px] text-slate-500 w-4 text-right">
+                {isOrdered ? `${idx + 1}.` : '•'}
+              </span>
+              <textarea
+                rows={2}
+                placeholder="Enter list item..."
+                value={item.text || ''}
+                onChange={(e) => handleUpdateItem(idx, e.target.value)}
+                className="flex-1 rounded-lg border border-panel-edge bg-slate-950 px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-600 focus:border-neon-blue outline-none"
+              />
+              <button
+                type="button"
+                disabled={items.length <= 1}
+                onClick={() => handleRemoveItem(idx)}
+                className="mt-1.5 rounded p-1 text-slate-500 hover:text-status-red disabled:opacity-20"
+                title="Remove item"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* =========================================================================
+   VIDEO BLOCK EDITOR
+   ========================================================================= */
+function VideoBlockEditor({ block, onUpdate }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">Video Provider</label>
+        <div className="grid grid-cols-3 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
+          {[
+            { id: 'youtube', label: 'YouTube' },
+            { id: 'vimeo', label: 'Vimeo' },
+            { id: 'mp4', label: 'Direct MP4' },
+          ].map((pv) => (
+            <button
+              key={pv.id}
+              type="button"
+              onClick={() => onUpdate({ provider: pv.id })}
+              className={`rounded py-1 text-xs capitalize ${
+                (block.provider || 'youtube') === pv.id
+                  ? 'bg-neon-blue text-white font-medium shadow-xs'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {pv.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">Video URL / Share Link</label>
+        <input
+          type="text"
+          placeholder={
+            block.provider === 'youtube'
+              ? 'https://www.youtube.com/watch?v=...'
+              : block.provider === 'vimeo'
+              ? 'https://vimeo.com/...'
+              : 'https://domain.com/video.mp4'
+          }
+          value={block.url || ''}
+          onChange={(e) => onUpdate({ url: e.target.value })}
+          className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
+        />
+        <p className="mt-1 text-[10px] text-slate-500">
+          Paste standard video URL. Embed link is automatically generated.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="mb-1 block text-xs text-slate-400 font-medium">Aspect Ratio</label>
+          <select
+            value={block.aspectRatio || '16/9'}
+            onChange={(e) => onUpdate({ aspectRatio: e.target.value })}
+            className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
+          >
+            <option value="16/9">16:9 (Standard HD)</option>
+            <option value="4/3">4:3 (Classic)</option>
+            <option value="21/9">21:9 (Ultrawide)</option>
+            <option value="1/1">1:1 (Square)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-xs text-slate-400 font-medium">Border Radius</label>
+          <select
+            value={block.radius || 'lg'}
+            onChange={(e) => onUpdate({ radius: e.target.value })}
+            className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
+          >
+            <option value="none">Sharp (None)</option>
+            <option value="md">Rounded (MD)</option>
+            <option value="lg">Smooth (LG)</option>
+            <option value="full">Pill / Max</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">Video Title (Optional)</label>
+        <input
+          type="text"
+          placeholder="e.g. Architecture Overview Demo"
+          value={block.title || ''}
+          onChange={(e) => onUpdate({ title: e.target.value })}
+          className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-xs text-slate-400 font-medium">Caption (Optional)</label>
+        <input
+          type="text"
+          placeholder="Caption text below video..."
+          value={block.caption || ''}
+          onChange={(e) => onUpdate({ caption: e.target.value })}
+          className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
+        />
       </div>
     </div>
   )
