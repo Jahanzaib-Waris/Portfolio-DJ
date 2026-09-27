@@ -12,6 +12,7 @@ import { fieldErrorsFrom, formErrorFrom, messageFor } from '../../utils/apiError
 import buildPayload from '../../utils/buildPayload'
 import slugify from '../../utils/slugify'
 import { compileBlocksToHTML, parseHTMLToBlocks, createDefaultBlock, createBlockId } from '../../utils/blogBlocks'
+import { getSampleCaseStudyBlocks, SAMPLE_POST_METADATA } from '../../utils/samplePostTemplate'
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -296,6 +297,23 @@ export default function BlogEditor() {
     setEditorMode(newMode)
   }
 
+  const handleLoadSampleCaseStudy = () => {
+    if (dirty && !window.confirm('Replace current editor contents with the App Store Review case study template?')) {
+      return
+    }
+    const sampleBlocks = getSampleCaseStudyBlocks()
+    setForm((prev) => ({
+      ...prev,
+      title: SAMPLE_POST_METADATA.title,
+      slug: SAMPLE_POST_METADATA.slug,
+      excerpt: SAMPLE_POST_METADATA.excerpt,
+    }))
+    setBlocks(sampleBlocks)
+    slugTouched.current = true
+    setDirty(true)
+    setEditorMode('blocks')
+  }
+
   const payloadFor = (isPublished) => {
     // Ensure content is up to date based on active editor mode
     const content = editorMode === 'blocks' ? compileBlocksToHTML(blocks) : form.content
@@ -403,6 +421,17 @@ export default function BlogEditor() {
 
         {/* Action Controls */}
         <div className="flex items-center gap-2">
+          {isNew && (
+            <button
+              type="button"
+              onClick={handleLoadSampleCaseStudy}
+              className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
+              title="Populate with the App Store Review Case Study blocks"
+            >
+              <span>⚡</span> Load Case Study
+            </button>
+          )}
+
           {/* Toggle Sidebar settings */}
           <button
             type="button"
