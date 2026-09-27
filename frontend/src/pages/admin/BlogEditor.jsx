@@ -576,6 +576,8 @@ export default function BlogEditor() {
                     block={selectedBlock}
                     index={selectedBlockIndex}
                     totalBlocks={selectedBlockTotal}
+                    parentBlock={selectedBlockContext?.parent}
+                    onSelectBlock={handleSelectBlock}
                     onUpdate={handleUpdateSelectedBlock}
                     onClose={() => setSidebarTab('settings')}
                     onDelete={handleDeleteBlock}

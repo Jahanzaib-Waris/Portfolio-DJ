@@ -39,6 +39,74 @@ export function createBlockId() {
   return 'b_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
 }
 
+export function getChildLayoutStyles(child, parentDirection = 'row') {
+  const isCol = parentDirection === 'column';
+  const widthMode = child.layoutWidth || child.width;
+  const alignSelf = child.alignSelf;
+
+  const styles = {};
+
+  if (alignSelf && alignSelf !== 'auto') {
+    styles.alignSelf =
+      alignSelf === 'start' ? 'flex-start' : alignSelf === 'end' ? 'flex-end' : alignSelf;
+  }
+
+  if (isCol) {
+    if (widthMode === 'hug' || (['button', 'icon_badge'].includes(child.type) && widthMode !== '100%')) {
+      styles.width = 'fit-content';
+      styles.maxWidth = '100%';
+    } else {
+      styles.width = '100%';
+    }
+    return styles;
+  }
+
+  // Row Mode
+  if (widthMode === 'hug' || (['button', 'icon_badge'].includes(child.type) && !widthMode)) {
+    styles.flex = '0 0 auto';
+    styles.width = 'auto';
+    return styles;
+  }
+
+  if (widthMode && widthMode.endsWith('%') && widthMode !== '100%') {
+    styles.flex = `0 0 ${widthMode}`;
+    styles.maxWidth = widthMode;
+    styles.width = widthMode;
+    return styles;
+  }
+
+  if (child.type === 'image') {
+    const imgWidth = child.width || '40%';
+    if (imgWidth === 'auto' || imgWidth === 'hug') {
+      styles.flex = '0 0 auto';
+      styles.width = 'auto';
+    } else if (imgWidth.endsWith('%') && imgWidth !== '100%') {
+      styles.flex = `0 0 ${imgWidth}`;
+      styles.maxWidth = imgWidth;
+      styles.width = imgWidth;
+    } else {
+      styles.flex = '1 1 0%';
+      styles.minWidth = '0';
+    }
+    return styles;
+  }
+
+  // Default in row is fill: flex: 1 1 0%
+  styles.flex = '1 1 0%';
+  styles.minWidth = '0';
+  return styles;
+}
+
+export function getChildLayoutStyleString(child, parentDirection = 'row') {
+  const obj = getChildLayoutStyles(child, parentDirection);
+  return Object.entries(obj)
+    .map(([k, v]) => {
+      const cssKey = k.replace(/([A-Z])/g, '-$1').toLowerCase();
+      return `${cssKey}: ${v};`;
+    })
+    .join(' ');
+}
+
 export function createDefaultBlock(type) {
   const id = createBlockId();
   switch (type) {
@@ -50,25 +118,33 @@ export function createDefaultBlock(type) {
         direction: 'row', // 'row' | 'column'
         wrap: true,
         justify: 'start', // 'start' | 'center' | 'between' | 'end'
-        align: 'center', // 'start' | 'center' | 'stretch'
+        align: 'start', // 'start' | 'center' | 'end' | 'stretch' (top aligned in row by default)
         gap: 'md', // 'none' | 'sm' | 'md' | 'lg'
         padding: 'md', // 'none' | 'sm' | 'md' | 'lg'
         background: 'subtle', // 'none' | 'subtle' | 'gradient' | 'accent'
         border: 'solid', // 'none' | 'solid' | 'dashed'
         radius: 'lg', // 'none' | 'md' | 'lg' | 'full'
         children: [
-          createDefaultBlock('image'),
-          createDefaultBlock('text'),
+          {
+            ...createDefaultBlock('image'),
+            width: '40%',
+            layoutWidth: '40%',
+          },
+          {
+            ...createDefaultBlock('text'),
+            layoutWidth: 'fill',
+            html: '<p>Write your content here. When placed inside a container with an image or another block, elements automatically align side-by-side with responsive auto-layout.</p>',
+          },
         ],
       };
 
     /* ---- Atomic Blocks ---- */
     case 'heading':
-      return { id, type: 'heading', level: 'h2', kicker: '', text: '', align: 'left' };
+      return { id, type: 'heading', level: 'h2', kicker: '', text: '', align: 'left', layoutWidth: 'fill' };
 
     case 'text':
     case 'paragraph':
-      return { id, type: 'text', html: '' };
+      return { id, type: 'text', html: '', layoutWidth: 'fill' };
 
     case 'image':
       return {
@@ -78,7 +154,8 @@ export function createDefaultBlock(type) {
         alt: '',
         caption: '',
         fit: 'cover',
-        width: '100%',
+        width: '40%',
+        layoutWidth: '40%',
         radius: 'md',
       };
 
@@ -89,6 +166,7 @@ export function createDefaultBlock(type) {
         icon: 'bolt',
         text: 'Feature Highlight',
         variant: 'primary',
+        layoutWidth: 'hug',
       };
 
     case 'button':
@@ -98,19 +176,20 @@ export function createDefaultBlock(type) {
         text: 'Get Started',
         url: '/#start',
         variant: 'primary',
+        layoutWidth: 'hug',
       };
 
     case 'code':
-      return { id, type: 'code', language: 'dart', filename: '', code: '' };
+      return { id, type: 'code', language: 'dart', filename: '', code: '', layoutWidth: 'fill' };
 
     case 'callout':
-      return { id, type: 'callout', style: 'info', title: '', text: '' };
+      return { id, type: 'callout', style: 'info', title: '', text: '', layoutWidth: 'fill' };
 
     case 'quote':
-      return { id, type: 'quote', quote: '', author: '', role: '' };
+      return { id, type: 'quote', quote: '', author: '', role: '', layoutWidth: 'fill' };
 
     case 'divider':
-      return { id, type: 'divider', style: 'gradient' };
+      return { id, type: 'divider', style: 'gradient', layoutWidth: 'fill' };
 
     case 'classic':
     default:
@@ -128,7 +207,7 @@ export function compileBlocksToHTML(blocks) {
     switch (block.type) {
       case 'container': {
         const dirClass = block.direction === 'column' ? 'fb-flex-col' : 'fb-flex-row';
-        const wrapClass = block.wrap ? 'fb-flex-wrap' : 'fb-flex-nowrap';
+        const wrapClass = block.wrap !== false ? 'fb-flex-wrap' : 'fb-flex-nowrap';
         const justifyClass =
           block.justify === 'center'
             ? 'fb-justify-center'
@@ -142,6 +221,8 @@ export function compileBlocksToHTML(blocks) {
             ? 'fb-items-start'
             : block.align === 'stretch'
             ? 'fb-items-stretch'
+            : block.align === 'end'
+            ? 'fb-items-end'
             : 'fb-items-center';
         const gapClass = `fb-gap-${block.gap || 'md'}`;
         const padClass = `fb-pad-${block.padding || 'md'}`;
@@ -149,8 +230,12 @@ export function compileBlocksToHTML(blocks) {
         const borderClass = `fb-border-${block.border || 'none'}`;
         const radiusClass = `fb-radius-${block.radius || 'md'}`;
 
+        const direction = block.direction || 'row';
         const childrenHtml = (block.children || [])
-          .map((child) => renderSingleBlock(child))
+          .map((child) => {
+            const layoutStyle = getChildLayoutStyleString(child, direction);
+            return `<div class="fb-child-item" style="${layoutStyle}">\n${renderSingleBlock(child)}\n</div>`;
+          })
           .join('\n');
 
         return (

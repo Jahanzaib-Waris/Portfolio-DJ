@@ -1,4 +1,4 @@
-import { renderSvgIcon } from '../../utils/blogBlocks'
+import { renderSvgIcon, getChildLayoutStyles } from '../../utils/blogBlocks'
 
 /**
  * Visual Preview of the block on the canvas, rendered with actual FlowBase styles.
@@ -11,6 +11,7 @@ export default function BlockPreviewRenderer({
   onSelect,
   selectedBlockId,
   onSelectChild,
+  isChild = false,
 }) {
   const handleClick = (e) => {
     e.stopPropagation()
@@ -21,8 +22,9 @@ export default function BlockPreviewRenderer({
     switch (block.type) {
       /* ---- Container / Flex Layout (Figma Auto-Layout / FlutterFlow Row/Column) ---- */
       case 'container': {
-        const dirClass = block.direction === 'column' ? 'fb-flex-col' : 'fb-flex-row'
-        const wrapClass = block.wrap ? 'fb-flex-wrap' : 'fb-flex-nowrap'
+        const direction = block.direction || 'row'
+        const dirClass = direction === 'column' ? 'fb-flex-col' : 'fb-flex-row'
+        const wrapClass = block.wrap !== false ? 'fb-flex-wrap' : 'fb-flex-nowrap'
         const justifyClass =
           block.justify === 'center'
             ? 'fb-justify-center'
@@ -36,7 +38,13 @@ export default function BlockPreviewRenderer({
             ? 'fb-items-start'
             : block.align === 'stretch'
             ? 'fb-items-stretch'
-            : 'fb-items-center'
+            : block.align === 'end'
+            ? 'fb-items-end'
+            : block.align === 'center'
+            ? 'fb-items-center'
+            : direction === 'column'
+            ? 'fb-items-stretch'
+            : 'fb-items-start'
         const gapClass = `fb-gap-${block.gap || 'md'}`
         const padClass = `fb-pad-${block.padding || 'md'}`
         const bgClass = `fb-bg-${block.background || 'none'}`
@@ -50,20 +58,25 @@ export default function BlockPreviewRenderer({
             className={`fb-container min-h-[4rem] !my-0 ${dirClass} ${wrapClass} ${justifyClass} ${alignClass} ${gapClass} ${padClass} ${bgClass} ${borderClass} ${radiusClass}`}
           >
             {children.length > 0 ? (
-              children.map((child) => (
-                <div
-                  key={child.id}
-                  className="flex-1 min-w-[140px]"
-                >
-                  <BlockPreviewRenderer
-                    block={child}
-                    isSelected={selectedBlockId === child.id}
-                    onSelect={onSelectChild || onSelect}
-                    selectedBlockId={selectedBlockId}
-                    onSelectChild={onSelectChild}
-                  />
-                </div>
-              ))
+              children.map((child) => {
+                const childStyles = getChildLayoutStyles(child, direction)
+                return (
+                  <div
+                    key={child.id}
+                    style={childStyles}
+                    className="fb-child-item relative transition-all"
+                  >
+                    <BlockPreviewRenderer
+                      block={child}
+                      isSelected={selectedBlockId === child.id}
+                      onSelect={onSelectChild || onSelect}
+                      selectedBlockId={selectedBlockId}
+                      onSelectChild={onSelectChild}
+                      isChild={true}
+                    />
+                  </div>
+                )
+              })
             ) : (
               <div className="w-full py-4 text-center text-xs text-slate-500 italic border border-dashed border-panel-edge/60 rounded-lg">
                 Empty container — add child blocks in inspector
@@ -223,7 +236,9 @@ export default function BlockPreviewRenderer({
   return (
     <div
       onClick={handleClick}
-      className={`markdown-body group/preview relative cursor-pointer rounded-xl p-3 transition-all duration-150 ${
+      className={`markdown-body group/preview relative cursor-pointer transition-all duration-150 ${
+        isChild ? 'rounded-lg p-1' : 'rounded-xl p-3'
+      } ${
         isSelected
           ? 'ring-2 ring-neon-blue bg-neon-blue/[0.04] shadow-md shadow-neon-blue/10'
           : 'hover:bg-white/[0.02] hover:ring-1 hover:ring-panel-edge'
@@ -232,7 +247,11 @@ export default function BlockPreviewRenderer({
       {renderContent()}
 
       {/* Floating Tag Badge on Select / Hover */}
-      <div className={`absolute right-2 top-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/preview:opacity-100'}`}>
+      <div
+        className={`absolute ${
+          isChild ? 'right-1 top-1' : 'right-2 top-2'
+        } z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/preview:opacity-100'}`}
+      >
         <span
           className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono uppercase font-bold ${
             isSelected

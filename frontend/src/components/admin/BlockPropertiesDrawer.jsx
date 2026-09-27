@@ -10,6 +10,8 @@ export default function BlockPropertiesDrawer({
   block,
   index,
   totalBlocks,
+  parentBlock,
+  onSelectBlock,
   onUpdate,
   onClose,
   onDelete,
@@ -31,7 +33,20 @@ export default function BlockPropertiesDrawer({
               {block.type.replace('_', ' ')} Inspector
             </h3>
             <span className="font-mono text-[10px] text-slate-400">
-              {block.type === 'container' ? 'Auto-Layout Container' : 'Atomic Element'}
+              {parentBlock ? (
+                <button
+                  type="button"
+                  onClick={() => onSelectBlock && onSelectBlock(parentBlock.id)}
+                  className="text-neon-blue hover:underline font-medium"
+                  title="Click to select parent container"
+                >
+                  Inside {parentBlock.direction === 'column' ? 'Stack' : 'Row'} &uarr;
+                </button>
+              ) : block.type === 'container' ? (
+                'Auto-Layout Container'
+              ) : (
+                'Atomic Element'
+              )}
             </span>
           </div>
         </div>
@@ -92,7 +107,15 @@ export default function BlockPropertiesDrawer({
 
       {/* Form Fields */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        <DrawerFields block={block} onUpdate={onUpdate} />
+        {parentBlock && (
+          <ChildLayoutSection
+            block={block}
+            parentBlock={parentBlock}
+            onUpdate={onUpdate}
+            onSelectBlock={onSelectBlock}
+          />
+        )}
+        <DrawerFields block={block} onUpdate={onUpdate} onSelectBlock={onSelectBlock} />
       </div>
 
       {/* Drawer Footer */}
@@ -110,13 +133,14 @@ export default function BlockPropertiesDrawer({
   )
 }
 
-function DrawerFields({ block, onUpdate }) {
+function DrawerFields({ block, onUpdate, onSelectBlock }) {
   switch (block.type) {
     /* =========================================================================
        CONTAINER / FLEXBOX (Auto-Layout Row / Column like Figma/FlutterFlow)
        ========================================================================= */
     case 'container': {
       const children = block.children || []
+      const isCol = block.direction === 'column'
 
       const addChild = (type) => {
         const newChild = createDefaultBlock(type)
@@ -135,9 +159,14 @@ function DrawerFields({ block, onUpdate }) {
             <div className="grid grid-cols-2 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
               <button
                 type="button"
-                onClick={() => onUpdate({ direction: 'row' })}
+                onClick={() =>
+                  onUpdate({
+                    direction: 'row',
+                    align: block.align === 'stretch' ? 'start' : block.align || 'start',
+                  })
+                }
                 className={`flex items-center justify-center gap-1.5 rounded py-1.5 font-medium ${
-                  (block.direction || 'row') === 'row'
+                  !isCol
                     ? 'bg-neon-blue text-white shadow-xs font-semibold'
                     : 'text-slate-400 hover:text-white'
                 }`}
@@ -146,9 +175,14 @@ function DrawerFields({ block, onUpdate }) {
               </button>
               <button
                 type="button"
-                onClick={() => onUpdate({ direction: 'column' })}
+                onClick={() =>
+                  onUpdate({
+                    direction: 'column',
+                    align: block.align === 'start' ? 'stretch' : block.align || 'stretch',
+                  })
+                }
                 className={`flex items-center justify-center gap-1.5 rounded py-1.5 font-medium ${
-                  block.direction === 'column'
+                  isCol
                     ? 'bg-neon-blue text-white shadow-xs font-semibold'
                     : 'text-slate-400 hover:text-white'
                 }`}
@@ -158,31 +192,78 @@ function DrawerFields({ block, onUpdate }) {
             </div>
           </div>
 
+          {/* Wrap / Responsive Stacking */}
+          {!isCol && (
+            <div>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">Line Wrapping</label>
+              <div className="grid grid-cols-2 gap-1 rounded-lg border border-panel-edge bg-abyss/80 p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => onUpdate({ wrap: true })}
+                  className={`rounded py-1 text-xs font-medium ${
+                    block.wrap !== false
+                      ? 'bg-neon-blue text-white font-semibold shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Wrap (Multi-Line)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onUpdate({ wrap: false })}
+                  className={`rounded py-1 text-xs font-medium ${
+                    block.wrap === false
+                      ? 'bg-neon-blue text-white font-semibold shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  No Wrap (Single Row)
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Alignment & Justify */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="mb-1 block text-xs text-slate-400 font-medium">Justify (Main Axis)</label>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">
+                Justify ({isCol ? 'Main / Vertical' : 'Main / Horizontal'})
+              </label>
               <select
                 value={block.justify || 'start'}
                 onChange={(e) => onUpdate({ justify: e.target.value })}
                 className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
               >
-                <option value="start">Start (Left)</option>
+                <option value="start">{isCol ? 'Top (Start)' : 'Left (Start)'}</option>
                 <option value="center">Center</option>
                 <option value="between">Space Between</option>
-                <option value="end">End (Right)</option>
+                <option value="end">{isCol ? 'Bottom (End)' : 'Right (End)'}</option>
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs text-slate-400 font-medium">Align (Cross Axis)</label>
+              <label className="mb-1 block text-xs text-slate-400 font-medium">
+                Align ({isCol ? 'Cross / Horizontal' : 'Cross / Vertical'})
+              </label>
               <select
-                value={block.align || 'center'}
+                value={block.align || (isCol ? 'stretch' : 'start')}
                 onChange={(e) => onUpdate({ align: e.target.value })}
                 className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-2 py-1.5 text-xs text-slate-200 outline-none focus:border-neon-blue"
               >
-                <option value="start">Top</option>
-                <option value="center">Center</option>
-                <option value="stretch">Stretch</option>
+                {isCol ? (
+                  <>
+                    <option value="stretch">Stretch (Full Width)</option>
+                    <option value="start">Left (Start)</option>
+                    <option value="center">Center</option>
+                    <option value="end">Right (End)</option>
+                  </>
+                ) : (
+                  <>
+                    <option value="start">Top (Start)</option>
+                    <option value="center">Center (Middle)</option>
+                    <option value="end">Bottom (End)</option>
+                    <option value="stretch">Stretch (Match Height)</option>
+                  </>
+                )}
               </select>
             </div>
           </div>
@@ -265,26 +346,45 @@ function DrawerFields({ block, onUpdate }) {
               <label className="text-xs text-slate-300 font-semibold">
                 Children ({children.length})
               </label>
-              <span className="text-[10px] text-slate-500">Tap on canvas to edit child</span>
+              <span className="text-[10px] text-slate-500">Tap child below or canvas to edit</span>
             </div>
 
             <div className="space-y-1.5">
               {children.map((child, i) => (
                 <div
                   key={child.id || i}
-                  className="flex items-center justify-between rounded-lg border border-panel-edge/60 bg-abyss/60 px-3 py-1.5 text-xs text-slate-300"
+                  className="flex items-center justify-between rounded-lg border border-panel-edge/60 bg-abyss/60 px-3 py-1.5 text-xs text-slate-300 hover:border-neon-blue/60 transition-colors"
                 >
-                  <span className="font-mono text-[10px] uppercase text-neon-blue font-bold">
-                    {i + 1}. {child.type}
-                  </span>
                   <button
                     type="button"
-                    onClick={() => removeChild(i)}
-                    className="text-slate-500 hover:text-status-red text-xs px-1"
-                    title="Remove child block"
+                    onClick={() => onSelectBlock && onSelectBlock(child.id)}
+                    className="flex flex-1 items-center gap-2 text-left font-mono text-[11px] text-slate-200 hover:text-neon-blue"
+                    title="Click to edit child properties"
                   >
-                    &times;
+                    <span className="font-bold text-neon-blue">#{i + 1}</span>
+                    <span className="uppercase">{child.type}</span>
+                    <span className="rounded bg-white/[0.05] px-1.5 py-0.5 text-[9px] text-slate-400">
+                      {child.layoutWidth || child.width || 'fill'}
+                    </span>
                   </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onSelectBlock && onSelectBlock(child.id)}
+                      className="text-[11px] text-slate-400 hover:text-white"
+                      title="Edit child"
+                    >
+                      ✎
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeChild(i)}
+                      className="text-slate-500 hover:text-status-red text-xs px-1"
+                      title="Remove child block"
+                    >
+                      &times;
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -757,3 +857,79 @@ function DrawerFields({ block, onUpdate }) {
       )
   }
 }
+
+function ChildLayoutSection({ block, parentBlock, onUpdate, onSelectBlock }) {
+  if (!parentBlock) return null
+  const isParentCol = parentBlock.direction === 'column'
+
+  return (
+    <div className="rounded-xl border border-neon-blue/30 bg-neon-blue/[0.04] p-3 space-y-2.5">
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-mono uppercase font-bold text-neon-blue flex items-center gap-1">
+          <span>⊞</span> Child Sizing in {isParentCol ? 'Stack (Col)' : 'Row'}
+        </span>
+        <button
+          type="button"
+          onClick={() => onSelectBlock && onSelectBlock(parentBlock.id)}
+          className="text-[10px] text-slate-400 hover:text-neon-blue underline"
+        >
+          Select Container &uarr;
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="mb-1 block text-[10px] text-slate-400 font-medium">Width / Space</label>
+          <select
+            value={
+              block.layoutWidth ||
+              (block.width && block.width !== '100%'
+                ? block.width
+                : ['button', 'icon_badge'].includes(block.type)
+                ? 'hug'
+                : 'fill')
+            }
+            onChange={(e) => onUpdate({ layoutWidth: e.target.value, width: e.target.value })}
+            className="w-full rounded border border-panel-edge bg-abyss/90 px-2 py-1 text-xs text-slate-200 outline-none focus:border-neon-blue"
+          >
+            {isParentCol ? (
+              <>
+                <option value="fill">100% (Full Width)</option>
+                <option value="hug">Hug (Auto / Fit)</option>
+              </>
+            ) : (
+              <>
+                <option value="fill">Fill Remaining (1fr)</option>
+                <option value="hug">Hug (Auto / Fit)</option>
+                <option value="25%">25% (Quarter)</option>
+                <option value="33%">33% (One Third)</option>
+                <option value="40%">40% (Medium)</option>
+                <option value="50%">50% (Half Width)</option>
+                <option value="60%">60% (Wide)</option>
+                <option value="66%">66% (Two Thirds)</option>
+                <option value="75%">75% (Three Quarters)</option>
+                <option value="100%">100% (Full Row)</option>
+              </>
+            )}
+          </select>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-[10px] text-slate-400 font-medium">Align Self</label>
+          <select
+            value={block.alignSelf || 'auto'}
+            onChange={(e) => onUpdate({ alignSelf: e.target.value })}
+            className="w-full rounded border border-panel-edge bg-abyss/90 px-2 py-1 text-xs text-slate-200 outline-none focus:border-neon-blue"
+          >
+            <option value="auto">Auto (Inherit)</option>
+            <option value="start">{isParentCol ? 'Left' : 'Top'}</option>
+            <option value="center">Center</option>
+            <option value="end">{isParentCol ? 'Right' : 'Bottom'}</option>
+            <option value="stretch">Stretch</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  )
+}
+

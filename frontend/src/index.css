@@ -1309,10 +1309,57 @@
   .fb-justify-start { justify-content: flex-start; }
   .fb-justify-center { justify-content: center; }
   .fb-justify-between { justify-content: space-between; }
+  .fb-justify-around { justify-content: space-around; }
   .fb-justify-end { justify-content: flex-end; }
   .fb-items-start { align-items: flex-start; }
   .fb-items-center { align-items: center; }
+  .fb-items-end { align-items: flex-end; }
   .fb-items-stretch { align-items: stretch; }
+  .fb-items-baseline { align-items: baseline; }
+
+  /* Reset all margins on container children to prevent spacing/alignment distortion */
+  .fb-container > .fb-block,
+  .fb-container > .fb-child-item,
+  .fb-container > * {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .fb-child-item > .fb-block,
+  .fb-child-item .fb-block {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  .fb-child-item .fb-atomic-image {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  .fb-child-item .fb-atomic-image img {
+    width: 100%;
+    display: block;
+  }
+
+  .fb-child-item {
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Default child sizing in Column (Stack) mode: 100% width */
+  .fb-container.fb-flex-col > .fb-child-item,
+  .fb-container.fb-flex-col > .fb-block {
+    width: 100%;
+  }
+
+  /* Responsive Row Wrapping on mobile / small screens */
+  @media (max-width: 768px) {
+    .fb-container.fb-flex-row.fb-flex-wrap {
+      flex-direction: column !important;
+    }
+    .fb-container.fb-flex-row.fb-flex-wrap > .fb-child-item {
+      flex: 0 0 100% !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+  }
 
   /* Gaps */
   .fb-gap-none { gap: 0; }
