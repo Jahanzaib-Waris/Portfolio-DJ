@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { createBlogPost, getBlogPost, updateBlogPost } from '../../api/client'
 import RichTextEditor from '../../components/admin/RichTextEditor'
 import BlogBlockBuilder from '../../components/admin/BlogBlockBuilder'
+import BlockPropertiesDrawer from '../../components/admin/BlockPropertiesDrawer'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -41,7 +42,9 @@ export default function BlogEditor() {
   // Editor modes: 'blocks' (Gutenberg / Elementor modular canvas) or 'classic' (TipTap WYSIWYG)
   const [editorMode, setEditorMode] = useState('blocks')
   const [blocks, setBlocks] = useState([createDefaultBlock('paragraph')])
+  const [selectedBlockId, setSelectedBlockId] = useState(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarTab, setSidebarTab] = useState('settings') // 'settings' | 'block'
 
   const [existingCover, setExistingCover] = useState(null)
   const [coverFile, setCoverFile] = useState(null)
@@ -144,12 +147,58 @@ export default function BlogEditor() {
     setDirty(true)
   }
 
+  const handleSelectBlock = (blockId) => {
+    setSelectedBlockId(blockId)
+    if (blockId) {
+      setSidebarOpen(true)
+      setSidebarTab('block')
+    }
+  }
+
+  const handleUpdateSelectedBlock = (patch) => {
+    const index = blocks.findIndex((b) => b.id === selectedBlockId)
+    if (index === -1) return
+    const next = [...blocks]
+    next[index] = { ...next[index], ...patch }
+    handleBlocksChange(next)
+  }
+
+  const handleDeleteBlock = (index) => {
+    const target = blocks[index]
+    const next = blocks.filter((_, i) => i !== index)
+    handleBlocksChange(next.length > 0 ? next : [createDefaultBlock('paragraph')])
+    if (selectedBlockId === target?.id) {
+      setSelectedBlockId(null)
+      setSidebarTab('settings')
+    }
+  }
+
+  const handleDuplicateBlock = (index) => {
+    const target = blocks[index]
+    const clone = { ...JSON.parse(JSON.stringify(target)), id: createBlockId() }
+    const next = [...blocks]
+    next.splice(index + 1, 0, clone)
+    handleBlocksChange(next)
+    setSelectedBlockId(clone.id)
+    setSidebarTab('block')
+  }
+
+  const handleMoveBlock = (fromIndex, toIndex) => {
+    if (toIndex < 0 || toIndex >= blocks.length) return
+    const next = [...blocks]
+    const [moved] = next.splice(fromIndex, 1)
+    next.splice(toIndex, 0, moved)
+    handleBlocksChange(next)
+  }
+
   const switchMode = (newMode) => {
     if (newMode === editorMode) return
     if (newMode === 'classic') {
       // Compiling current blocks to HTML before switching to classic editor
       const compiled = compileBlocksToHTML(blocks)
       setForm((prev) => ({ ...prev, content: compiled }))
+      setSelectedBlockId(null)
+      setSidebarTab('settings')
     } else if (newMode === 'blocks') {
       // Re-parsing HTML back to blocks
       const parsed = parseHTMLToBlocks(form.content)
@@ -209,6 +258,12 @@ export default function BlogEditor() {
     const message = messageFor(fieldErrors, field)
     return message ? <p className="mt-1 text-xs text-status-red">{message}</p> : null
   }
+
+  const selectedBlockIndex = useMemo(
+    () => blocks.findIndex((b) => b.id === selectedBlockId),
+    [blocks, selectedBlockId],
+  )
+  const selectedBlock = selectedBlockIndex !== -1 ? blocks[selectedBlockIndex] : null
 
   if (loadState === 'loading') {
     return (
@@ -373,7 +428,12 @@ export default function BlogEditor() {
             </div>
 
             {editorMode === 'blocks' ? (
-              <BlogBlockBuilder blocks={blocks} onChange={handleBlocksChange} />
+              <BlogBlockBuilder
+                blocks={blocks}
+                onChange={handleBlocksChange}
+                selectedBlockId={selectedBlockId}
+                onSelectBlock={handleSelectBlock}
+              />
             ) : (
               <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
             )}
@@ -382,83 +442,136 @@ export default function BlogEditor() {
           </StatusPanel>
         </div>
 
-        {/* Collapsible Sidebar Settings Panel (4 cols) */}
+        {/* Collapsible Sidebar: Post Settings vs Block Inspector (4 cols) */}
         {sidebarOpen && (
           <div className="lg:col-span-4 space-y-4">
-            <StatusPanel glow={false} className="p-4 space-y-4">
-              <div className="flex items-center justify-between border-b border-panel-edge/60 pb-2">
-                <span className="font-mono text-xs uppercase tracking-wider text-slate-300 font-semibold">
-                  Publishing Settings
-                </span>
+            <StatusPanel glow={false} className="p-0 overflow-hidden border border-panel-edge/80">
+              {/* Tab Selector Header */}
+              <div className="flex items-center justify-between border-b border-panel-edge/60 bg-abyss/80 px-3 py-2">
+                <div className="flex items-center gap-1 rounded-lg border border-panel-edge bg-slate-950 p-0.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setSidebarTab('settings')}
+                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                      sidebarTab === 'settings'
+                        ? 'bg-neon-blue/20 text-neon-blue font-semibold shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Post Settings
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSidebarTab('block')}
+                    className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                      sidebarTab === 'block'
+                        ? 'bg-neon-blue/20 text-neon-blue font-semibold shadow-xs'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span>Block Inspector</span>
+                    {selectedBlock && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-neon-blue" />
+                    )}
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(false)}
-                  className="rounded p-1 text-slate-500 hover:text-slate-300 text-xs"
+                  title="Close sidebar"
+                  className="rounded p-1 text-slate-500 hover:bg-panel-edge hover:text-slate-200 text-xs"
                 >
                   &times;
                 </button>
               </div>
 
-              <div>
-                <label htmlFor="published_date" className="system-heading mb-1 block text-xs text-slate-400">
-                  Publication Date
-                </label>
-                <input
-                  id="published_date"
-                  type="date"
-                  value={form.published_date}
-                  onChange={(e) => update({ published_date: e.target.value })}
-                  className={inputClass}
-                />
-                {errorFor('published_date')}
-              </div>
-
-              <div>
-                <label htmlFor="excerpt" className="system-heading mb-1 block text-xs text-slate-400">
-                  Summary / Excerpt
-                </label>
-                <textarea
-                  id="excerpt"
-                  rows={3}
-                  maxLength={300}
-                  placeholder="Short post preview for listing cards and SEO meta..."
-                  value={form.excerpt}
-                  onChange={(e) => update({ excerpt: e.target.value })}
-                  className={inputClass}
-                />
-                <p className="mt-1 text-right text-[10px] text-slate-500">{form.excerpt.length}/300</p>
-                {errorFor('excerpt')}
-              </div>
-
-              <div>
-                <span className="system-heading mb-1 block text-xs text-slate-400">Featured Cover Image</span>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFile}
-                  className="w-full text-xs text-slate-400 file:mr-2 file:rounded file:border file:border-panel-edge file:bg-abyss/60 file:px-2.5 file:py-1 file:text-xs file:text-slate-200"
-                />
-                {errorFor('cover_image')}
-
-                {(coverPreview || (existingCover && !removeCover)) && (
-                  <div className="mt-2.5 flex items-center gap-3 rounded-lg border border-panel-edge bg-abyss/80 p-2">
-                    <img
-                      src={coverPreview || existingCover}
-                      alt="Cover preview"
-                      className="h-14 w-20 rounded border border-panel-edge object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={clearCover}
-                      className="text-xs text-slate-400 transition-colors hover:text-status-red"
-                    >
-                      Remove
-                    </button>
+              {/* Tab Content: Block Inspector */}
+              {sidebarTab === 'block' ? (
+                selectedBlock ? (
+                  <BlockPropertiesDrawer
+                    block={selectedBlock}
+                    index={selectedBlockIndex}
+                    totalBlocks={blocks.length}
+                    onUpdate={handleUpdateSelectedBlock}
+                    onClose={() => setSidebarTab('settings')}
+                    onDelete={handleDeleteBlock}
+                    onDuplicate={handleDuplicateBlock}
+                    onMove={handleMoveBlock}
+                  />
+                ) : (
+                  <div className="p-8 text-center text-xs text-slate-500 space-y-2">
+                    <p className="text-slate-400 font-medium">No block selected</p>
+                    <p className="text-[11px] leading-relaxed">
+                      Click any block on the canvas to inspect and edit its properties here.
+                    </p>
                   </div>
-                )}
-                {removeCover && <p className="mt-1.5 text-xs text-accent">Cover will be removed on save.</p>}
-              </div>
+                )
+              ) : (
+                /* Tab Content: Post Settings */
+                <div className="p-4 space-y-4">
+                  <div>
+                    <label htmlFor="published_date" className="system-heading mb-1 block text-xs text-slate-400">
+                      Publication Date
+                    </label>
+                    <input
+                      id="published_date"
+                      type="date"
+                      value={form.published_date}
+                      onChange={(e) => update({ published_date: e.target.value })}
+                      className={inputClass}
+                    />
+                    {errorFor('published_date')}
+                  </div>
+
+                  <div>
+                    <label htmlFor="excerpt" className="system-heading mb-1 block text-xs text-slate-400">
+                      Summary / Excerpt
+                    </label>
+                    <textarea
+                      id="excerpt"
+                      rows={3}
+                      maxLength={300}
+                      placeholder="Short post preview for listing cards and SEO meta..."
+                      value={form.excerpt}
+                      onChange={(e) => update({ excerpt: e.target.value })}
+                      className={inputClass}
+                    />
+                    <p className="mt-1 text-right text-[10px] text-slate-500">{form.excerpt.length}/300</p>
+                    {errorFor('excerpt')}
+                  </div>
+
+                  <div>
+                    <span className="system-heading mb-1 block text-xs text-slate-400">Featured Cover Image</span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFile}
+                      className="w-full text-xs text-slate-400 file:mr-2 file:rounded file:border file:border-panel-edge file:bg-abyss/60 file:px-2.5 file:py-1 file:text-xs file:text-slate-200"
+                    />
+                    {errorFor('cover_image')}
+
+                    {(coverPreview || (existingCover && !removeCover)) && (
+                      <div className="mt-2.5 flex items-center gap-3 rounded-lg border border-panel-edge bg-abyss/80 p-2">
+                        <img
+                          src={coverPreview || existingCover}
+                          alt="Cover preview"
+                          className="h-14 w-20 rounded border border-panel-edge object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={clearCover}
+                          className="text-xs text-slate-400 transition-colors hover:text-status-red"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                    {removeCover && <p className="mt-1.5 text-xs text-accent">Cover will be removed on save.</p>}
+                  </div>
+                </div>
+              )}
             </StatusPanel>
           </div>
         )}
