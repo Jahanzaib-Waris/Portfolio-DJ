@@ -3,6 +3,7 @@ import { NavLink, Link } from 'react-router-dom'
 import SystemButton from './SystemButton'
 
 const navLinks = [
+  { to: '/solutions', label: 'Solutions' },
   { to: '/blogs', label: 'Blog' },
   { to: '/#services', label: 'Services', isAnchor: true },
   { to: '/#about', label: 'About', isAnchor: true },

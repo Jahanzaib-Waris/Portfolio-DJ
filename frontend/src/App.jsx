@@ -6,6 +6,7 @@ import { AuthProvider } from './auth/AuthProvider'
 import PublicLayout from './components/PublicLayout'
 import applyTheme from './utils/applyTheme'
 import Home from './pages/Home'
+import Solutions from './pages/Solutions'
 import Blogs from './pages/Blogs'
 import Projects from './pages/Projects'
 import NotFound from './pages/NotFound'
@@ -60,6 +61,7 @@ function App() {
           {/* Public site */}
           <Route element={<PublicLayout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/solutions" element={<Solutions />} />
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/projects" element={<Projects />} />
