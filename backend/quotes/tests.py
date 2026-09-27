@@ -21,6 +21,36 @@ class QuoteSubmissionTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(QuoteRequest.objects.count(), 1)
 
+    def test_flowbase_payload_submission(self):
+        payload = {
+            'full_name': 'Alex River',
+            'email': 'alex@example.com',
+            'service': 'Build a new app',
+            'backend': 'Supabase',
+            'budget': '$2,000 – $5,000',
+            'timeline': 'Within a month',
+            'project_link': 'https://example.com/recording',
+            'details': 'Need a full FlutterFlow mobile app for iOS and Android.',
+        }
+        response = self.client.post('/api/quotes/', payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        quote = QuoteRequest.objects.get(email='alex@example.com')
+        self.assertEqual(quote.name, 'Alex River')
+        self.assertEqual(quote.service, 'Build a new app')
+        self.assertEqual(quote.backend, 'Supabase')
+        self.assertEqual(quote.project_details, 'Need a full FlutterFlow mobile app for iOS and Android.')
+
+    def test_honeypot_rejection(self):
+        payload = {
+            'full_name': 'Bot Spammer',
+            'email': 'bot@spam.com',
+            'details': 'Buy cheap sunglasses',
+            'company_website': 'https://spamsite.xyz',
+        }
+        response = self.client.post('/api/quotes/', payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(QuoteRequest.objects.filter(email='bot@spam.com').count(), 0)
+
     def test_submission_is_throttled_after_five(self):
         for _ in range(5):
             response = self.client.post('/api/quotes/', VALID_PAYLOAD)

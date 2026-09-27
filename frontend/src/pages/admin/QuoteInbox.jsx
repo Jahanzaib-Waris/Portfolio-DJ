@@ -138,7 +138,44 @@ export default function QuoteInbox() {
               </div>
 
               {isOpen && (
-                <div className="mt-4 border-t border-panel-edge/60 pt-4">
+                <div className="mt-4 border-t border-panel-edge/60 pt-4 space-y-3">
+                  {(quote.service || quote.backend || quote.budget || quote.timeline) && (
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {quote.service && (
+                        <span className="fb-chip bg-neon-indigo/15 border-neon-indigo/40 text-white font-medium">
+                          {quote.service}
+                        </span>
+                      )}
+                      {quote.backend && (
+                        <span className="fb-chip bg-abyss border-panel-edge text-slate-300">
+                          Backend: {quote.backend}
+                        </span>
+                      )}
+                      {quote.budget && (
+                        <span className="fb-chip bg-abyss border-panel-edge text-slate-300">
+                          Budget: {quote.budget}
+                        </span>
+                      )}
+                      {quote.timeline && (
+                        <span className="fb-chip bg-abyss border-panel-edge text-slate-300">
+                          Timeline: {quote.timeline}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {quote.project_link && (
+                    <p className="text-xs text-slate-400">
+                      Link:{' '}
+                      <a
+                        href={quote.project_link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-neon-blue hover:underline"
+                      >
+                        {quote.project_link}
+                      </a>
+                    </p>
+                  )}
                   <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
                     {quote.project_details}
                   </p>

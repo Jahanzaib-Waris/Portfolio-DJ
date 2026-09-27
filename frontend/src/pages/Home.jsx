@@ -3,6 +3,7 @@ import { Link, useOutletContext, useNavigate } from 'react-router-dom'
 import { getProjects, getSkills } from '../api/client'
 import useDocumentMeta from '../hooks/useDocumentMeta'
 import SystemButton from '../components/SystemButton'
+import EnquiryForm from '../components/EnquiryForm'
 
 const fallbackServices = [
   {
@@ -464,7 +465,48 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Closing Call to Action */}
+      {/* 6. Start a project Enquiry Section (§8.2) */}
+      <section id="start" className="fb-section fb-section--alt">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-12 lg:grid-cols-12 items-start">
+            {/* Form card (60% -> 7 cols on lg) */}
+            <div className="fb-form-card lg:col-span-7">
+              <p className="fb-kicker mb-2">Start a project</p>
+              <h2 className="system-heading text-3xl font-extrabold text-white sm:text-4xl">
+                Tell me about your app
+              </h2>
+              <p className="fb-lead mt-3 mb-8">
+                Building something new, fixing something broken, or adding an integration? Send the details and I will get back to you.
+              </p>
+              <EnquiryForm />
+            </div>
+
+            {/* Expectations Aside (40% -> 5 cols on lg) */}
+            <aside className="lg:col-span-5 lg:sticky lg:top-24 space-y-8 pt-2">
+              <div>
+                <h3 className="system-heading text-xl font-bold text-white mb-2">What happens next</h3>
+                <ul className="fb-aside-list">
+                  <li>I read your message and reply with questions or a first take on the problem.</li>
+                  <li>If it is a good fit, you get a plan, a timeline and a quote.</li>
+                  <li>Nothing starts until you approve the quote.</li>
+                </ul>
+              </div>
+
+              <div className="pt-2 border-t border-panel-edge">
+                <h3 className="system-heading text-xl font-bold text-white mb-2 pt-6">Helpful to include</h3>
+                <ul className="fb-aside-list">
+                  <li>Screenshots or a screen recording</li>
+                  <li>The exact error message</li>
+                  <li>Your backend (Firebase, Supabase or other)</li>
+                  <li>Your deadline, if you have one</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. Closing Call to Action */}
       <section className="fb-section fb-section--tight">
         <div className="mx-auto max-w-6xl px-6">
           <div className="fb-cta">
@@ -476,7 +518,7 @@ export default function Home() {
               A new build, a bug you cannot crack, or an integration your app is missing. Tell me about it and I will tell you how I would tackle it.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
-              <SystemButton onClick={onRequestQuote} size="lg" variant="primary">
+              <SystemButton as="a" href="#start" size="lg" variant="primary">
                 Start a project
               </SystemButton>
               <SystemButton as="a" href="#services" size="lg" variant="outline">

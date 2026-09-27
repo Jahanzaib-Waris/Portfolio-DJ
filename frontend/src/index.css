@@ -922,4 +922,193 @@
     font-family: var(--font-display);
     font-weight: 700;
   }
+
+  /* ---- FlowBase Enquiry Form (§9.5) ---- */
+  .fb-form-card {
+    position: relative;
+    background: linear-gradient(180deg, rgb(23 27 53 / 0.85), rgb(17 20 42 / 0.85));
+    border: 1px solid var(--color-panel-edge);
+    border-radius: 16px;
+    padding: clamp(1.75rem, 4vw, 2.5rem);
+  }
+
+  .fb-field {
+    margin-bottom: 1.15rem;
+  }
+
+  .fb-field label,
+  .fb-field legend {
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    color: #ECEEFB;
+    font-size: 0.92rem;
+    font-weight: 600;
+  }
+
+  .fb-field label span[aria-hidden],
+  .fb-field legend span[aria-hidden] {
+    color: #7C6CFF;
+  }
+
+  .fb-field input,
+  .fb-field select,
+  .fb-field textarea {
+    width: 100%;
+    min-height: 46px;
+    padding: 0.75rem 0.95rem;
+    border: 1px solid var(--color-panel-edge);
+    border-radius: 10px;
+    background: #0D1024;
+    color: #ECEEFB;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .fb-field input::placeholder,
+  .fb-field textarea::placeholder {
+    color: #6B7299;
+  }
+
+  .fb-field :is(input, select, textarea):focus {
+    border-color: #6D5AF6;
+    outline: none;
+    box-shadow: 0 0 0 4px rgb(109 90 246 / 0.18);
+  }
+
+  .fb-field textarea {
+    min-height: 8.5rem;
+    resize: vertical;
+  }
+
+  .fb-field select {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23A1A7CA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-position: right 0.9rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+  }
+
+  .fb-field select option {
+    background: #11142A;
+    color: #ECEEFB;
+  }
+
+  .fb-field--pills {
+    border: 0;
+    padding: 0;
+    margin-inline: 0;
+  }
+
+  .fb-field--pills .fb-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .fb-field--pills label {
+    display: inline-block;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  .fb-field--pills input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .fb-field--pills span {
+    display: inline-block;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--color-panel-edge);
+    border-radius: 999px;
+    background: #0D1024;
+    color: var(--color-muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .fb-field--pills label:hover span {
+    border-color: #6D5AF6;
+    color: #ECEEFB;
+  }
+
+  .fb-field--pills input:checked + span {
+    border-color: #6D5AF6;
+    background: rgb(124 108 255 / 0.18);
+    color: #ECEEFB;
+    box-shadow: 0 0 14px rgb(109 90 246 / 0.25);
+  }
+
+  .fb-field--pills input:focus-visible + span {
+    outline: 2px solid var(--color-neon-blue);
+    outline-offset: 3px;
+  }
+
+  .fb-help {
+    margin-top: 0.35rem;
+    color: var(--color-muted);
+    font-size: 0.82rem;
+  }
+
+  .fb-error {
+    color: #FCA5A5;
+    font-size: 0.85rem;
+    margin-top: 0.35rem;
+  }
+
+  .fb-field--invalid :is(input, select, textarea) {
+    border-color: rgb(252 165 165 / 0.6) !important;
+  }
+
+  .fb-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .fb-success {
+    padding: 1.75rem;
+    border: 1px solid rgb(40 200 64 / 0.35);
+    border-radius: 14px;
+    background: rgb(40 200 64 / 0.08);
+    color: #ECEEFB;
+  }
+
+  .fb-aside-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.75rem 0 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .fb-aside-list li {
+    position: relative;
+    padding-left: 1.6rem;
+    color: var(--color-muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .fb-aside-list li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.45rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-neon-indigo);
+    box-shadow: 0 0 8px rgb(124 108 255 / 0.8);
+  }
 }

@@ -1,14 +1,7 @@
-import { useEffect, useState } from 'react'
-import { submitQuoteRequest } from '../api/client'
-import SystemButton from './SystemButton'
-
-const initialForm = { name: '', email: '', project_details: '' }
+import { useEffect } from 'react'
+import EnquiryForm from './EnquiryForm'
 
 export default function RequestQuoteModal({ open, onClose }) {
-  const [form, setForm] = useState(initialForm)
-  const [status, setStatus] = useState('idle')
-  const [error, setError] = useState(null)
-
   useEffect(() => {
     if (!open) return
 
@@ -27,90 +20,33 @@ export default function RequestQuoteModal({ open, onClose }) {
 
   if (!open) return null
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setStatus('submitting')
-    setError(null)
-    try {
-      await submitQuoteRequest(form)
-      setStatus('success')
-      setForm(initialForm)
-    } catch {
-      setStatus('idle')
-      setError('Something went wrong. Please try again.')
-    }
-  }
-
-  const handleClose = () => {
-    setStatus('idle')
-    setError(null)
-    onClose()
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4" onClick={handleClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 sm:p-6 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div
-        className="system-panel w-full max-w-lg p-8"
+        className="system-panel w-full max-w-xl max-h-[92vh] overflow-y-auto p-6 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="system-heading text-xl text-neon-blue">Request a Quote</h2>
-          <button onClick={handleClose} className="text-slate-400 hover:text-neon-blue" aria-label="Close">
-            ✕
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <p className="fb-kicker mb-1">Start a project</p>
+            <h2 className="system-heading text-2xl text-white">Tell me about your app</h2>
+            <p className="mt-1 text-xs text-[#A1A7CA]">
+              Building something new, fixing something broken, or adding an integration? Send the details and I will get back to you.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border border-panel-edge text-slate-400 hover:text-white hover:border-neon-indigo transition-colors cursor-pointer"
+            aria-label="Close"
+          >
+            &#x2715;
           </button>
         </div>
 
-        {status === 'success' ? (
-          <div className="space-y-4">
-            <p className="text-status-green">
-              Message sent &mdash; thanks for reaching out. I&rsquo;ll get back to you soon.
-            </p>
-            <SystemButton onClick={handleClose}>Close</SystemButton>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-400">Name</label>
-              <input
-                required
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                className="w-full rounded-[10px] border border-panel-edge bg-[#0D1024] px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-indigo focus:ring-4 focus:ring-[rgb(124_108_255_/_0.18)]"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-400">Email</label>
-              <input
-                required
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full rounded-[10px] border border-panel-edge bg-[#0D1024] px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-indigo focus:ring-4 focus:ring-[rgb(124_108_255_/_0.18)]"
-              />
-            </div>
-            <div>
-              <label className="mb-1 block text-xs font-semibold text-slate-400">Project Details</label>
-              <textarea
-                required
-                name="project_details"
-                rows={4}
-                value={form.project_details}
-                onChange={handleChange}
-                className="w-full rounded-[10px] border border-panel-edge bg-[#0D1024] px-3 py-2 text-sm text-slate-100 outline-none focus:border-neon-indigo focus:ring-4 focus:ring-[rgb(124_108_255_/_0.18)]"
-              />
-            </div>
-            {error && <p className="text-status-red text-sm">{error}</p>}
-            <SystemButton type="submit" variant="primary" disabled={status === 'submitting'}>
-              {status === 'submitting' ? 'Sending...' : 'Submit Request'}
-            </SystemButton>
-          </form>
-        )}
+        <EnquiryForm isModal={true} />
       </div>
     </div>
   )
