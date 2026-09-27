@@ -14,7 +14,7 @@ export default function SystemButton({
 }) {
   let variantClass = ''
   if (variant === 'primary') variantClass = 'system-button-primary'
-  else if (variant === 'outline') variantClass = 'system-button border border-panel-edge bg-transparent hover:bg-accent-hover hover:border-accent-hover text-white transition-colors'
+  else if (variant === 'outline') variantClass = 'border border-panel-edge bg-transparent hover:bg-[rgb(109_90_246_/_0.14)] hover:border-neon-indigo text-white transition-colors'
 
   return (
     <Tag

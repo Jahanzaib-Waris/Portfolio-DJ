@@ -479,8 +479,8 @@ export default function Home() {
               <SystemButton onClick={onRequestQuote} size="lg" variant="primary">
                 Start a project
               </SystemButton>
-              <SystemButton as={Link} to="/blogs" size="lg" variant="outline">
-                Browse the fixes &rarr;
+              <SystemButton as="a" href="#services" size="lg" variant="outline">
+                See services
               </SystemButton>
             </div>
           </div>

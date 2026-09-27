@@ -152,15 +152,17 @@
 
   .system-button-primary {
     border: 1px solid var(--btn-primary-border, transparent);
-    color: var(--btn-primary-fg, #ffffff);
-    background: var(--btn-primary-bg, var(--color-accent));
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.12) inset, 0 6px 18px -8px rgb(109 90 246 / 0.65);
+    color: var(--btn-primary-fg, #ffffff) !important;
+    background: var(--btn-primary-bg, #6D5AF6) !important;
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.16) inset, 0 6px 20px -6px rgb(109 90 246 / 0.65);
   }
 
   .system-button-primary:hover {
-    background: var(--color-accent-hover);
+    background: var(--btn-primary-hover-bg, #5B48E8) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
     transform: translateY(-2px);
-    box-shadow: 0 1px 0 rgb(255 255 255 / 0.16) inset, 0 12px 26px -10px rgb(109 90 246 / 0.8);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.22) inset, 0 12px 28px -8px rgb(109 90 246 / 0.85);
   }
 
   .system-button-primary:active {

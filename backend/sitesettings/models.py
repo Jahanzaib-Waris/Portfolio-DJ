@@ -76,17 +76,17 @@ class SiteTheme(models.Model):
         ('accent', 'Accent border'),
     ]
 
-    color_void = models.CharField(max_length=7, default='#0d1117', validators=[hex_color_validator])
-    color_panel = models.CharField(max_length=7, default='#161b22', validators=[hex_color_validator])
-    color_panel_edge = models.CharField(max_length=7, default='#30363d', validators=[hex_color_validator])
-    color_neon_blue = models.CharField(max_length=7, default='#58a6ff', validators=[hex_color_validator])
-    color_neon_indigo = models.CharField(max_length=7, default='#388bfd', validators=[hex_color_validator])
-    color_accent = models.CharField(max_length=7, default='#238636', validators=[hex_color_validator])
+    color_void = models.CharField(max_length=7, default='#0A0C16', validators=[hex_color_validator])
+    color_panel = models.CharField(max_length=7, default='#11142A', validators=[hex_color_validator])
+    color_panel_edge = models.CharField(max_length=7, default='#232848', validators=[hex_color_validator])
+    color_neon_blue = models.CharField(max_length=7, default='#38BDF8', validators=[hex_color_validator])
+    color_neon_indigo = models.CharField(max_length=7, default='#7C6CFF', validators=[hex_color_validator])
+    color_accent = models.CharField(max_length=7, default='#6D5AF6', validators=[hex_color_validator])
     color_status_green = models.CharField(max_length=7, default='#3fb950', validators=[hex_color_validator])
-    color_status_red = models.CharField(max_length=7, default='#f85149', validators=[hex_color_validator])
+    color_status_red = models.CharField(max_length=7, default='#FCA5A5', validators=[hex_color_validator])
 
-    font_display = models.CharField(max_length=40, choices=FONT_DISPLAY_CHOICES, default='Inter')
-    font_mono = models.CharField(max_length=40, choices=FONT_MONO_CHOICES, default='JetBrains Mono')
+    font_display = models.CharField(max_length=40, choices=FONT_DISPLAY_CHOICES, default='Manrope')
+    font_mono = models.CharField(max_length=40, choices=FONT_MONO_CHOICES, default='Fira Code')
 
     radius_scale = models.CharField(max_length=10, choices=RADIUS_CHOICES, default='soft')
     shadow_intensity = models.CharField(max_length=10, choices=SHADOW_CHOICES, default='none')

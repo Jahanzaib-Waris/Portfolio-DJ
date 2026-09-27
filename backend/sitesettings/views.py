@@ -31,5 +31,16 @@ class ThemeView(RetrieveUpdateAPIView):
     permission_classes = [IsAdminUserOrReadOnly]
 
     def get_object(self):
-        obj, _ = SiteTheme.objects.get_or_create(pk=1)
+        obj, created = SiteTheme.objects.get_or_create(pk=1)
+        if not created and obj.color_accent == '#238636':
+            obj.color_void = '#0A0C16'
+            obj.color_panel = '#11142A'
+            obj.color_panel_edge = '#232848'
+            obj.color_neon_blue = '#38BDF8'
+            obj.color_neon_indigo = '#7C6CFF'
+            obj.color_accent = '#6D5AF6'
+            obj.color_status_red = '#FCA5A5'
+            obj.font_display = 'Manrope'
+            obj.font_mono = 'Fira Code'
+            obj.save()
         return obj
