@@ -18,6 +18,7 @@ Portfolio-DJ/
 ├── README.md                setup instructions
 ├── docs/
 │   ├── ARCHITECTURE.md      this file
+│   ├── SRS.md               Software Requirements Specification & System Schema
 │   ├── DEPLOYMENT.md        step-by-step Vercel + Supabase deployment
 │   └── TESTING.md           manual test checklist for the admin panel / public site
 │
@@ -501,10 +502,7 @@ dashboard for a "Paused" state before assuming the database is gone.
 - **Forgot-password email flow.** `change-password` is self-service only (current + new
   password, while logged in) — no email sending is configured, and a single-admin site doesn't
   need the added infrastructure of a token-based reset-by-email flow.
-- **Page builder / drag-and-drop layout editing.** The theme system (colors, typography,
-  borders/shadows, button/card style) is deliberately the ceiling for now — a block/section
-  editor for page *layout* is a distinct, larger feature that the theme tokens don't block but
-  also don't attempt.
+- **Page builder for static marketing pages.** The blog editor features the **FlowBase Visual Block Builder V2** (auto-layout flex containers, atomic elements, comparison tables, checklists, code cards, and video embeds with lossless HTML compilation). Extending this full drag-drop builder to arbitrary custom landing pages remains a future milestone.
 - **Multi-theme / theme gallery.** `SiteTheme` is a singleton by design — one fully customizable
   theme, not a selection of community themes.
 - **HSTS preload.** `SECURE_HSTS_PRELOAD` defaults off — submitting to the browser preload list

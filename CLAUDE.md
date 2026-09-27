@@ -9,15 +9,14 @@ A personal developer portfolio + blog: Django REST Framework API (`backend/`) + 
 Storage). The frontend has a public marketing site built with the developer-focused FlowBase design
 system (near-black `#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted
 Manrope & Fira Code variable fonts) and a custom admin panel (JWT-authenticated, staff-only)
-that replaces the Django admin for day-to-day content editing — including a runtime-editable site
+that replaces the Django admin for day-to-day content editing — including the **FlowBase Visual Block Builder V2**
+(Figma/Webflow-style flex containers, atomic elements, comparison tables, lists, video embeds), a runtime-editable site
 theme (colors/fonts/borders/button style, applied via CSS custom properties with no rebuild) and
 self-built traffic analytics.
 
-**Read `docs/ARCHITECTURE.md` before making non-trivial changes.** It's the maintained system
-reference — full data model, every API endpoint and its permissions, how JWT auth and
-throttling actually work, all env vars, frontend routing/conventions, and a list of what's
-deliberately not built. This file only covers commands and the architectural patterns that span
-multiple files; ARCHITECTURE.md has the detail.
+**Read `docs/ARCHITECTURE.md` and `docs/SRS.md` before making non-trivial changes.** They are the maintained system
+references — complete Software Requirements Specification, data models, every API endpoint and its permissions,
+FlowBase block schemas, and architectural conventions. This file covers quick commands and patterns.
 
 ## Commands
 
