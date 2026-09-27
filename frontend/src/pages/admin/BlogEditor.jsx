@@ -41,6 +41,7 @@ export default function BlogEditor() {
   // Editor modes: 'blocks' (Gutenberg / Elementor modular canvas) or 'classic' (TipTap WYSIWYG)
   const [editorMode, setEditorMode] = useState('blocks')
   const [blocks, setBlocks] = useState([createDefaultBlock('paragraph')])
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   const [existingCover, setExistingCover] = useState(null)
   const [coverFile, setCoverFile] = useState(null)
@@ -231,189 +232,235 @@ export default function BlogEditor() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl pb-16">
-      <Link to="/admin/blog" className="text-xs text-slate-400 transition-colors hover:text-neon-blue">
-        &larr; Back to posts
-      </Link>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl text-white">{isNew ? 'New post' : 'Edit post'}</h1>
+    <div className="mx-auto max-w-7xl pb-16">
+      {/* Top Sticky Header */}
+      <div className="sticky top-0 z-30 -mx-4 -mt-4 mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/80 bg-abyss/90 px-5 py-3 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          {dirty && <span className="text-xs text-accent">Unsaved changes</span>}
-          <span
-            className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${
-              form.is_published ? 'bg-status-green/10 text-status-green' : 'bg-accent/10 text-accent'
-            }`}
+          <Link
+            to="/admin/blog"
+            className="rounded-lg border border-panel-edge/80 bg-white/[0.02] p-1.5 text-xs text-slate-400 transition-colors hover:border-neon-blue hover:text-white"
+            title="Back to post list"
           >
-            {form.is_published ? 'Published' : 'Draft'}
-          </span>
+            &larr;
+          </Link>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-bold text-white leading-tight">
+                {form.title ? form.title : isNew ? 'Untitled Post' : 'Edit Post'}
+              </h1>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide ${
+                  form.is_published ? 'bg-status-green/10 text-status-green' : 'bg-accent/10 text-accent'
+                }`}
+              >
+                {form.is_published ? 'Published' : 'Draft'}
+              </span>
+              {dirty && <span className="text-[11px] text-accent font-medium">• Unsaved changes</span>}
+            </div>
+            {form.slug && (
+              <span className="font-mono text-[11px] text-slate-500">/blogs/{form.slug}</span>
+            )}
+          </div>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex items-center gap-2">
+          {/* Toggle Sidebar settings */}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+              sidebarOpen
+                ? 'border-neon-blue/60 bg-neon-blue/10 text-neon-blue'
+                : 'border-panel-edge bg-abyss/60 text-slate-400 hover:text-white'
+            }`}
+            title="Toggle post settings panel"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+            </svg>
+            Post Settings
+          </button>
+
+          <SystemButton onClick={() => save()} disabled={saving} variant="primary">
+            {saving ? 'Saving...' : 'Save Draft'}
+          </SystemButton>
+
+          {form.is_published ? (
+            <SystemButton onClick={() => save(false)} disabled={saving}>
+              Unpublish
+            </SystemButton>
+          ) : (
+            <SystemButton onClick={() => save(true)} disabled={saving}>
+              Publish
+            </SystemButton>
+          )}
         </div>
       </div>
 
       {formError && (
-        <p role="alert" className="mt-4 text-sm text-status-red">
+        <div className="mb-4 rounded-xl border border-status-red/40 bg-status-red/10 p-3 text-xs text-status-red">
           {formError}
-        </p>
+        </div>
       )}
 
-      <div className="mt-6 space-y-5">
-        <StatusPanel glow={false} className="space-y-4 p-5">
-          <div>
-            <label htmlFor="title" className="system-heading mb-1 block text-xs text-slate-400">
-              Title
-            </label>
-            <input
-              id="title"
-              value={form.title}
-              onChange={(e) => handleTitle(e.target.value)}
-              className={inputClass}
-            />
-            {errorFor('title')}
-          </div>
-
-          <div>
-            <label htmlFor="slug" className="system-heading mb-1 block text-xs text-slate-400">
-              Slug <span className="text-slate-600">(the URL: /blogs/{form.slug || '...'})</span>
-            </label>
-            <input
-              id="slug"
-              value={form.slug}
-              onChange={(e) => handleSlug(e.target.value)}
-              className={inputClass}
-            />
-            {errorFor('slug')}
-          </div>
-
-          <div>
-            <label htmlFor="excerpt" className="system-heading mb-1 block text-xs text-slate-400">
-              Excerpt <span className="text-slate-600">(shown on the blog list)</span>
-            </label>
-            <textarea
-              id="excerpt"
-              rows={2}
-              maxLength={300}
-              value={form.excerpt}
-              onChange={(e) => update({ excerpt: e.target.value })}
-              className={inputClass}
-            />
-            <p className="mt-1 text-right text-[10px] text-slate-600">{form.excerpt.length}/300</p>
-            {errorFor('excerpt')}
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
+      {/* Main 2-Column Responsive Layout */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
+        {/* Main Content Area (8 cols if sidebar open, 12 cols if collapsed) */}
+        <div className={`${sidebarOpen ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-4`}>
+          {/* Inline Title & Excerpt Quick Field */}
+          <StatusPanel glow={false} className="p-5 space-y-3">
             <div>
-              <label htmlFor="published_date" className="system-heading mb-1 block text-xs text-slate-400">
-                Published date
-              </label>
               <input
-                id="published_date"
-                type="date"
-                value={form.published_date}
-                onChange={(e) => update({ published_date: e.target.value })}
-                className={inputClass}
+                id="title"
+                placeholder="Post Title..."
+                value={form.title}
+                onChange={(e) => handleTitle(e.target.value)}
+                className="w-full bg-transparent text-2xl font-bold text-white placeholder-slate-600 outline-none"
               />
-              {errorFor('published_date')}
+              {errorFor('title')}
             </div>
 
             <div>
-              <span className="system-heading mb-1 block text-xs text-slate-400">Cover image</span>
               <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFile}
-                className="w-full text-xs text-slate-400 file:mr-3 file:rounded-md file:border file:border-panel-edge file:bg-abyss/60 file:px-3 file:py-1.5 file:text-xs file:text-slate-200"
+                id="slug"
+                placeholder="url-slug (auto-generated from title)"
+                value={form.slug}
+                onChange={(e) => handleSlug(e.target.value)}
+                className="w-full font-mono text-xs text-slate-400 bg-transparent placeholder-slate-700 outline-none"
               />
-              {errorFor('cover_image')}
+              {errorFor('slug')}
+            </div>
+          </StatusPanel>
 
-              {(coverPreview || (existingCover && !removeCover)) && (
-                <div className="mt-2 flex items-center gap-3">
-                  <img
-                    src={coverPreview || existingCover}
-                    alt="Cover preview"
-                    className="h-12 w-20 rounded border border-panel-edge object-cover"
-                  />
+          {/* Builder Canvas */}
+          <StatusPanel glow={false} className="p-5">
+            {/* Mode Switcher */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/60 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">Editor Mode:</span>
+                <div className="flex items-center rounded-lg border border-panel-edge bg-abyss/80 p-0.5 text-xs">
                   <button
                     type="button"
-                    onClick={clearCover}
-                    className="text-xs text-slate-400 transition-colors hover:text-status-red"
+                    onClick={() => switchMode('blocks')}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                      editorMode === 'blocks'
+                        ? 'bg-neon-blue/20 text-neon-blue shadow-xs font-semibold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
                   >
-                    Remove
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    Block Builder (Gutenberg)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => switchMode('classic')}
+                    className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                      editorMode === 'classic'
+                        ? 'bg-neon-blue/20 text-neon-blue shadow-xs font-semibold'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Classic Editor
                   </button>
                 </div>
-              )}
-              {removeCover && <p className="mt-2 text-xs text-accent">Cover will be removed on save.</p>}
-            </div>
-          </div>
-        </StatusPanel>
-
-        {/* Content Section: Modular Block Builder vs Classic WYSIWYG */}
-        <StatusPanel glow={false} className="p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/60 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="system-heading text-xs text-slate-300">Blog Content Mode:</span>
-              <div className="flex items-center rounded-lg border border-panel-edge bg-abyss/80 p-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => switchMode('blocks')}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                    editorMode === 'blocks'
-                      ? 'bg-neon-blue/20 text-neon-blue shadow-xs font-semibold'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  </svg>
-                  Block Builder (Elementor/Gutenberg)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => switchMode('classic')}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
-                    editorMode === 'classic'
-                      ? 'bg-neon-blue/20 text-neon-blue shadow-xs font-semibold'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                  </svg>
-                  Classic Editor
-                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-              {editorMode === 'blocks' && (
-                <span>{blocks.length} {blocks.length === 1 ? 'block' : 'blocks'}</span>
-              )}
-            </div>
+            {editorMode === 'blocks' ? (
+              <BlogBlockBuilder blocks={blocks} onChange={handleBlocksChange} />
+            ) : (
+              <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
+            )}
+
+            {errorFor('content')}
+          </StatusPanel>
+        </div>
+
+        {/* Collapsible Sidebar Settings Panel (4 cols) */}
+        {sidebarOpen && (
+          <div className="lg:col-span-4 space-y-4">
+            <StatusPanel glow={false} className="p-4 space-y-4">
+              <div className="flex items-center justify-between border-b border-panel-edge/60 pb-2">
+                <span className="font-mono text-xs uppercase tracking-wider text-slate-300 font-semibold">
+                  Publishing Settings
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="rounded p-1 text-slate-500 hover:text-slate-300 text-xs"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div>
+                <label htmlFor="published_date" className="system-heading mb-1 block text-xs text-slate-400">
+                  Publication Date
+                </label>
+                <input
+                  id="published_date"
+                  type="date"
+                  value={form.published_date}
+                  onChange={(e) => update({ published_date: e.target.value })}
+                  className={inputClass}
+                />
+                {errorFor('published_date')}
+              </div>
+
+              <div>
+                <label htmlFor="excerpt" className="system-heading mb-1 block text-xs text-slate-400">
+                  Summary / Excerpt
+                </label>
+                <textarea
+                  id="excerpt"
+                  rows={3}
+                  maxLength={300}
+                  placeholder="Short post preview for listing cards and SEO meta..."
+                  value={form.excerpt}
+                  onChange={(e) => update({ excerpt: e.target.value })}
+                  className={inputClass}
+                />
+                <p className="mt-1 text-right text-[10px] text-slate-500">{form.excerpt.length}/300</p>
+                {errorFor('excerpt')}
+              </div>
+
+              <div>
+                <span className="system-heading mb-1 block text-xs text-slate-400">Featured Cover Image</span>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFile}
+                  className="w-full text-xs text-slate-400 file:mr-2 file:rounded file:border file:border-panel-edge file:bg-abyss/60 file:px-2.5 file:py-1 file:text-xs file:text-slate-200"
+                />
+                {errorFor('cover_image')}
+
+                {(coverPreview || (existingCover && !removeCover)) && (
+                  <div className="mt-2.5 flex items-center gap-3 rounded-lg border border-panel-edge bg-abyss/80 p-2">
+                    <img
+                      src={coverPreview || existingCover}
+                      alt="Cover preview"
+                      className="h-14 w-20 rounded border border-panel-edge object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={clearCover}
+                      className="text-xs text-slate-400 transition-colors hover:text-status-red"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {removeCover && <p className="mt-1.5 text-xs text-accent">Cover will be removed on save.</p>}
+              </div>
+            </StatusPanel>
           </div>
-
-          {editorMode === 'blocks' ? (
-            <BlogBlockBuilder blocks={blocks} onChange={handleBlocksChange} />
-          ) : (
-            <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
-          )}
-
-          {errorFor('content')}
-        </StatusPanel>
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        <SystemButton onClick={() => save()} disabled={saving} variant="primary">
-          {saving ? 'Saving...' : 'Save'}
-        </SystemButton>
-
-        {form.is_published ? (
-          <SystemButton onClick={() => save(false)} disabled={saving}>
-            Unpublish
-          </SystemButton>
-        ) : (
-          <SystemButton onClick={() => save(true)} disabled={saving}>
-            Save &amp; publish
-          </SystemButton>
         )}
       </div>
     </div>
