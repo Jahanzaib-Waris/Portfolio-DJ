@@ -3,12 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { createBlogPost, getBlogPost, updateBlogPost } from '../../api/client'
 import RichTextEditor from '../../components/admin/RichTextEditor'
+import BlogBlockBuilder from '../../components/admin/BlogBlockBuilder'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
 import { fieldErrorsFrom, formErrorFrom, messageFor } from '../../utils/apiErrors'
 import buildPayload from '../../utils/buildPayload'
 import slugify from '../../utils/slugify'
+import { compileBlocksToHTML, parseHTMLToBlocks, createDefaultBlock } from '../../utils/blogBlocks'
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -35,6 +37,10 @@ export default function BlogEditor() {
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState(null)
   const [dirty, setDirty] = useState(false)
+
+  // Editor modes: 'blocks' (Gutenberg / Elementor modular canvas) or 'classic' (TipTap WYSIWYG)
+  const [editorMode, setEditorMode] = useState('blocks')
+  const [blocks, setBlocks] = useState([createDefaultBlock('paragraph')])
 
   const [existingCover, setExistingCover] = useState(null)
   const [coverFile, setCoverFile] = useState(null)
@@ -77,6 +83,10 @@ export default function BlogEditor() {
         })
         setExistingCover(post.cover_image || null)
         slugTouched.current = true // an existing slug is a published URL; don't rewrite it
+
+        // Parse content into blocks
+        const parsed = parseHTMLToBlocks(post.content || '')
+        setBlocks(parsed)
         setLoadState('ready')
       })
       .catch(() => {
@@ -125,19 +135,44 @@ export default function BlogEditor() {
     setDirty(true)
   }
 
-  const payloadFor = (isPublished) =>
-    buildPayload(
+  const handleBlocksChange = (newBlocks) => {
+    setBlocks(newBlocks)
+    // Synchronize compiled HTML to form.content so save always has latest HTML
+    const compiled = compileBlocksToHTML(newBlocks)
+    setForm((prev) => ({ ...prev, content: compiled }))
+    setDirty(true)
+  }
+
+  const switchMode = (newMode) => {
+    if (newMode === editorMode) return
+    if (newMode === 'classic') {
+      // Compiling current blocks to HTML before switching to classic editor
+      const compiled = compileBlocksToHTML(blocks)
+      setForm((prev) => ({ ...prev, content: compiled }))
+    } else if (newMode === 'blocks') {
+      // Re-parsing HTML back to blocks
+      const parsed = parseHTMLToBlocks(form.content)
+      setBlocks(parsed)
+    }
+    setEditorMode(newMode)
+  }
+
+  const payloadFor = (isPublished) => {
+    // Ensure content is up to date based on active editor mode
+    const content = editorMode === 'blocks' ? compileBlocksToHTML(blocks) : form.content
+    return buildPayload(
       {
         title: form.title,
         slug: form.slug,
         excerpt: form.excerpt,
-        content: form.content,
+        content,
         published_date: form.published_date,
         is_published: isPublished,
       },
       { cover_image: coverFile },
       removeCover ? ['cover_image'] : [],
     )
+  }
 
   const save = async (publishOverride) => {
     setSaving(true)
@@ -312,8 +347,56 @@ export default function BlogEditor() {
           </div>
         </StatusPanel>
 
+        {/* Content Section: Modular Block Builder vs Classic WYSIWYG */}
         <StatusPanel glow={false} className="p-5">
-          <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/60 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="system-heading text-xs text-slate-300">Blog Content Mode:</span>
+              <div className="flex items-center rounded-lg border border-panel-edge bg-abyss/80 p-0.5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => switchMode('blocks')}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                    editorMode === 'blocks'
+                      ? 'bg-neon-blue/20 text-neon-blue shadow-xs font-semibold'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                  Block Builder (Elementor/Gutenberg)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => switchMode('classic')}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1 font-medium transition-colors ${
+                    editorMode === 'classic'
+                      ? 'bg-neon-blue/20 text-neon-blue shadow-xs font-semibold'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Classic Editor
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              {editorMode === 'blocks' && (
+                <span>{blocks.length} {blocks.length === 1 ? 'block' : 'blocks'}</span>
+              )}
+            </div>
+          </div>
+
+          {editorMode === 'blocks' ? (
+            <BlogBlockBuilder blocks={blocks} onChange={handleBlocksChange} />
+          ) : (
+            <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
+          )}
+
           {errorFor('content')}
         </StatusPanel>
       </div>
