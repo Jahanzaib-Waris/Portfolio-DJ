@@ -11,7 +11,7 @@ import { Skeleton } from '../../components/Skeleton'
 import { fieldErrorsFrom, formErrorFrom, messageFor } from '../../utils/apiErrors'
 import buildPayload from '../../utils/buildPayload'
 import slugify from '../../utils/slugify'
-import { compileBlocksToHTML, parseHTMLToBlocks, createDefaultBlock } from '../../utils/blogBlocks'
+import { compileBlocksToHTML, parseHTMLToBlocks, createDefaultBlock, createBlockId } from '../../utils/blogBlocks'
 
 const today = () => new Date().toISOString().slice(0, 10)
 
@@ -26,6 +26,73 @@ const emptyPost = {
 
 const inputClass =
   'w-full rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-neon-blue'
+
+function findBlockContext(tree, id, parent = null) {
+  if (!id || !Array.isArray(tree)) return null
+  for (let i = 0; i < tree.length; i++) {
+    const b = tree[i]
+    if (b.id === id) {
+      return { block: b, index: i, total: tree.length, parent }
+    }
+    if (Array.isArray(b.children) && b.children.length > 0) {
+      const match = findBlockContext(b.children, id, b)
+      if (match) return match
+    }
+  }
+  return null
+}
+
+function updateBlockInTree(tree, id, patch) {
+  return tree.map((b) => {
+    if (b.id === id) {
+      return { ...b, ...patch }
+    }
+    if (Array.isArray(b.children) && b.children.length > 0) {
+      return { ...b, children: updateBlockInTree(b.children, id, patch) }
+    }
+    return b
+  })
+}
+
+function deleteBlockFromTree(tree, id) {
+  return tree
+    .filter((b) => b.id !== id)
+    .map((b) => {
+      if (Array.isArray(b.children) && b.children.length > 0) {
+        return { ...b, children: deleteBlockFromTree(b.children, id) }
+      }
+      return b
+    })
+}
+
+function duplicateBlockDeep(block) {
+  const clone = { ...JSON.parse(JSON.stringify(block)), id: createBlockId() }
+  if (Array.isArray(clone.children)) {
+    clone.children = clone.children.map(duplicateBlockDeep)
+  }
+  return clone
+}
+
+function duplicateBlockInTree(tree, id) {
+  let newId = null
+  const recurse = (list) => {
+    const res = []
+    for (const b of list) {
+      const updated =
+        Array.isArray(b.children) && b.children.length > 0
+          ? { ...b, children: recurse(b.children) }
+          : b
+      res.push(updated)
+      if (b.id === id) {
+        const cloned = duplicateBlockDeep(b)
+        newId = cloned.id
+        res.push(cloned)
+      }
+    }
+    return res
+  }
+  return { nextBlocks: recurse(tree), newId }
+}
 
 export default function BlogEditor() {
   const { slug: routeSlug } = useParams()
@@ -155,40 +222,62 @@ export default function BlogEditor() {
     }
   }
 
+  const selectedBlockContext = useMemo(
+    () => findBlockContext(blocks, selectedBlockId),
+    [blocks, selectedBlockId],
+  )
+  const selectedBlock = selectedBlockContext?.block || null
+  const selectedBlockIndex = selectedBlockContext?.index ?? -1
+  const selectedBlockTotal = selectedBlockContext?.total ?? blocks.length
+
   const handleUpdateSelectedBlock = (patch) => {
-    const index = blocks.findIndex((b) => b.id === selectedBlockId)
-    if (index === -1) return
-    const next = [...blocks]
-    next[index] = { ...next[index], ...patch }
+    if (!selectedBlockId) return
+    const next = updateBlockInTree(blocks, selectedBlockId, patch)
     handleBlocksChange(next)
   }
 
-  const handleDeleteBlock = (index) => {
-    const target = blocks[index]
-    const next = blocks.filter((_, i) => i !== index)
-    handleBlocksChange(next.length > 0 ? next : [createDefaultBlock('paragraph')])
-    if (selectedBlockId === target?.id) {
-      setSelectedBlockId(null)
-      setSidebarTab('settings')
+  const handleDeleteBlock = (target) => {
+    const targetId =
+      typeof target === 'string'
+        ? target
+        : selectedBlockContext?.block?.id || selectedBlockId
+    if (!targetId) return
+    const next = deleteBlockFromTree(blocks, targetId)
+    handleBlocksChange(next.length > 0 ? next : [createDefaultBlock('text')])
+    setSelectedBlockId(null)
+    setSidebarTab('settings')
+  }
+
+  const handleDuplicateBlock = (target) => {
+    const targetId =
+      typeof target === 'string'
+        ? target
+        : selectedBlockContext?.block?.id || selectedBlockId
+    if (!targetId) return
+    const { nextBlocks, newId } = duplicateBlockInTree(blocks, targetId)
+    handleBlocksChange(nextBlocks)
+    if (newId) {
+      setSelectedBlockId(newId)
+      setSidebarTab('block')
     }
   }
 
-  const handleDuplicateBlock = (index) => {
-    const target = blocks[index]
-    const clone = { ...JSON.parse(JSON.stringify(target)), id: createBlockId() }
-    const next = [...blocks]
-    next.splice(index + 1, 0, clone)
-    handleBlocksChange(next)
-    setSelectedBlockId(clone.id)
-    setSidebarTab('block')
-  }
-
   const handleMoveBlock = (fromIndex, toIndex) => {
-    if (toIndex < 0 || toIndex >= blocks.length) return
-    const next = [...blocks]
-    const [moved] = next.splice(fromIndex, 1)
-    next.splice(toIndex, 0, moved)
-    handleBlocksChange(next)
+    if (selectedBlockContext?.parent) {
+      const parent = selectedBlockContext.parent
+      const children = [...parent.children]
+      if (toIndex < 0 || toIndex >= children.length) return
+      const [moved] = children.splice(fromIndex, 1)
+      children.splice(toIndex, 0, moved)
+      const next = updateBlockInTree(blocks, parent.id, { children })
+      handleBlocksChange(next)
+    } else {
+      if (toIndex < 0 || toIndex >= blocks.length) return
+      const next = [...blocks]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      handleBlocksChange(next)
+    }
   }
 
   const switchMode = (newMode) => {
@@ -258,12 +347,6 @@ export default function BlogEditor() {
     const message = messageFor(fieldErrors, field)
     return message ? <p className="mt-1 text-xs text-status-red">{message}</p> : null
   }
-
-  const selectedBlockIndex = useMemo(
-    () => blocks.findIndex((b) => b.id === selectedBlockId),
-    [blocks, selectedBlockId],
-  )
-  const selectedBlock = selectedBlockIndex !== -1 ? blocks[selectedBlockIndex] : null
 
   if (loadState === 'loading') {
     return (
@@ -492,7 +575,7 @@ export default function BlogEditor() {
                   <BlockPropertiesDrawer
                     block={selectedBlock}
                     index={selectedBlockIndex}
-                    totalBlocks={blocks.length}
+                    totalBlocks={selectedBlockTotal}
                     onUpdate={handleUpdateSelectedBlock}
                     onClose={() => setSidebarTab('settings')}
                     onDelete={handleDeleteBlock}

@@ -1286,6 +1286,155 @@
     margin-inline: calc(-1 * clamp(1rem, 5vw, 4rem));
   }
 
+  /* ---- Figma / Webflow / FlutterFlow Atomic & Container Layout Engine ---- */
+  .fb-container {
+    display: flex;
+    position: relative;
+    width: 100%;
+    margin: 2rem 0;
+    transition: all 0.2s ease;
+  }
+  .fb-flex-row {
+    flex-direction: row;
+  }
+  .fb-flex-col {
+    flex-direction: column;
+  }
+  .fb-flex-wrap {
+    flex-wrap: wrap;
+  }
+  .fb-flex-nowrap {
+    flex-wrap: nowrap;
+  }
+  .fb-justify-start { justify-content: flex-start; }
+  .fb-justify-center { justify-content: center; }
+  .fb-justify-between { justify-content: space-between; }
+  .fb-justify-end { justify-content: flex-end; }
+  .fb-items-start { align-items: flex-start; }
+  .fb-items-center { align-items: center; }
+  .fb-items-stretch { align-items: stretch; }
+
+  /* Gaps */
+  .fb-gap-none { gap: 0; }
+  .fb-gap-sm { gap: 0.75rem; }
+  .fb-gap-md { gap: 1.5rem; }
+  .fb-gap-lg { gap: 2.25rem; }
+
+  /* Paddings */
+  .fb-pad-none { padding: 0; }
+  .fb-pad-sm { padding: 0.75rem 1rem; }
+  .fb-pad-md { padding: 1.5rem; }
+  .fb-pad-lg { padding: 2.25rem; }
+
+  /* Backgrounds */
+  .fb-bg-none { background: transparent; }
+  .fb-bg-subtle { background: rgb(17 20 42 / 0.55); }
+  .fb-bg-gradient { background: linear-gradient(135deg, rgb(23 27 53 / 0.9), rgb(17 20 42 / 0.9)); }
+  .fb-bg-accent { background: linear-gradient(135deg, rgb(109 90 246 / 0.12), rgb(23 27 53 / 0.85)); }
+
+  /* Borders */
+  .fb-border-none { border: none; }
+  .fb-border-solid { border: 1px solid var(--color-panel-edge); }
+  .fb-border-dashed { border: 1px dashed var(--color-panel-edge); }
+
+  /* Radii */
+  .fb-radius-none { border-radius: 0; }
+  .fb-radius-md { border-radius: 10px; }
+  .fb-radius-lg { border-radius: 18px; }
+  .fb-radius-full { border-radius: 9999px; }
+
+  /* Atomic Image */
+  .fb-atomic-image {
+    margin: 0;
+    overflow: hidden;
+  }
+  .fb-atomic-image img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .fb-img-cover { object-fit: cover; }
+  .fb-img-contain { object-fit: contain; }
+
+  /* Icon Badge */
+  .fb-icon-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    width: fit-content;
+    margin: 0.5rem 0;
+  }
+  .fb-badge--primary {
+    background: rgb(109 90 246 / 0.15);
+    border: 1px solid rgb(109 90 246 / 0.35);
+    color: #c7bfff;
+  }
+  .fb-badge--emerald {
+    background: rgb(16 185 129 / 0.15);
+    border: 1px solid rgb(16 185 129 / 0.35);
+    color: #a7f3d0;
+  }
+  .fb-badge--amber {
+    background: rgb(245 158 11 / 0.15);
+    border: 1px solid rgb(245 158 11 / 0.35);
+    color: #fde68a;
+  }
+  .fb-badge--sky {
+    background: rgb(56 189 248 / 0.15);
+    border: 1px solid rgb(56 189 248 / 0.35);
+    color: #bae6fd;
+  }
+  .fb-badge--slate {
+    background: rgb(255 255 255 / 0.05);
+    border: 1px solid var(--color-panel-edge);
+    color: var(--color-muted);
+  }
+  .fb-badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Atomic Button */
+  .fb-atomic-button {
+    margin: 0.5rem 0;
+  }
+  .fb-btn-subtle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    background: rgb(255 255 255 / 0.05);
+    color: #ECEEFB;
+    border: 1px solid var(--color-panel-edge);
+    text-decoration: none !important;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .fb-btn-subtle:hover {
+    background: rgb(255 255 255 / 0.1);
+    border-color: var(--color-neon-blue);
+  }
+
+  /* Dividers */
+  .fb-divider--gradient {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgb(109 90 246 / 0.6), transparent);
+    margin: 2.5rem 0;
+  }
+  .fb-divider--hairline {
+    border: 0;
+    border-top: 1px solid var(--color-panel-edge);
+    margin: 2.5rem 0;
+  }
+
   /* ---- FlowBase Enquiry Form (§9.5) ---- */
   .fb-form-card {
     position: relative;

@@ -2,26 +2,42 @@ import { useState } from 'react'
 import BlockPreviewRenderer from './BlockPreviewRenderer'
 import { createBlockId, createDefaultBlock } from '../../utils/blogBlocks'
 
-const AVAILABLE_BLOCKS = [
+const ATOMIC_AND_LAYOUT_BLOCKS = [
   {
-    category: 'Essential Content',
+    category: 'Layout & Structure',
     blocks: [
       {
-        type: 'paragraph',
-        label: 'Paragraph / Rich Text',
-        badge: 'Text',
-        desc: 'Rich text paragraph with links, bold, italic & formatting',
+        type: 'container',
+        label: 'Auto-Layout Container (Row / Stack)',
+        badge: 'Layout',
+        desc: 'Figma / FlutterFlow style flex container: arranges images, text & buttons side-by-side or stacked',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16m-7 6h7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM9 4v16" />
           </svg>
         ),
       },
       {
+        type: 'divider',
+        label: 'Divider Line',
+        badge: 'Break',
+        desc: 'Subtle gradient or hairline section separator',
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 12H4" />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
+    category: 'Core Content Elements',
+    blocks: [
+      {
         type: 'heading',
         label: 'Heading & Subhead',
-        badge: 'Title',
-        desc: 'H2, H3, H4 with optional kicker/tagline',
+        badge: 'Text',
+        desc: 'H2, H3, H4 with optional kicker/eyebrow tag & text alignment',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M6 4v16m12-16v16m-12-8h12" />
@@ -29,37 +45,21 @@ const AVAILABLE_BLOCKS = [
         ),
       },
       {
-        type: 'text_image',
-        label: 'Text with Floating Image',
-        badge: 'Popular',
-        desc: 'Flow paragraph text wrapped around a right or left floated image',
+        type: 'text',
+        label: 'Text / Paragraph',
+        badge: 'Text',
+        desc: 'Rich text block with bold, italic, inline code, and links',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 5h7v7H4V5zm0 10h16m-6-4h6m-6-4h6M4 19h16" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 6h16M4 12h16m-7 6h7" />
           </svg>
         ),
       },
-      {
-        type: 'list',
-        label: 'List (Bullets or Numbered)',
-        badge: 'Items',
-        desc: 'Bulleted checklist or numbered procedural steps',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-          </svg>
-        ),
-      },
-    ],
-  },
-  {
-    category: 'Media & Code',
-    blocks: [
       {
         type: 'image',
-        label: 'Image & Caption',
+        label: 'Image',
         badge: 'Media',
-        desc: 'Stand-alone boxed, wide or full bleed image with caption',
+        desc: 'Single image element with flexible width, cover/contain fit & caption',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -67,10 +67,37 @@ const AVAILABLE_BLOCKS = [
         ),
       },
       {
+        type: 'button',
+        label: 'Action Button / Link',
+        badge: 'Action',
+        desc: 'Primary brand button (#6D5AF6), outline, or subtle link card',
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+        ),
+      },
+      {
+        type: 'icon_badge',
+        label: 'Icon Badge / Highlight',
+        badge: 'UI',
+        desc: 'Pill badge with icon (bolt, check, star, terminal) for highlights',
+        icon: (
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
+    category: 'Engineering & Rich Media',
+    blocks: [
+      {
         type: 'code',
         label: 'Code Card / Terminal',
         badge: 'Dev',
-        desc: 'IDE dark card with window dots, filename & language tag',
+        desc: 'Syntax card with filename header and programming language tag',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
@@ -81,7 +108,7 @@ const AVAILABLE_BLOCKS = [
         type: 'callout',
         label: 'Callout / Alert Box',
         badge: 'Notice',
-        desc: 'Highlighted Tip, Info, Warning, or Success box',
+        desc: 'Highlighted note box (Tip, Warning, Info, Success)',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -92,81 +119,10 @@ const AVAILABLE_BLOCKS = [
         type: 'quote',
         label: 'Pull Quote / Testimonial',
         badge: 'Quote',
-        desc: 'Large stylized quote with speaker name and role badge',
+        desc: 'Quotation with author citation and role attribution',
         icon: (
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
-          </svg>
-        ),
-      },
-    ],
-  },
-  {
-    category: 'Layout & Conversion',
-    blocks: [
-      {
-        type: 'columns',
-        label: 'Multi-Column Grid',
-        badge: 'Layout',
-        desc: '50/50, 60/40, 40/60, or 3-Column side-by-side builder',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 4H5a1 1 0 00-1 1v14a1 1 0 001 1h4a1 1 0 001-1V5a1 1 0 00-1-1zm10 0h-4a1 1 0 00-1 1v14a1 1 0 001 1h4a1 1 0 001-1V5a1 1 0 00-1-1z" />
-          </svg>
-        ),
-      },
-      {
-        type: 'stats',
-        label: 'Key Stats / Metric Cards',
-        badge: 'Data',
-        desc: 'Side-by-side metric badges (e.g. 99.9% uptime, 500k+ users)',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
-        ),
-      },
-      {
-        type: 'faq',
-        label: 'Collapsible Accordion / FAQ',
-        badge: 'UI',
-        desc: 'Expandable Q&A accordion questions and answers',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        ),
-      },
-      {
-        type: 'cta',
-        label: 'CTA / Action Banner',
-        badge: 'Convert',
-        desc: 'FlowBase gradient action card with direct link button',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
-          </svg>
-        ),
-      },
-      {
-        type: 'button',
-        label: 'Standalone Button / Link',
-        badge: 'Link',
-        desc: 'Centered or aligned primary button linking to any page',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
-        ),
-      },
-      {
-        type: 'divider',
-        label: 'Hairline Divider',
-        badge: 'Break',
-        desc: 'Subtle hairline section separator',
-        icon: (
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M20 12H4" />
           </svg>
         ),
       },
@@ -187,7 +143,7 @@ export default function BlogBlockBuilder({
 
   const removeBlock = (index) => {
     const next = blocks.filter((_, i) => i !== index)
-    onChange(next.length > 0 ? next : [createDefaultBlock('paragraph')])
+    onChange(next.length > 0 ? next : [createDefaultBlock('text')])
     if (selectedBlockId === blocks[index]?.id) {
       onSelectBlock(null)
     }
@@ -221,7 +177,6 @@ export default function BlogBlockBuilder({
     onChange(next)
     setInsertIndex(null)
     setSearchBlockQuery('')
-    // Automatically select newly added block to open its properties drawer
     onSelectBlock(newBlock.id)
   }
 
@@ -253,7 +208,7 @@ export default function BlogBlockBuilder({
     setDragOverIndex(null)
   }
 
-  const allFilteredBlocks = AVAILABLE_BLOCKS.map((cat) => ({
+  const allFilteredBlocks = ATOMIC_AND_LAYOUT_BLOCKS.map((cat) => ({
     ...cat,
     blocks: cat.blocks.filter(
       (b) =>
@@ -269,11 +224,11 @@ export default function BlogBlockBuilder({
       <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-xl border border-panel-edge/80 bg-white/[0.015] px-4 py-2.5">
         <div className="flex items-center gap-2">
           <span className="flex h-5 w-5 items-center justify-center rounded-md bg-neon-blue/15 text-neon-blue text-xs font-bold">
-            ✦
+            ⊞
           </span>
-          <span className="text-xs font-semibold text-slate-200">Live Post Canvas</span>
+          <span className="text-xs font-semibold text-slate-200">Visual Canvas</span>
           <span className="text-[11px] text-slate-500 font-normal">
-            (Tap any block to customize in the side properties panel)
+            (Tap any container or atomic element to inspect properties)
           </span>
         </div>
 
@@ -285,11 +240,11 @@ export default function BlogBlockBuilder({
           <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.4} d="M12 4v16m8-8H4" />
           </svg>
-          Add Block
+          Add Element / Container
         </button>
       </div>
 
-      {/* Live Canvas of Blocks */}
+      {/* Live Canvas */}
       <div className="space-y-3">
         {blocks.map((block, index) => {
           const isDragging = draggedIndex === index
@@ -314,7 +269,7 @@ export default function BlogBlockBuilder({
                   : 'border-panel-edge/70 bg-abyss/40 hover:border-panel-edge'
               }`}
             >
-              {/* Subtle Canvas Hover Bar with Quick Floating Actions */}
+              {/* Floating Action Bar */}
               <div className="flex items-center justify-between border-b border-panel-edge/30 bg-white/[0.015] px-3 py-1.5 text-xs select-none">
                 <div className="flex items-center gap-2">
                   <span
@@ -324,7 +279,7 @@ export default function BlogBlockBuilder({
                     ⠿
                   </span>
                   <span className="font-mono text-[10px] uppercase font-bold text-neon-blue">
-                    {block.type.replace('_', ' ')}
+                    {block.type === 'container' ? 'Container (Auto-Layout)' : block.type}
                   </span>
                   <span className="text-[10px] text-slate-500">#{index + 1}</span>
                 </div>
@@ -375,11 +330,13 @@ export default function BlogBlockBuilder({
                 </div>
               </div>
 
-              {/* Pure Visual Preview Component (Clean, true-to-design, no messy inline forms) */}
+              {/* Visual Preview */}
               <BlockPreviewRenderer
                 block={block}
                 isSelected={isSelected}
-                onSelect={() => onSelectBlock(block.id)}
+                onSelect={(id) => onSelectBlock(id || block.id)}
+                selectedBlockId={selectedBlockId}
+                onSelectChild={(childId) => onSelectBlock(childId)}
               />
 
               {/* In-between Add Handle button */}
@@ -388,7 +345,7 @@ export default function BlogBlockBuilder({
                   type="button"
                   onClick={() => setInsertIndex(index + 1)}
                   className="absolute -bottom-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-panel-edge bg-slate-900 text-[11px] text-slate-400 opacity-0 transition-all hover:scale-110 hover:border-neon-blue hover:text-neon-blue group-hover:opacity-100 shadow-md"
-                  title="Insert block here"
+                  title="Insert element here"
                 >
                   +
                 </button>
@@ -408,11 +365,11 @@ export default function BlogBlockBuilder({
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add another block
+          Add Element or Container
         </button>
       </div>
 
-      {/* Block Type Picker Modal with Search & Categories */}
+      {/* Add Modal */}
       {insertIndex !== null && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
           <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-panel-edge bg-slate-950 shadow-2xl overflow-hidden">
@@ -420,8 +377,8 @@ export default function BlogBlockBuilder({
             <div className="border-b border-panel-edge p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-white">Add Block</h3>
-                  <p className="text-xs text-slate-400">Choose a component to insert at position #{insertIndex + 1}</p>
+                  <h3 className="text-base font-semibold text-white">Add Element or Container</h3>
+                  <p className="text-xs text-slate-400">Choose an atomic element or auto-layout container to insert at #{insertIndex + 1}</p>
                 </div>
                 <button
                   type="button"
@@ -436,7 +393,7 @@ export default function BlogBlockBuilder({
               <div className="mt-3 relative">
                 <input
                   type="text"
-                  placeholder="Search blocks (e.g. image, quote, columns, float)..."
+                  placeholder="Search elements (e.g. container, row, image, text, button)..."
                   value={searchBlockQuery}
                   onChange={(e) => setSearchBlockQuery(e.target.value)}
                   className="w-full rounded-lg border border-panel-edge bg-abyss/70 px-3 py-1.5 pl-8 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"
@@ -448,7 +405,7 @@ export default function BlogBlockBuilder({
               </div>
             </div>
 
-            {/* Modal Categories & Blocks */}
+            {/* Modal Categories */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {allFilteredBlocks.map((cat) => (
                 <div key={cat.category} className="space-y-2">

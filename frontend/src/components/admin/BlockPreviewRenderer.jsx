@@ -1,74 +1,162 @@
+import { renderSvgIcon } from '../../utils/blogBlocks'
+
 /**
  * Visual Preview of the block on the canvas, rendered with actual FlowBase styles.
- * When the author taps or clicks this block, it triggers selection into the properties drawer.
+ * If the block is a container, it renders its children recursively inside flex layout.
+ * Tapping any block (container or atomic child) selects it in the properties inspector.
  */
-export default function BlockPreviewRenderer({ block, isSelected, onSelect }) {
-  const renderPreviewContent = () => {
+export default function BlockPreviewRenderer({
+  block,
+  isSelected,
+  onSelect,
+  selectedBlockId,
+  onSelectChild,
+}) {
+  const handleClick = (e) => {
+    e.stopPropagation()
+    onSelect(block.id)
+  }
+
+  const renderContent = () => {
     switch (block.type) {
-      case 'heading': {
-        const Tag = ['h2', 'h3', 'h4'].includes(block.level) ? block.level : 'h2'
+      /* ---- Container / Flex Layout (Figma Auto-Layout / FlutterFlow Row/Column) ---- */
+      case 'container': {
+        const dirClass = block.direction === 'column' ? 'fb-flex-col' : 'fb-flex-row'
+        const wrapClass = block.wrap ? 'fb-flex-wrap' : 'fb-flex-nowrap'
+        const justifyClass =
+          block.justify === 'center'
+            ? 'fb-justify-center'
+            : block.justify === 'between'
+            ? 'fb-justify-between'
+            : block.justify === 'end'
+            ? 'fb-justify-end'
+            : 'fb-justify-start'
+        const alignClass =
+          block.align === 'start'
+            ? 'fb-items-start'
+            : block.align === 'stretch'
+            ? 'fb-items-stretch'
+            : 'fb-items-center'
+        const gapClass = `fb-gap-${block.gap || 'md'}`
+        const padClass = `fb-pad-${block.padding || 'md'}`
+        const bgClass = `fb-bg-${block.background || 'none'}`
+        const borderClass = `fb-border-${block.border || 'none'}`
+        const radiusClass = `fb-radius-${block.radius || 'md'}`
+
+        const children = block.children || []
+
         return (
-          <div className="fb-block fb-block-heading !my-0">
-            {block.kicker && <span className="fb-block-kicker">{block.kicker}</span>}
-            <Tag className="!my-0">{block.text || <span className="text-slate-600 italic">Empty Heading...</span>}</Tag>
+          <div
+            className={`fb-container min-h-[4rem] !my-0 ${dirClass} ${wrapClass} ${justifyClass} ${alignClass} ${gapClass} ${padClass} ${bgClass} ${borderClass} ${radiusClass}`}
+          >
+            {children.length > 0 ? (
+              children.map((child) => (
+                <div
+                  key={child.id}
+                  className="flex-1 min-w-[140px]"
+                >
+                  <BlockPreviewRenderer
+                    block={child}
+                    isSelected={selectedBlockId === child.id}
+                    onSelect={onSelectChild || onSelect}
+                    selectedBlockId={selectedBlockId}
+                    onSelectChild={onSelectChild}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="w-full py-4 text-center text-xs text-slate-500 italic border border-dashed border-panel-edge/60 rounded-lg">
+                Empty container — add child blocks in inspector
+              </div>
+            )}
           </div>
         )
       }
 
+      /* ---- Heading ---- */
+      case 'heading': {
+        const Tag = ['h2', 'h3', 'h4'].includes(block.level) ? block.level : 'h2'
+        const alignClass =
+          block.align === 'center'
+            ? 'text-center'
+            : block.align === 'right'
+            ? 'text-right'
+            : 'text-left'
+
+        return (
+          <div className={`fb-block fb-block-heading !my-0 ${alignClass}`}>
+            {block.kicker && <span className="fb-block-kicker">{block.kicker}</span>}
+            <Tag className="!my-0">{block.text || <span className="text-slate-600 italic">Heading text...</span>}</Tag>
+          </div>
+        )
+      }
+
+      /* ---- Text / Paragraph ---- */
+      case 'text':
       case 'paragraph': {
         return (
-          <div className="fb-block fb-block-paragraph !my-0">
+          <div className="fb-block fb-block-text !my-0">
             {block.html ? (
               <div dangerouslySetInnerHTML={{ __html: block.html }} />
             ) : (
-              <p className="text-slate-600 italic">Empty paragraph — click to edit in sidebar</p>
+              <p className="text-slate-600 italic">Empty text block — click to edit in sidebar</p>
             )}
           </div>
         )
       }
 
-      case 'text_image': {
-        const floatClass = block.float === 'left' ? 'fb-float-left' : 'fb-float-right'
-        const widthClass =
-          block.imageWidth === 'small'
-            ? 'fb-float-sm'
-            : block.imageWidth === 'large'
-            ? 'fb-float-lg'
-            : 'fb-float-md'
+      /* ---- Image ---- */
+      case 'image': {
+        const radClass = `fb-radius-${block.radius || 'md'}`
+        const fitClass = block.fit === 'contain' ? 'fb-img-contain' : 'fb-img-cover'
+        const style = block.width && block.width !== '100%' && block.width !== 'auto' ? { width: block.width } : {}
 
-        return (
-          <div className="fb-block fb-text-image-wrap clearfix !my-0">
-            {block.imageSrc ? (
-              <figure className={`fb-float-figure ${floatClass} ${widthClass}`}>
-                <img src={block.imageSrc} alt={block.alt || ''} className="rounded-lg border border-panel-edge" />
-                {block.caption && <figcaption className="fb-float-caption">{block.caption}</figcaption>}
-              </figure>
-            ) : (
-              <div className={`rounded-lg border border-dashed border-panel-edge/60 bg-abyss/80 p-6 text-center text-xs text-slate-500 ${floatClass} ${widthClass}`}>
-                <span>🖼️ Floating Image Placeholder</span>
-              </div>
-            )}
-            <div className="fb-text-body">
-              {block.html ? (
-                <div dangerouslySetInnerHTML={{ __html: block.html }} />
-              ) : (
-                <p className="text-slate-600 italic">Type wrapped text in the sidebar...</p>
-              )}
-            </div>
+        return block.src ? (
+          <figure className={`fb-block fb-atomic-image ${radClass} !my-0`} style={style}>
+            <img src={block.src} alt={block.alt || ''} className={`${fitClass} ${radClass}`} />
+            {block.caption && <figcaption className="fb-image-caption">{block.caption}</figcaption>}
+          </figure>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-panel-edge/80 bg-abyss/40 py-6 text-center text-xs text-slate-500">
+            <svg className="mb-1.5 h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span>Empty Image</span>
           </div>
         )
       }
 
-      case 'callout': {
-        const style = ['info', 'tip', 'warning', 'success'].includes(block.style) ? block.style : 'info'
+      /* ---- Icon Badge ---- */
+      case 'icon_badge': {
+        const variant = block.variant || 'primary'
         return (
-          <div className={`fb-block fb-callout fb-callout--${style} !my-0`}>
-            {block.title && <strong className="fb-callout-title">{block.title}</strong>}
-            <div className="fb-callout-body">{block.text || <span className="text-slate-600 italic">Callout message...</span>}</div>
+          <div className={`fb-block fb-icon-badge fb-badge--${variant} !my-0`}>
+            <span
+              className="fb-badge-icon"
+              dangerouslySetInnerHTML={{ __html: renderSvgIcon(block.icon || 'bolt') }}
+            />
+            <span className="fb-badge-text">{block.text || 'Badge Text'}</span>
           </div>
         )
       }
 
+      /* ---- Button ---- */
+      case 'button': {
+        const variant =
+          block.variant === 'secondary'
+            ? 'system-button-secondary'
+            : block.variant === 'subtle'
+            ? 'fb-btn-subtle'
+            : 'system-button-primary'
+
+        return (
+          <div className="fb-block fb-atomic-button !my-0">
+            <span className={`${variant} inline-block pointer-events-none`}>{block.text || 'Action Button'}</span>
+          </div>
+        )
+      }
+
+      /* ---- Code Block ---- */
       case 'code': {
         const lang = block.language || 'dart'
         return (
@@ -89,29 +177,18 @@ export default function BlockPreviewRenderer({ block, isSelected, onSelect }) {
         )
       }
 
-      case 'image': {
-        const layoutClass =
-          block.layout === 'wide'
-            ? 'fb-image--wide'
-            : block.layout === 'full'
-            ? 'fb-image--full'
-            : 'fb-image--standard'
-
-        return block.src ? (
-          <figure className={`fb-block fb-image ${layoutClass} !my-0`}>
-            <img src={block.src} alt={block.alt || ''} className="rounded-xl border border-panel-edge" />
-            {block.caption && <figcaption className="fb-image-caption">{block.caption}</figcaption>}
-          </figure>
-        ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-panel-edge/80 bg-abyss/40 py-8 text-center text-xs text-slate-500">
-            <svg className="mb-2 h-8 w-8 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>Empty Image Block — Click to set image source</span>
+      /* ---- Callout / Alert Box ---- */
+      case 'callout': {
+        const style = ['info', 'tip', 'warning', 'success'].includes(block.style) ? block.style : 'info'
+        return (
+          <div className={`fb-block fb-callout fb-callout--${style} !my-0`}>
+            {block.title && <strong className="fb-callout-title">{block.title}</strong>}
+            <div className="fb-callout-body">{block.text || <span className="text-slate-600 italic">Callout message...</span>}</div>
           </div>
         )
       }
 
+      /* ---- Quote ---- */
       case 'quote': {
         return (
           <blockquote className="fb-block fb-pull-quote !my-0">
@@ -126,98 +203,12 @@ export default function BlockPreviewRenderer({ block, isSelected, onSelect }) {
         )
       }
 
-      case 'columns': {
-        const layoutClass =
-          block.layout === 'wide-left'
-            ? 'fb-columns--wide-left'
-            : block.layout === 'wide-right'
-            ? 'fb-columns--wide-right'
-            : block.layout === 'three-col'
-            ? 'fb-columns--three-col'
-            : 'fb-columns--equal'
-
-        if (block.layout === 'three-col') {
-          return (
-            <div className={`fb-block fb-columns-grid ${layoutClass} !my-0`}>
-              <div className="fb-col rounded-lg border border-dashed border-panel-edge/40 bg-abyss/30 p-3" dangerouslySetInnerHTML={{ __html: block.left || '<span class="text-slate-600 italic">Column 1</span>' }} />
-              <div className="fb-col rounded-lg border border-dashed border-panel-edge/40 bg-abyss/30 p-3" dangerouslySetInnerHTML={{ __html: block.center || '<span class="text-slate-600 italic">Column 2</span>' }} />
-              <div className="fb-col rounded-lg border border-dashed border-panel-edge/40 bg-abyss/30 p-3" dangerouslySetInnerHTML={{ __html: block.right || '<span class="text-slate-600 italic">Column 3</span>' }} />
-            </div>
-          )
-        }
-
-        return (
-          <div className={`fb-block fb-columns-grid ${layoutClass} !my-0`}>
-            <div className="fb-col fb-col-left rounded-lg border border-dashed border-panel-edge/40 bg-abyss/30 p-3" dangerouslySetInnerHTML={{ __html: block.left || '<span class="text-slate-600 italic">Left Column</span>' }} />
-            <div className="fb-col fb-col-right rounded-lg border border-dashed border-panel-edge/40 bg-abyss/30 p-3" dangerouslySetInnerHTML={{ __html: block.right || '<span class="text-slate-600 italic">Right Column</span>' }} />
-          </div>
-        )
-      }
-
-      case 'stats': {
-        const items = block.items || []
-        return (
-          <div className="fb-block fb-stats-grid !my-0">
-            {items.map((stat, i) => (
-              <div key={i} className="fb-stat-cell">
-                <span className="fb-stat-val">{stat.value || '0'}</span>
-                <span className="fb-stat-lbl">{stat.label || 'Metric'}</span>
-              </div>
-            ))}
-          </div>
-        )
-      }
-
-      case 'faq': {
-        const items = block.items || []
-        return (
-          <div className="fb-block fb-faq-list !my-0">
-            {items.map((item, i) => (
-              <details key={i} className="fb-faq-item" open>
-                <summary className="fb-faq-q">{item.question || 'FAQ Question'}</summary>
-                <div className="fb-faq-a"><p>{item.answer || 'Answer description...'}</p></div>
-              </details>
-            ))}
-          </div>
-        )
-      }
-
-      case 'button': {
-        const alignClass =
-          block.align === 'center'
-            ? 'justify-center'
-            : block.align === 'right'
-            ? 'justify-end'
-            : 'justify-start'
-        const btnVariant = block.variant === 'secondary' ? 'system-button-secondary' : 'system-button-primary'
-        return (
-          <div className={`fb-block fb-standalone-btn flex ${alignClass} !my-0`}>
-            <span className={`${btnVariant} inline-block pointer-events-none`}>{block.text || 'Button Link'}</span>
-          </div>
-        )
-      }
-
-      case 'cta': {
-        const btnVariant = block.variant === 'secondary' ? 'system-button-secondary' : 'system-button-primary'
-        return (
-          <div className="fb-block fb-cta-box !my-0">
-            <div className="fb-cta-inner">
-              <div className="fb-cta-text">
-                <h3>{block.heading || 'Call to Action Title'}</h3>
-                <p>{block.text || 'Supporting description...'}</p>
-              </div>
-              <span className={`fb-cta-btn ${btnVariant} pointer-events-none`}>
-                {block.buttonText || 'Learn More'} &rarr;
-              </span>
-            </div>
-          </div>
-        )
-      }
-
+      /* ---- Divider ---- */
       case 'divider': {
-        return <hr className="fb-block fb-divider !my-0" />
+        return <hr className={`fb-block fb-divider fb-divider--${block.style || 'gradient'} !my-0`} />
       }
 
+      /* ---- Classic ---- */
       case 'classic':
       default: {
         return (
@@ -231,21 +222,26 @@ export default function BlockPreviewRenderer({ block, isSelected, onSelect }) {
 
   return (
     <div
-      onClick={onSelect}
-      className={`markdown-body relative cursor-pointer rounded-xl p-4 transition-all duration-150 ${
+      onClick={handleClick}
+      className={`markdown-body group/preview relative cursor-pointer rounded-xl p-3 transition-all duration-150 ${
         isSelected
-          ? 'ring-2 ring-neon-blue bg-neon-blue/[0.04] shadow-lg shadow-neon-blue/10'
+          ? 'ring-2 ring-neon-blue bg-neon-blue/[0.04] shadow-md shadow-neon-blue/10'
           : 'hover:bg-white/[0.02] hover:ring-1 hover:ring-panel-edge'
       }`}
     >
-      {renderPreviewContent()}
-      
-      {/* Floating Edit Hint Badge on Hover/Select */}
-      <div className={`absolute right-3 top-3 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-        <span className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-mono uppercase font-semibold ${
-          isSelected ? 'bg-neon-blue text-white shadow-xs' : 'bg-slate-800 text-slate-300 border border-panel-edge'
-        }`}>
-          {isSelected ? 'Editing in Drawer ✎' : 'Click to Edit ✎'}
+      {renderContent()}
+
+      {/* Floating Tag Badge on Select / Hover */}
+      <div className={`absolute right-2 top-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover/preview:opacity-100'}`}>
+        <span
+          className={`inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-mono uppercase font-bold ${
+            isSelected
+              ? 'bg-neon-blue text-white shadow-xs'
+              : 'bg-slate-900/90 text-slate-300 border border-panel-edge'
+          }`}
+        >
+          {block.type}
+          {isSelected && ' • active'}
         </span>
       </div>
     </div>
