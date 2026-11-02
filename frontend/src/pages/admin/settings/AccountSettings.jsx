@@ -5,9 +5,8 @@ import Field from '../../../components/admin/Field'
 import { inputClass } from '../../../components/admin/formStyles'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
-import { fieldErrorsFrom, formErrorFrom } from '../../../utils/apiErrors'
 
-const empty = { current_password: '', new_password: '', confirm_password: '' }
+const empty = { new_password: '', confirm_password: '' }
 
 export default function AccountSettings() {
   const [form, setForm] = useState(empty)
@@ -38,16 +37,20 @@ export default function AccountSettings() {
       return
     }
 
+    if (form.new_password.length < 6) {
+      setFieldErrors({ new_password: 'Password must be at least 6 characters.' })
+      setSaving(false)
+      return
+    }
+
     try {
       await changePassword({
-        current_password: form.current_password,
         new_password: form.new_password,
       })
       setForm(empty)
       setSaved(true)
     } catch (error) {
-      setFieldErrors(fieldErrorsFrom(error))
-      setFormError(formErrorFrom(error))
+      setFormError(error?.message || 'Failed to change password. Try again.')
     } finally {
       setSaving(false)
     }
@@ -57,9 +60,9 @@ export default function AccountSettings() {
     <div className="mx-auto max-w-lg pb-16">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl text-white sm:text-3xl">Account</h1>
-        {saved && <span className="text-xs text-status-green">Saved</span>}
+        {saved && <span className="text-xs text-status-green font-medium">✓ Password updated</span>}
       </div>
-      <p className="mt-2 text-sm text-slate-400">Change the password used to sign in to this panel.</p>
+      <p className="mt-2 text-sm text-slate-400">Change the password used to sign in to this control panel.</p>
 
       {formError && (
         <p role="alert" className="mt-4 text-sm text-status-red">
@@ -69,19 +72,7 @@ export default function AccountSettings() {
 
       <StatusPanel glow={false} className="mt-6 space-y-4 p-5">
         <form onSubmit={save} className="space-y-4">
-          <Field label="Current password" htmlFor="current_password" error={fieldErrors.current_password?.[0]}>
-            <input
-              id="current_password"
-              type="password"
-              required
-              autoComplete="current-password"
-              value={form.current_password}
-              onChange={(e) => update({ current_password: e.target.value })}
-              className={inputClass}
-            />
-          </Field>
-
-          <Field label="New password" htmlFor="new_password" error={fieldErrors.new_password?.[0]}>
+          <Field label="New password" htmlFor="new_password" error={fieldErrors.new_password}>
             <input
               id="new_password"
               type="password"
@@ -96,7 +87,7 @@ export default function AccountSettings() {
           <Field
             label="Confirm new password"
             htmlFor="confirm_password"
-            error={typeof fieldErrors.confirm_password === 'string' ? fieldErrors.confirm_password : fieldErrors.confirm_password?.[0]}
+            error={fieldErrors.confirm_password}
           >
             <input
               id="confirm_password"
@@ -110,7 +101,7 @@ export default function AccountSettings() {
           </Field>
 
           <SystemButton type="submit" disabled={saving} variant="primary">
-            {saving ? 'Saving...' : 'Change password'}
+            {saving ? 'Updating...' : 'Change password'}
           </SystemButton>
         </form>
       </StatusPanel>

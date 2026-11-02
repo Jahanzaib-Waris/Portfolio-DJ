@@ -1,141 +1,192 @@
-import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { getBlogPost } from '../api/client'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useParams, useOutletContext } from 'react-router-dom'
+import { getBlogPost, getBlogPosts } from '../api/client'
 import RichTextContent from '../components/RichTextContent'
 import StatusPanel from '../components/StatusPanel'
 import { Skeleton } from '../components/Skeleton'
+import SystemButton from '../components/SystemButton'
 import useDocumentMeta from '../hooks/useDocumentMeta'
+import fallbackPostDetails from '../data/fallbackBlogDetails.json'
 
-const fallbackPostDetails = {
-  'fix-flutterflow-google-maps-ios': {
-    title: 'Fix: Google Maps blank screen on iOS release builds in FlutterFlow',
-    published_date: 'Sep 18, 2026',
-    category: 'FlutterFlow Fixes',
-    content: `
-<h2>The Problem</h2>
-<p>In FlutterFlow, your Google Maps widget may render perfectly in Run Mode and on local iOS simulators, but turns into a solid grey or blank box immediately after releasing via TestFlight or App Store Connect.</p>
-
-<blockquote class="is-style-fb-warning">
-  <strong>Warning:</strong> iOS release builds enforce strict Info.plist key validation and separate Google Maps SDK API key declarations from Android manifest keys.
-</blockquote>
-
-<h2>Why it happens</h2>
-<p>When Flutter compiles for release on iOS, the Google Maps SDK fails to initialize if the <code>io.flutter.embedded_views_preview</code> key or the Google Maps API Key is omitted from your Xcode project settings or FlutterFlow project configuration.</p>
-
-<h2>The Fix</h2>
-<ol>
-  <li>Navigate to your <strong>Settings &rarr; App Details</strong> in FlutterFlow.</li>
-  <li>Under <strong>Permissions / Plist</strong>, add:</li>
-</ol>
-
-<pre><code>&lt;key&gt;io.flutter.embedded_views_preview&lt;/key&gt;
-&lt;true/&gt;</code></pre>
-
-<p>Ensure your Google Cloud Console has an unrestricted iOS API Key with the bundle identifier matching your app identifier exactly.</p>
-    `,
-  },
-  'custom-dart-action-with-return-value': {
-    title: 'How to create custom Dart actions that return complex data in FlutterFlow',
-    published_date: 'Sep 12, 2026',
-    category: 'Custom Code',
-    content: `
-<h2>The Problem</h2>
-<p>FlutterFlow's visual action builder is great for standard navigations, but when you need to parse nested JSON responses from a custom API or calculate subscription prorations, you need custom Dart code that returns structured data.</p>
-
-<h2>The Solution</h2>
-<p>In FlutterFlow, define a <strong>Custom Action</strong> with a defined return type (e.g. <code>JSON</code> or a custom Data Type). Paste your Dart function:</p>
-
-<pre><code>Future&lt;dynamic&gt; calculateProration(
-  DateTime currentPeriodEnd,
-  double newPlanPrice,
-) async {
-  final now = DateTime.now();
-  final daysLeft = currentPeriodEnd.difference(now).inDays;
-  final dailyRate = newPlanPrice / 30.0;
-  return {
-    'daysLeft': daysLeft,
-    'dueToday': (daysLeft * dailyRate).toStringAsFixed(2),
-  };
-}</code></pre>
-
-<blockquote class="is-style-fb-tip">
-  <strong>Tip:</strong> Always test custom actions with mock inputs directly in the FlutterFlow editor test tab before compiling.
-</blockquote>
-    `,
-  },
-  'supabase-auth-rls-flutterflow': {
-    title: 'Connecting Supabase Row Level Security with FlutterFlow authenticated users',
-    published_date: 'Aug 29, 2026',
-    category: 'Integrations',
-    content: `
-<h2>The Problem</h2>
-<p>Enabling Row Level Security (RLS) on Supabase tables often results in zero rows returned inside your FlutterFlow app because requests are sent anonymously without the user's JWT bearer token.</p>
-
-<h2>The Fix</h2>
-<p>Ensure that in FlutterFlow under <strong>Integrations &rarr; Supabase</strong>, you check <strong>Enable Auth</strong> and use the Supabase Auth action when users log in. This automatically injects the auth bearer token into every PostgreSQL query executed by the client SDK.</p>
-    `,
-  },
-  'nested-scrollview-renderflex-overflow': {
-    title: 'Resolving RenderFlex overflow errors in complex nested lists',
-    published_date: 'Aug 14, 2026',
-    category: 'FlutterFlow Fixes',
-    content: `
-<h2>The Problem</h2>
-<p>You see yellow-and-black striped hazard bars with a message like: <em>A RenderFlex overflowed by 24 pixels on the bottom</em> or <em>Vertical viewport was given unbounded height</em>.</p>
-
-<h2>The Fix</h2>
-<p>Wrap the inner ListView in an <strong>Expanded</strong> widget, or set the ListView's property <strong>Shrink Wrap: True</strong> and <strong>Physics: NeverScrollableScrollPhysics</strong> if nested within a parent single-child scrollview.</p>
-    `,
-  },
+/** Rough word-count reading-time estimate from an HTML string */
+function readingTime(html = '') {
+  const text = html.replace(/<[^>]+>/g, ' ')
+  const words = text.trim().split(/\s+/).filter(Boolean).length
+  return Math.max(1, Math.ceil(words / 200))
 }
+
+const ChevronLeft = () => (
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+    <path d="M10 12L6 8l4-4" />
+  </svg>
+)
 
 export default function BlogDetail() {
   const { slug } = useParams()
+  const { onRequestQuote } = useOutletContext() || {}
   const [post, setPost] = useState(null)
+  const [allPosts, setAllPosts] = useState([])
   const [loadState, setLoadState] = useState('loading')
 
-  const effectivePost = post || fallbackPostDetails[slug]
-
-  useDocumentMeta(effectivePost ? `${effectivePost.title} — Jahanzaib Waris` : undefined, effectivePost?.excerpt)
+  const todayStr = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const rawFallback = fallbackPostDetails[slug]
+  const isFallbackScheduled = rawFallback?.published_date_raw && rawFallback.published_date_raw > todayStr
+  const effectivePost = post || (!isFallbackScheduled ? rawFallback : null)
+  const mins = effectivePost ? readingTime(effectivePost.content) : null
 
   useEffect(() => {
+    getBlogPosts()
+      .then((res) => {
+        const list = res.results || res.items || res
+        if (Array.isArray(list)) setAllPosts(list)
+      })
+      .catch(() => {})
+  }, [])
+
+  const relatedPosts = useMemo(() => {
+    const fallbackList = Object.entries(fallbackPostDetails).map(([s, p]) => ({ slug: s, ...p }))
+    const pool = (allPosts.length > 0 ? allPosts : fallbackList)
+      .filter((p) => p.slug !== slug && (!p.published_date_raw || p.published_date_raw <= todayStr))
+    const sameCat = pool.filter((p) => p.category === effectivePost?.category)
+    const otherCat = pool.filter((p) => p.category !== effectivePost?.category)
+    return [...sameCat, ...otherCat].slice(0, 2)
+  }, [allPosts, slug, effectivePost?.category, todayStr])
+
+  const blogDetailSchema = useMemo(() => {
+    if (!effectivePost) return null
+    const postUrl = `https://jerry-dev-studio.web.app/blogs/${slug}`
+    const imageUrl = effectivePost.cover_image
+      ? (effectivePost.cover_image.startsWith('http')
+          ? effectivePost.cover_image
+          : `https://jerry-dev-studio.web.app${effectivePost.cover_image.startsWith('/') ? '' : '/'}${effectivePost.cover_image}`)
+      : 'https://jerry-dev-studio.web.app/logo.png'
+
+    return [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: effectivePost.title,
+        description: effectivePost.excerpt,
+        image: imageUrl,
+        datePublished: effectivePost.published_date_raw || effectivePost.published_date || '2026-11-01',
+        dateModified: '2026-11-01',
+        author: {
+          '@type': 'Organization',
+          name: 'Jerry Dev Studio',
+          url: 'https://jerry-dev-studio.web.app/',
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Jerry Dev Studio',
+          url: 'https://jerry-dev-studio.web.app/',
+          logo: {
+            '@type': 'ImageObject',
+            url: 'https://jerry-dev-studio.web.app/logo.png',
+          },
+        },
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: 'https://jerry-dev-studio.web.app/',
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Blog & Fixes',
+            item: 'https://jerry-dev-studio.web.app/blogs',
+          },
+          {
+            '@type': 'ListItem',
+            position: 3,
+            name: effectivePost.title,
+            item: postUrl,
+          },
+        ],
+      },
+    ]
+  }, [effectivePost, slug])
+
+  useDocumentMeta({
+    title: effectivePost ? `${effectivePost.title} — Jerry Dev Studio` : 'Article — Jerry Dev Studio',
+    description: effectivePost?.excerpt,
+    canonicalPath: `/blogs/${slug}`,
+    image: effectivePost?.cover_image,
+    type: 'article',
+    keywords: `${effectivePost?.category || 'FlutterFlow'}, FlutterFlow fix, Dart, mobile engineering, Jerry Dev Studio`,
+    schema: blogDetailSchema,
+  })
+
+  useEffect(() => {
+    let canceled = false
     setLoadState('loading')
     getBlogPost(slug)
       .then((data) => {
-        setPost(data)
-        setLoadState('ready')
+        if (canceled) return
+        if (data) {
+          setPost(data)
+          setLoadState('ready')
+        } else if (rawFallback) {
+          if (isFallbackScheduled) {
+            setPost(null)
+            setLoadState('error')
+          } else {
+            setLoadState('ready')
+          }
+        } else {
+          setLoadState('error')
+        }
       })
       .catch(() => {
-        if (fallbackPostDetails[slug]) {
+        if (canceled) return
+        if (rawFallback && !isFallbackScheduled) {
           setLoadState('ready')
         } else {
           setLoadState('error')
         }
       })
-  }, [slug])
+    return () => {
+      canceled = true
+    }
+  }, [slug, rawFallback, isFallbackScheduled])
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
+      {/* Breadcrumb back link */}
       <Link
         to="/blogs"
-        className="mb-8 inline-flex items-center gap-2 text-sm text-[#38BDF8] hover:text-white transition-colors"
+        className="mb-10 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A1A7CA] hover:text-white transition-colors"
       >
-        &larr; Back to Blog
+        <ChevronLeft />
+        Blog &amp; Fixes
       </Link>
 
       {loadState === 'loading' && !effectivePost && (
-        <StatusPanel glow={false}>
-          <Skeleton className="mb-6 h-52 w-full" />
-          <Skeleton className="mb-3 h-3 w-24" />
-          <Skeleton className="mb-6 h-7 w-2/3" />
-          <Skeleton className="mb-2 h-4 w-full" />
-          <Skeleton className="mb-2 h-4 w-full" />
-          <Skeleton className="h-4 w-3/4" />
+        <StatusPanel glow={false} className="space-y-4 p-8">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="mt-8 h-64 w-full" />
         </StatusPanel>
       )}
 
       {loadState === 'error' && !effectivePost && (
-        <p className="text-status-red">Blog post not found.</p>
+        <StatusPanel className="p-8 text-center">
+          <p className="text-status-red text-base font-semibold">Article not found</p>
+          <p className="mt-2 text-xs text-slate-400">
+            This article may still be scheduled for publication or the link has moved.
+          </p>
+          <div className="mt-6">
+            <SystemButton as={Link} to="/blogs">
+              Explore All Articles
+            </SystemButton>
+          </div>
+        </StatusPanel>
       )}
 
       {effectivePost && (
@@ -144,25 +195,102 @@ export default function BlogDetail() {
             <img
               src={effectivePost.cover_image}
               alt={effectivePost.title}
-              className="mb-8 h-auto w-full object-cover rounded-[24px] border border-panel-edge"
+              className="mb-8 h-auto w-full rounded-[24px] border border-panel-edge object-cover shadow-2xl"
             />
           )}
-          <div className="flex items-center gap-3 text-xs mb-3">
+
+          {/* Metadata pill row */}
+          <div className="flex flex-wrap items-center gap-3 text-xs">
             {effectivePost.category && (
-              <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue">
+              <span className="fb-chip border-neon-blue/30 bg-neon-blue/10 text-neon-blue font-medium">
                 {effectivePost.category}
               </span>
             )}
-            <span className="font-mono-ui text-[#A1A7CA]">{effectivePost.published_date}</span>
+            <span className="font-mono-ui text-[#A1A7CA]">
+              {effectivePost.published_date}
+            </span>
+            {mins && (
+              <>
+                <span className="text-slate-600">&middot;</span>
+                <span className="text-slate-400">{mins} min read</span>
+              </>
+            )}
           </div>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+
+          <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl leading-tight">
             {effectivePost.title}
           </h1>
+
+          {effectivePost.excerpt && (
+            <p className="mt-4 text-lg text-slate-300 leading-relaxed">
+              {effectivePost.excerpt}
+            </p>
+          )}
+
           <div className="mt-10 border-t border-panel-edge pt-10">
             <RichTextContent className="markdown-body">
               {effectivePost.content}
             </RichTextContent>
           </div>
+
+          {/* Consultation / Work with studio CTA banner */}
+          <div className="mt-16 rounded-2xl border border-neon-blue/30 bg-gradient-to-r from-neon-blue/10 via-[#0A0C16] to-neon-indigo/10 p-6 sm:p-8 backdrop-blur-sm">
+            <div className="sm:flex sm:items-center sm:justify-between sm:gap-6">
+              <div>
+                <span className="eyebrow system-heading text-xs text-neon-blue">
+                  // NEED ARCHITECTURAL ASSISTANCE?
+                </span>
+                <h3 className="mt-2 text-xl font-bold text-white">
+                  Facing a complex FlutterFlow or mobile engineering blocker?
+                </h3>
+                <p className="mt-1.5 text-sm text-slate-300 max-w-xl">
+                  Jerry Dev Studio audits codebases, builds custom Dart actions, fixes App Store rejections, and builds production apps with full Supabase backends.
+                </p>
+              </div>
+              <div className="mt-4 sm:mt-0 shrink-0">
+                <SystemButton variant="primary" onClick={onRequestQuote}>
+                  Request consultation
+                </SystemButton>
+              </div>
+            </div>
+          </div>
+
+          {/* Related Articles */}
+          {relatedPosts.length > 0 && (
+            <div className="mt-16 border-t border-panel-edge pt-12">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                Related Articles &amp; Solutions
+              </h2>
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {relatedPosts.map((rel) => (
+                  <Link
+                    key={rel.slug}
+                    to={`/blogs/${rel.slug}`}
+                    className="group flex flex-col justify-between rounded-xl border border-panel-edge bg-void/50 p-5 transition-all hover:border-neon-blue/40 hover:bg-abyss/60"
+                  >
+                    <div>
+                      {rel.category && (
+                        <span className="text-[11px] font-semibold text-neon-blue uppercase tracking-wider">
+                          {rel.category}
+                        </span>
+                      )}
+                      <h4 className="mt-2 text-base font-bold text-white group-hover:text-neon-blue transition-colors line-clamp-2">
+                        {rel.title}
+                      </h4>
+                      {rel.excerpt && (
+                        <p className="mt-2 text-xs text-slate-400 line-clamp-2 leading-relaxed">
+                          {rel.excerpt}
+                        </p>
+                      )}
+                    </div>
+                    <span className="mt-4 inline-flex items-center text-xs font-semibold text-neon-blue group-hover:translate-x-1 transition-transform">
+                      Read article &rarr;
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </article>
       )}
     </div>

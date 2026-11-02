@@ -93,25 +93,33 @@ export default function BlogList() {
             </StatusPanel>
           ))}
 
-        {filteredPosts.map((post) => (
-          <StatusPanel key={post.id} className="flex flex-wrap items-center gap-4 p-4">
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-sm font-semibold text-white">{post.title}</h2>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] uppercase tracking-wide ${
-                    post.is_published
-                      ? 'bg-status-green/10 text-status-green'
-                      : 'bg-accent/10 text-accent'
-                  }`}
-                >
-                  {post.is_published ? 'Published' : 'Draft'}
-                </span>
+        {filteredPosts.map((post) => {
+          const todayStr = new Date().toISOString().slice(0, 10)
+          const isScheduled = post.is_published && post.published_date && post.published_date > todayStr
+
+          return (
+            <StatusPanel key={post.id} className="flex flex-wrap items-center gap-4 p-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate text-sm font-semibold text-white">{post.title}</h2>
+                  {isScheduled ? (
+                    <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-[10px] font-medium tracking-wide text-neon-blue">
+                      Scheduled &middot; {post.published_date}
+                    </span>
+                  ) : post.is_published ? (
+                    <span className="rounded-full bg-status-green/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-status-green">
+                      Live
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
+                      Draft
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 truncate text-xs text-slate-500">
+                  {post.published_date} &middot; /{post.slug}
+                </p>
               </div>
-              <p className="mt-1 truncate text-xs text-slate-500">
-                {post.published_date} &middot; /{post.slug}
-              </p>
-            </div>
 
             <div className="flex shrink-0 gap-2 text-xs">
               {post.is_published && (
@@ -136,7 +144,8 @@ export default function BlogList() {
               </button>
             </div>
           </StatusPanel>
-        ))}
+          )
+        })}
       </div>
 
       {hasMore && (

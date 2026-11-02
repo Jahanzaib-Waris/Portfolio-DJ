@@ -4,21 +4,19 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/authContext'
 import SystemButton from '../../components/SystemButton'
 
-/** Turns a failed login into something worth reading. */
+/** Turns a failed login into something user-readable. */
 function describeError(error) {
-  const status = error?.response?.status
-  const data = error?.response?.data
-
-  // The custom serializer rejects non-staff accounts with a 400 and a
-  // non_field_errors message; bad credentials come back from simplejwt as 401.
-  if (status === 400) {
-    const detail = data?.non_field_errors?.[0] || data?.detail
-    return detail || 'That account cannot sign in here.'
+  const msg = error?.message || ''
+  if (msg.includes('Invalid login credentials') || msg.includes('invalid_grant')) {
+    return 'Incorrect email or password.'
   }
-  if (status === 401) return 'Incorrect username or password.'
-  if (status === 429) return 'Too many attempts. Try again shortly.'
-  if (!error?.response) return 'Cannot reach the server. Is the backend running?'
-  return 'Something went wrong. Try again.'
+  if (msg.includes('Email not confirmed')) {
+    return 'Please confirm your email address or disable email confirmation in Supabase.'
+  }
+  if (msg.includes('rate limit') || msg.includes('too many')) {
+    return 'Too many attempts. Try again shortly.'
+  }
+  return msg || 'Cannot sign in. Please verify your credentials.'
 }
 
 export default function AdminLogin() {
@@ -26,7 +24,7 @@ export default function AdminLogin() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [form, setForm] = useState({ username: '', password: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -34,7 +32,7 @@ export default function AdminLogin() {
     document.title = 'Sign in — Control Panel'
   }, [])
 
-  // Already signed in (or just signed in): go where they were headed.
+  // Already signed in: redirect to destination
   if (!isBooting && isAuthenticated) {
     return <Navigate to={location.state?.from?.pathname || '/admin'} replace />
   }
@@ -46,7 +44,7 @@ export default function AdminLogin() {
     setSubmitting(true)
     setError(null)
     try {
-      await login(form.username, form.password)
+      await login(form.email, form.password)
       navigate(location.state?.from?.pathname || '/admin', { replace: true })
     } catch (err) {
       setError(describeError(err))
@@ -69,16 +67,18 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="username" className="system-heading mb-1 block text-xs text-slate-400">
-                Username
+              <label htmlFor="email" className="system-heading mb-1 block text-xs text-slate-400">
+                Email address
               </label>
               <input
-                id="username"
-                name="username"
+                id="email"
+                name="email"
+                type="email"
                 required
-                autoComplete="username"
+                autoComplete="email"
                 autoFocus
-                value={form.username}
+                placeholder="admin@example.com"
+                value={form.email}
                 onChange={handleChange}
                 className={inputClass}
               />

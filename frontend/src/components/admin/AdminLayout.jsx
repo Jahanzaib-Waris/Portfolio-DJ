@@ -157,8 +157,9 @@ export default function AdminLayout() {
             >
               <span className="text-lg leading-none">{menuOpen ? '×' : '≡'}</span>
             </button>
-            <Link to="/admin" className="system-heading text-base text-neon-blue">
-              {siteName ? `${siteName} — Control Panel` : 'Control Panel'}
+            <Link to="/admin" className="system-heading flex items-center gap-2 text-base text-neon-blue">
+              <img src="/logo.png" alt="Jerry Dev Studio" className="h-6 w-6 rounded object-contain" />
+              <span>{siteName ? `${siteName} — Control Panel` : 'Control Panel'}</span>
             </Link>
           </div>
 

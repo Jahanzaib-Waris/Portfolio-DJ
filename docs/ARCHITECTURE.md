@@ -1,12 +1,8 @@
 # Portfolio-DJ — Project Reference
 
-A personal developer portfolio and blog with a modern, developer-focused FlowBase visual system
-(deep navy canvas, violet primary, sky blue accents, self-hosted typography). Django REST
-Framework API + React (Vite) single-page frontend, deployed as two separate Vercel projects
-backed by Supabase. The admin panel is a custom WordPress-style control panel: grouped
-sidebar, live analytics, content CRUD, site settings, and a single runtime-editable theme.
+**Jerry Dev Studio** ([https://jerry-dev-studio.web.app/](https://jerry-dev-studio.web.app/)): A high-performance FlutterFlow & mobile engineering studio portfolio, client portal, and technical publication built with the **FlowBase** design system (deep navy canvas, violet primary, sky blue accents, self-hosted typography). React (Vite) single-page frontend deployed on **Firebase Hosting** and backed directly by **Supabase** (PostgreSQL, Supabase Auth, Storage, and Row Level Security). The admin panel is a custom route-guarded control panel: grouped sidebar, live analytics, content CRUD, FlowBase Visual Block Builder V2, site settings, and a runtime-editable theme.
 
-Last updated: 2026-09-26.
+Last updated: 2026-11-02.
 
 ---
 

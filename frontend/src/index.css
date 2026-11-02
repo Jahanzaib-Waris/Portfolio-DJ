@@ -1847,4 +1847,34 @@
     background: var(--color-neon-indigo);
     box-shadow: 0 0 8px rgb(124 108 255 / 0.8);
   }
+
+  .copy-code-btn {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.72rem;
+    font-family: var(--font-mono-ui, monospace);
+    color: #a1a7ca;
+    background: rgba(17, 20, 42, 0.9);
+    border: 1px solid var(--color-panel-edge);
+    border-radius: 0.375rem;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all 0.15s ease;
+    user-select: none;
+    z-index: 10;
+  }
+
+  .copy-code-btn:hover {
+    color: var(--color-neon-blue);
+    border-color: var(--color-neon-blue);
+    background: rgba(56, 189, 248, 0.12);
+  }
+
+  .copy-code-btn.copied {
+    color: #4ade80;
+    border-color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+  }
 }

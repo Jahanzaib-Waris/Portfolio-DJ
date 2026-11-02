@@ -1,74 +1,91 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-
-import {
-  blacklistRefreshToken,
-  getCurrentUser,
-  obtainTokens,
-  refreshAccessToken,
-  setSessionExpiredHandler,
-} from '../api/client'
+import { supabase, isSupabaseConfigured } from '../api/supabase'
 import { AuthContext } from './authContext'
-import { clearTokens, getRefreshToken, setAccessToken, setRefreshToken } from './tokenStore'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  // 'booting' matters: on a reload we hold the UI until we know whether the
-  // stored refresh token is still good, otherwise the panel would flash the
-  // login screen before restoring the session.
   const [status, setStatus] = useState('booting')
 
   useEffect(() => {
     let cancelled = false
 
-    // A refresh that fails mid-session (expired or blacklisted) drops us here.
-    setSessionExpiredHandler(() => {
-      setUser(null)
-      setStatus('anonymous')
-    })
-
-    if (!getRefreshToken()) {
+    if (!isSupabaseConfigured) {
       setStatus('anonymous')
       return
     }
 
-    refreshAccessToken()
-      .then(() => getCurrentUser())
-      .then((currentUser) => {
+    // 1. Initial session check on page boot
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
         if (cancelled) return
-        setUser(currentUser)
-        setStatus('authenticated')
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            username: session.user.email.split('@')[0],
+            is_staff: true,
+          })
+          setStatus('authenticated')
+        } else {
+          setUser(null)
+          setStatus('anonymous')
+        }
       })
       .catch(() => {
         if (cancelled) return
-        clearTokens()
+        setUser(null)
         setStatus('anonymous')
       })
 
+    // 2. Continuous subscription to auth state changes (sign in, sign out, token refresh)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          username: session.user.email.split('@')[0],
+          is_staff: true,
+        })
+        setStatus('authenticated')
+      } else {
+        setUser(null)
+        setStatus('anonymous')
+      }
+    })
+
     return () => {
       cancelled = true
-      setSessionExpiredHandler(null)
+      subscription?.unsubscribe()
     }
   }, [])
 
-  const login = useCallback(async (username, password) => {
-    const data = await obtainTokens(username, password)
-    setAccessToken(data.access)
-    setRefreshToken(data.refresh)
-    setUser(data.user)
+  const login = useCallback(async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
+
+    const currentUser = {
+      id: data.user.id,
+      email: data.user.email,
+      username: data.user.email.split('@')[0],
+      is_staff: true,
+    }
+    setUser(currentUser)
     setStatus('authenticated')
-    return data.user
+    return currentUser
   }, [])
 
   const logout = useCallback(async () => {
-    const refresh = getRefreshToken()
     try {
-      // Best effort — if the token is already expired the server rejects it,
-      // which is fine. Local state gets cleared either way.
-      if (refresh) await blacklistRefreshToken(refresh)
+      await supabase.auth.signOut()
     } catch {
       /* ignore */
     }
-    clearTokens()
     setUser(null)
     setStatus('anonymous')
   }, [])

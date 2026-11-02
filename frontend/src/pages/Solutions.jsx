@@ -94,10 +94,50 @@ export default function Solutions() {
     [activeTopicId],
   )
 
-  useDocumentMeta(
-    `${currentTopic.title} — Solutions | Jahanzaib Waris`,
-    currentTopic.description,
+  const solutionsSchema = useMemo(
+    () => [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: `${currentTopic.title} — Jerry Dev Studio`,
+        serviceType: 'Mobile Application Development',
+        provider: {
+          '@type': 'Organization',
+          name: 'Jerry Dev Studio',
+          url: 'https://jerry-dev-studio.web.app/',
+        },
+        description: currentTopic.description,
+        areaServed: 'Worldwide',
+      },
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Home',
+            item: 'https://jerry-dev-studio.web.app/',
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Solutions',
+            item: 'https://jerry-dev-studio.web.app/solutions',
+          },
+        ],
+      },
+    ],
+    [currentTopic],
   )
+
+  useDocumentMeta({
+    title: `${currentTopic.title} — Solutions | Jerry Dev Studio`,
+    description: currentTopic.description,
+    canonicalPath: '/solutions',
+    keywords: 'FlutterFlow solutions, mobile app engineering, custom Dart actions, Supabase integration, mobile app bug fixes',
+    schema: solutionsSchema,
+  })
 
   const {
     items: posts,
@@ -228,7 +268,124 @@ export default function Solutions() {
         )}
       </div>
 
-      {/* 3. Closing CTA Band matching reference image */}
+      {/* 3. Studio Engagement Models / Packages */}
+      <section className="mt-20 border-t border-panel-edge/80 pt-16">
+        <div className="max-w-2xl">
+          <p className="fb-kicker mb-3">HOW WE ENGAGE</p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            Flexible Engineering Packages
+          </h2>
+          <p className="mt-4 fb-lead">
+            Transparent engagement models tailored for early-stage founders, scaling products, and established dev teams.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
+          {/* Package 1 */}
+          <div className="fb-card flex flex-col justify-between border-panel-edge bg-abyss/40 p-6 sm:p-7 relative overflow-hidden">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue text-xs">
+                  Fixed Scope
+                </span>
+                <span className="font-mono-ui text-xs text-[#A1A7CA]">2–4 Days</span>
+              </div>
+              <h3 className="text-xl font-bold text-white">Codebase Audit &amp; Bug Triage</h3>
+              <p className="mt-3 text-sm text-[#A1A7CA] leading-relaxed">
+                Stuck on a tricky crash, grey screen, or custom action failure? We perform a comprehensive architectural audit, diagnose root causes, and ship tested Dart fixes.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-xs text-[#ECEEFB] font-medium">
+                <li className="flex items-center gap-2">
+                  <span className="text-status-green">&#10003;</span> RenderFlex &amp; layout overflow resolution
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-status-green">&#10003;</span> Custom Dart action &amp; widget debugging
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-status-green">&#10003;</span> App Store review rejection diagnostics
+                </li>
+              </ul>
+            </div>
+            <div className="mt-8 pt-4 border-t border-panel-edge/60">
+              <SystemButton onClick={onRequestQuote} variant="outline" className="w-full justify-center">
+                Request an audit &rarr;
+              </SystemButton>
+            </div>
+          </div>
+
+          {/* Package 2 (Featured) */}
+          <div className="fb-card flex flex-col justify-between border-neon-blue/40 bg-neon-blue/[0.03] p-6 sm:p-7 relative shadow-lg shadow-neon-blue/5">
+            <div className="absolute top-0 right-0 bg-neon-blue text-abyss text-[10px] font-bold tracking-wider uppercase px-3 py-1 rounded-bl-lg font-mono-ui">
+              Most Popular
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="fb-chip bg-neon-blue/20 border-neon-blue/40 text-neon-blue text-xs font-semibold">
+                  End-to-End Build
+                </span>
+                <span className="font-mono-ui text-xs text-[#A1A7CA]">2–4 Weeks</span>
+              </div>
+              <h3 className="text-xl font-bold text-white">MVP Launch Sprint</h3>
+              <p className="mt-3 text-sm text-[#A1A7CA] leading-relaxed">
+                Turn your Figma designs or product roadmap into a polished, responsive iOS &amp; Android app ready for user acquisition and investor showcases.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-xs text-[#ECEEFB] font-medium">
+                <li className="flex items-center gap-2">
+                  <span className="text-neon-blue">&#10003;</span> Pixel-perfect FlutterFlow UI implementation
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-neon-blue">&#10003;</span> Scalable Supabase / Firebase schema &amp; RLS
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-neon-blue">&#10003;</span> Stripe / RevenueCat subscriptions &amp; Auth
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-neon-blue">&#10003;</span> Apple &amp; Google Play Store release prep
+                </li>
+              </ul>
+            </div>
+            <div className="mt-8 pt-4 border-t border-panel-edge/60">
+              <SystemButton onClick={onRequestQuote} variant="primary" className="w-full justify-center">
+                Start an MVP sprint &rarr;
+              </SystemButton>
+            </div>
+          </div>
+
+          {/* Package 3 */}
+          <div className="fb-card flex flex-col justify-between border-panel-edge bg-abyss/40 p-6 sm:p-7 relative">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue text-xs">
+                  Ongoing Support
+                </span>
+                <span className="font-mono-ui text-xs text-[#A1A7CA]">Monthly Retainer</span>
+              </div>
+              <h3 className="text-xl font-bold text-white">Dedicated Engineering Retainer</h3>
+              <p className="mt-3 text-sm text-[#A1A7CA] leading-relaxed">
+                Reserve dedicated engineering capacity for your product team. Continuous feature rollouts, complex API integrations, and SLA-backed priority bug fixes.
+              </p>
+              <ul className="mt-6 space-y-2.5 text-xs text-[#ECEEFB] font-medium">
+                <li className="flex items-center gap-2">
+                  <span className="text-status-green">&#10003;</span> Reserved weekly engineering hours
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-status-green">&#10003;</span> Direct Slack / Discord team collaboration
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-status-green">&#10003;</span> Continuous database &amp; API maintenance
+                </li>
+              </ul>
+            </div>
+            <div className="mt-8 pt-4 border-t border-panel-edge/60">
+              <SystemButton onClick={onRequestQuote} variant="outline" className="w-full justify-center">
+                Discuss a retainer &rarr;
+              </SystemButton>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Closing CTA Band */}
       <section className="fb-section fb-section--tight mt-16">
         <div className="fb-cta">
           <p className="fb-kicker mb-3 text-center">STUCK ON SOMETHING?</p>
@@ -236,7 +393,7 @@ export default function Solutions() {
             Have a FlutterFlow app that needs work?
           </h2>
           <p className="mt-4 text-center fb-lead mx-auto max-w-xl">
-            A new build, a bug you cannot crack, or an integration your app is missing. Tell me about it and I will tell you how I would tackle it.
+            A new build, a blocker you cannot crack, or an integration your app is missing. Share your requirements and our studio will provide a clear engineering breakdown.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <SystemButton

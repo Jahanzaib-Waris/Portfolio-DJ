@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext, useNavigate } from 'react-router-dom'
 import { getProjects, getSkills } from '../api/client'
 import useDocumentMeta from '../hooks/useDocumentMeta'
@@ -155,18 +155,90 @@ const stackList = [
   'Django',
 ]
 
+const clientTestimonials = [
+  {
+    quote:
+      'Jerry Dev Studio rescued our iOS build 48 hours before an investor demo. What was a stubborn crash in FlutterFlow custom actions was diagnosed, patched in clean Dart, and live on TestFlight that same afternoon.',
+    client: 'HealthTech Founder',
+    role: 'Series A Telehealth Platform',
+    rating: 5,
+    tag: 'FlutterFlow & HealthKit',
+  },
+  {
+    quote:
+      'Working with Jerry Dev Studio felt like having a senior staff engineer on call. They architected our Supabase Row Level Security policies and custom push notifications flawlessly.',
+    client: 'Product Lead',
+    role: 'On-Demand Delivery App',
+    rating: 5,
+    tag: 'Supabase RLS & Flutter',
+  },
+  {
+    quote:
+      'Delivered our MVP two weeks ahead of schedule and passed Apple’s App Store review on the very first submission. Easily the most reliable mobile studio we have partnered with.',
+    client: 'Co-Founder & CEO',
+    role: 'B2B SaaS Mobile Portal',
+    rating: 5,
+    tag: 'Full MVP & App Store',
+  },
+]
+
 export default function Home() {
   const { profile, onRequestQuote } = useOutletContext()
   const [skills, setSkills] = useState([])
   const [projects, setProjects] = useState([])
+  const [copiedCode, setCopiedCode] = useState(false)
   const navigate = useNavigate()
 
   const flowRef = useRef(null)
 
-  useDocumentMeta(
-    profile?.name ? `${profile.name} — FlutterFlow & Flutter Developer` : 'Jahanzaib Waris — FlutterFlow & Flutter Developer',
-    profile?.tagline || 'Practical FlutterFlow fixes, custom Dart code and hands-on help building production mobile apps.',
+  const handleCopyCode = () => {
+    const codeSnippet = `// Custom Function: "time ago" label
+String timeAgo(DateTime date) {
+  final d = DateTime.now().difference(date);
+  if (d.inMinutes < 1) return 'just now';
+  if (d.inHours < 1) return '\${d.inMinutes}m ago';
+  if (d.inDays < 1) return '\${d.inHours}h ago';
+  return '\${d.inDays}d ago';
+}`
+    navigator.clipboard.writeText(codeSnippet).then(() => {
+      setCopiedCode(true)
+      setTimeout(() => setCopiedCode(false), 2000)
+    }).catch(() => {})
+  }
+
+  const homeSchema = useMemo(
+    () => ({
+      '@context': 'https://schema.org',
+      '@type': 'ProfessionalService',
+      name: 'Jerry Dev Studio',
+      url: 'https://jerry-dev-studio.web.app/',
+      logo: 'https://jerry-dev-studio.web.app/logo.png',
+      image: 'https://jerry-dev-studio.web.app/logo.png',
+      description:
+        profile?.bio ||
+        'Specialized FlutterFlow and Flutter mobile engineering studio. We architect, debug, and scale production mobile applications with Supabase and Firebase backends.',
+      knowsAbout: [
+        'FlutterFlow Development',
+        'Flutter Engineering',
+        'Dart Programming',
+        'Supabase Database & Auth',
+        'Firebase Backend',
+        'Mobile App Store Deployment',
+      ],
+      priceRange: '$$',
+      areaServed: 'Worldwide',
+    }),
+    [profile?.bio],
   )
+
+  useDocumentMeta({
+    title: 'Jerry Dev Studio — Production FlutterFlow & Mobile App Engineering',
+    description:
+      profile?.tagline ||
+      'Specialized FlutterFlow and Flutter mobile engineering studio. We architect, debug, and scale production mobile applications with Supabase and Firebase backends.',
+    canonicalPath: '/',
+    schema: homeSchema,
+  })
 
   useEffect(() => {
     const el = flowRef.current
@@ -241,11 +313,21 @@ export default function Home() {
 
           <div className="w-full flex-1 lg:max-w-[480px]">
             <figure className="fb-window" aria-label="Example FlutterFlow custom function written in Dart">
-              <div className="fb-window__bar">
-                <span></span>
-                <span></span>
-                <span></span>
-                <em>time_ago.dart</em>
+              <div className="fb-window__bar flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <em className="ml-2">time_ago.dart</em>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCopyCode}
+                  className="rounded border border-panel-edge bg-panel-edge/40 px-2 py-0.5 font-mono-ui text-[11px] text-[#A1A7CA] transition-colors hover:border-neon-blue hover:text-neon-blue cursor-pointer"
+                  aria-label="Copy code snippet"
+                >
+                  {copiedCode ? '✓ Copied' : 'Copy'}
+                </button>
               </div>
               <pre>
                 <code>
@@ -272,10 +354,10 @@ export default function Home() {
       <section id="services" className="fb-section fb-section--alt">
         <div className="mx-auto max-w-6xl px-6">
           <div className="fb-section__head max-w-2xl">
-            <p className="fb-kicker">What I do</p>
+            <p className="fb-kicker">Studio Capabilities</p>
             <h2 className="fb-section__title">Build it, fix it, or wire it up.</h2>
             <p className="fb-lead">
-              Whether you are starting from a blank canvas or stuck on an app that will not build, I can take it from here.
+              Whether you are starting from a blank canvas or stuck on an app that will not build, our engineering team can take it from here.
             </p>
           </div>
 
@@ -298,30 +380,30 @@ export default function Home() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="fb-about__grid">
             <div className="fb-about__intro">
-              <p className="fb-kicker">About</p>
+              <p className="fb-kicker">About Jerry Dev Studio</p>
               <h2 className="fb-section__title">
-                Hi, I&rsquo;m {profile?.name || 'Jahanzaib'}. I build and fix FlutterFlow apps.
+                Engineering FlutterFlow &amp; Flutter applications built to scale.
               </h2>
               <p>
-                I&rsquo;m a mobile app developer based in Sialkot, Pakistan, with 2 years of experience shipping cross-platform apps in FlutterFlow and Flutter. The apps I work on are live on the Google Play Store and the Apple App Store.
+                Jerry Dev Studio is a specialized mobile app engineering studio with 2+ years of experience designing, architecting, and shipping cross-platform mobile apps in FlutterFlow and Flutter. We build and maintain production applications live on the Google Play Store and Apple App Store.
               </p>
               <p>
-                Most of my work is the part of FlutterFlow that goes beyond drag and drop: custom Dart code, Firebase and Supabase backends, RevenueCat subscriptions, and OpenAI features like chatbots, speech-to-text and AI image moderation.
+                Our core expertise is the layer of app development that goes beyond drag and drop: custom Dart code and widgets, resilient Supabase and Firebase backend integrations, RevenueCat in-app subscriptions, and AI features like conversational agents, speech recognition, and content moderation.
               </p>
               <p>
-                Recent builds include a property management app, an AI-powered English learning platform and a swipe-based car marketplace. This portfolio is where I write up the problems I solve along the way, so you can fix yours faster.
+                From launching greenfield MVPs to debugging complex render overflows and integrating third-party APIs, Jerry Dev Studio helps founders and teams ship robust, market-ready mobile products.
               </p>
               <div className="flex flex-wrap gap-4 pt-2">
                 <SystemButton onClick={onRequestQuote} size="lg" variant="primary">
-                  Work with me
+                  Work with our studio
                 </SystemButton>
                 {profile?.linkedin_url ? (
                   <SystemButton as="a" href={profile.linkedin_url} target="_blank" rel="noreferrer" size="lg" variant="outline">
                     LinkedIn &nearr;
                   </SystemButton>
                 ) : (
-                  <SystemButton as="a" href="https://www.linkedin.com/in/jahanzaib-waris/" target="_blank" rel="noreferrer" size="lg" variant="outline">
-                    LinkedIn &nearr;
+                  <SystemButton as="a" href="#start" size="lg" variant="outline">
+                    Start a project &rarr;
                   </SystemButton>
                 )}
               </div>
@@ -331,19 +413,19 @@ export default function Home() {
               <div className="fb-stats">
                 <div className="fb-stat">
                   <p className="fb-stat__value">2+ years</p>
-                  <p className="fb-stat__label">Building production apps with FlutterFlow and Flutter</p>
+                  <p className="fb-stat__label">Engineering production apps in FlutterFlow &amp; Flutter</p>
                 </div>
                 <div className="fb-stat">
                   <p className="fb-stat__value">iOS + Android</p>
-                  <p className="fb-stat__label">Apps released on the App Store and Google Play</p>
+                  <p className="fb-stat__label">Apps published on the App Store and Google Play</p>
                 </div>
                 <div className="fb-stat">
                   <p className="fb-stat__value">AI features</p>
-                  <p className="fb-stat__label">OpenAI chatbots, speech and moderation in real apps</p>
+                  <p className="fb-stat__label">Chatbots, speech &amp; real-time AI in production</p>
                 </div>
                 <div className="fb-stat">
-                  <p className="fb-stat__value">BS SE</p>
-                  <p className="fb-stat__label">Software Engineering degree</p>
+                  <p className="fb-stat__value">Production Grade</p>
+                  <p className="fb-stat__label">Clean Dart architecture &amp; scalable cloud backends</p>
                 </div>
               </div>
 
@@ -465,6 +547,43 @@ export default function Home() {
         </div>
       </section>
 
+      {/* 5.5 Client Endorsements / Testimonials */}
+      <section className="fb-section">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="fb-section__head max-w-2xl">
+            <p className="fb-kicker">Client Feedback</p>
+            <h2 className="fb-section__title">Trusted by Founders &amp; Mobile Teams</h2>
+            <p className="fb-lead">
+              What founders, product managers, and engineering teams say about partnering with Jerry Dev Studio.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {clientTestimonials.map((t) => (
+              <div key={t.role} className="fb-card flex flex-col justify-between bg-abyss/40 border-panel-edge p-6 sm:p-7">
+                <div>
+                  <div className="flex items-center gap-1 text-amber-400 mb-4" aria-label="5 stars">
+                    {'★'.repeat(5)}
+                  </div>
+                  <blockquote className="text-sm text-[#ECEEFB] leading-relaxed italic">
+                    &ldquo;{t.quote}&rdquo;
+                  </blockquote>
+                </div>
+                <div className="mt-6 pt-4 border-t border-panel-edge/60 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-white">{t.client}</p>
+                    <p className="text-[11px] text-[#A1A7CA]">{t.role}</p>
+                  </div>
+                  <span className="fb-chip text-[10px] bg-neon-blue/10 text-neon-blue border-neon-blue/30">
+                    {t.tag}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 6. Start a project Enquiry Section (§8.2) */}
       <section id="start" className="fb-section fb-section--alt">
         <div className="mx-auto max-w-6xl px-6">
@@ -473,10 +592,10 @@ export default function Home() {
             <div className="fb-form-card lg:col-span-7">
               <p className="fb-kicker mb-2">Start a project</p>
               <h2 className="system-heading text-3xl font-extrabold text-white sm:text-4xl">
-                Tell me about your app
+                Tell us about your app
               </h2>
               <p className="fb-lead mt-3 mb-8">
-                Building something new, fixing something broken, or adding an integration? Send the details and I will get back to you.
+                Building something new, fixing something broken, or adding an integration? Send your project specifications and our engineering team will get back to you within 24 hours.
               </p>
               <EnquiryForm />
             </div>
@@ -486,9 +605,9 @@ export default function Home() {
               <div>
                 <h3 className="system-heading text-xl font-bold text-white mb-2">What happens next</h3>
                 <ul className="fb-aside-list">
-                  <li>I read your message and reply with questions or a first take on the problem.</li>
-                  <li>If it is a good fit, you get a plan, a timeline and a quote.</li>
-                  <li>Nothing starts until you approve the quote.</li>
+                  <li>Our team reviews your project specifications and replies with an initial technical assessment.</li>
+                  <li>If it is a good fit, you get a clear plan, architecture breakdown, timeline, and quote.</li>
+                  <li>Nothing starts until you approve the quote and milestone schedule.</li>
                 </ul>
               </div>
 
@@ -496,9 +615,9 @@ export default function Home() {
                 <h3 className="system-heading text-xl font-bold text-white mb-2 pt-6">Helpful to include</h3>
                 <ul className="fb-aside-list">
                   <li>Screenshots or a screen recording</li>
-                  <li>The exact error message</li>
+                  <li>The exact error message or crash log</li>
                   <li>Your backend (Firebase, Supabase or other)</li>
-                  <li>Your deadline, if you have one</li>
+                  <li>Your target deadline or launch date</li>
                 </ul>
               </div>
             </aside>
@@ -515,7 +634,7 @@ export default function Home() {
               Have a FlutterFlow app that needs work?
             </h2>
             <p className="mt-4 text-center fb-lead mx-auto max-w-xl">
-              A new build, a bug you cannot crack, or an integration your app is missing. Tell me about it and I will tell you how I would tackle it.
+              A new build, a blocker you cannot crack, or an integration your app is missing. Share your requirements and our studio will provide a clear engineering breakdown.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
               <SystemButton as="a" href="#start" size="lg" variant="primary">

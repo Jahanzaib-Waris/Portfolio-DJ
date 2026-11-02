@@ -890,7 +890,7 @@ function DrawerFields({ block, onUpdate, onSelectBlock }) {
             <label className="mb-1 block text-xs text-slate-400 font-medium">Author Name</label>
             <input
               type="text"
-              placeholder="e.g. Jahanzaib Waris"
+              placeholder="e.g. Lead Engineer"
               value={block.author || ''}
               onChange={(e) => onUpdate({ author: e.target.value })}
               className="w-full rounded-lg border border-panel-edge bg-abyss/80 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-neon-blue outline-none"

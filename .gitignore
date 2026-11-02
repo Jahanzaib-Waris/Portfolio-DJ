@@ -50,4 +50,9 @@ context.txt
 PROGRESS.md
 
 .vercel
+.firebase/
 .env*
+supabase/.temp/
+*.zip
+Logo icon*
+

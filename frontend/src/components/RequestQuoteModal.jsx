@@ -32,9 +32,9 @@ export default function RequestQuoteModal({ open, onClose }) {
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <p className="fb-kicker mb-1">Start a project</p>
-            <h2 className="system-heading text-2xl text-white">Tell me about your app</h2>
+            <h2 className="system-heading text-2xl text-white">Tell us about your app</h2>
             <p className="mt-1 text-xs text-[#A1A7CA]">
-              Building something new, fixing something broken, or adding an integration? Send the details and I will get back to you.
+              Building something new, fixing something broken, or adding an integration? Send your project specifications and our engineering team will get back to you within 24 hours.
             </p>
           </div>
           <button

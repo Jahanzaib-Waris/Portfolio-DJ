@@ -35,18 +35,18 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
   const validate = () => {
     const newErrors = {}
     if (!form.full_name.trim()) {
-      newErrors.full_name = 'Please tell me your name.'
+      newErrors.full_name = 'Please enter your name.'
     }
     if (!form.email.trim()) {
-      newErrors.email = 'I need an email address to reply to you.'
+      newErrors.email = 'Please provide an email address so we can reply to you.'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      newErrors.email = 'I need a valid email address to reply to you.'
+      newErrors.email = 'Please enter a valid email address.'
     }
     if (!form.service) {
-      newErrors.service = 'Please pick the option closest to what you need.'
+      newErrors.service = 'Please pick the service option closest to what you need.'
     }
     if (!form.details.trim()) {
-      newErrors.details = 'A short description helps me understand what you need.'
+      newErrors.details = 'A short description helps our team evaluate your requirements.'
     }
     return newErrors
   }
@@ -100,17 +100,17 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
         if (serverErrors.name || serverErrors.full_name) {
           mapped.full_name = Array.isArray(serverErrors.name || serverErrors.full_name)
             ? (serverErrors.name || serverErrors.full_name)[0]
-            : 'Please tell me your name.'
+            : 'Please enter your name.'
         }
         if (serverErrors.email) {
           mapped.email = Array.isArray(serverErrors.email)
             ? serverErrors.email[0]
-            : 'I need an email address to reply to you.'
+            : 'Please provide an email address so we can reply to you.'
         }
         if (serverErrors.project_details || serverErrors.details) {
           mapped.details = Array.isArray(serverErrors.project_details || serverErrors.details)
             ? (serverErrors.project_details || serverErrors.details)[0]
-            : 'A short description helps me understand what you need.'
+            : 'A short description helps our team evaluate your requirements.'
         }
         setErrors(mapped)
         setGlobalError(serverErrors.detail || 'Something went wrong. Please check the fields above and try again.')
@@ -131,9 +131,9 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
         <div className="flex items-start gap-3">
           <span className="text-xl text-status-green">&#10003;</span>
           <div>
-            <h3 className="system-heading text-lg font-bold text-white">Thank you!</h3>
+            <h3 className="system-heading text-lg font-bold text-white">Inquiry Received!</h3>
             <p className="mt-1 text-sm text-[#ECEEFB] leading-relaxed">
-              Thanks, your project details are in. I will reply by email with questions or next steps.
+              Thank you, your project specifications have been submitted. Our engineering team will review your requirements and reply by email within 24 hours.
             </p>
           </div>
         </div>

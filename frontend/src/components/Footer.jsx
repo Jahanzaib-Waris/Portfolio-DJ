@@ -28,7 +28,7 @@ function MailIcon() {
 
 export default function Footer({ profile }) {
   const socialLinks = [
-    { label: 'LinkedIn', href: profile?.linkedin_url || 'https://www.linkedin.com/in/jahanzaib-waris/', Icon: LinkedInIcon },
+    profile?.linkedin_url && { label: 'LinkedIn', href: profile.linkedin_url, Icon: LinkedInIcon },
     profile?.github_url && { label: 'GitHub', href: profile.github_url, Icon: GithubIcon },
     profile?.email && { label: 'Email', href: `mailto:${profile.email}`, Icon: MailIcon },
   ].filter(Boolean)
@@ -40,13 +40,15 @@ export default function Footer({ profile }) {
           {/* Brand info */}
           <div className="md:col-span-5 lg:col-span-5">
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-neon-indigo to-neon-blue font-mono-ui text-xs font-bold text-white shadow-[0_0_12px_rgba(124,108,255,0.4)]">
-                {(profile?.name ? profile.name.slice(0, 2) : 'JW').toUpperCase()}
-              </span>
-              <span className="system-heading text-lg font-bold text-white">{profile?.name || 'Jahanzaib Waris'}</span>
+              <img
+                src={profile?.photo || '/logo.png'}
+                alt={profile?.name || 'Jerry Dev Studio'}
+                className="h-8 w-8 rounded-lg object-contain"
+              />
+              <span className="system-heading text-lg font-bold text-white">{profile?.name || 'Jerry Dev Studio'}</span>
             </div>
             <p className="mt-4 text-sm text-[#A1A7CA] max-w-sm leading-relaxed">
-              Mobile application developer specializing in FlutterFlow, Flutter, and scalable cross-platform apps.
+              Jerry Dev Studio &mdash; Engineering production FlutterFlow, Flutter, and scalable cross-platform mobile apps.
             </p>
           </div>
 
@@ -122,7 +124,7 @@ export default function Footer({ profile }) {
 
         <div className="mt-16 flex flex-col md:flex-row items-center justify-between border-t border-panel-edge pt-8 text-xs text-[#A1A7CA]">
           <p>
-            &copy; {new Date().getFullYear()} {profile?.name || 'Jahanzaib Waris'}. All rights reserved.
+            &copy; {new Date().getFullYear()} {profile?.name || 'Jerry Dev Studio'}. All rights reserved.
           </p>
           <p className="mt-2 md:mt-0">
             Not affiliated with FlutterFlow or Google.

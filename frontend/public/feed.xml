@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>Jerry Dev Studio — FlutterFlow &amp; Mobile Engineering Blog</title>
+  <link>https://jerry-dev-studio.web.app/blogs</link>
+  <description>Practical FlutterFlow fixes, custom Dart code snippets, and architectural guides from Jerry Dev Studio.</description>
+  <language>en-us</language>
+  <lastBuildDate>Sun, 01 Nov 2026 09:00:00 GMT</lastBuildDate>
+  <atom:link href="https://jerry-dev-studio.web.app/feed.xml" rel="self" type="application/rss+xml" />
+
+  <item>
+    <title>Streaming Real-Time AI Responses in FlutterFlow with Server-Sent Events (SSE) &amp; Supabase Edge Functions</title>
+    <link>https://jerry-dev-studio.web.app/blogs/flutterflow-streaming-ai-sse-supabase</link>
+    <guid>https://jerry-dev-studio.web.app/blogs/flutterflow-streaming-ai-sse-supabase</guid>
+    <pubDate>Sun, 01 Nov 2026 09:00:00 GMT</pubDate>
+    <description>Eliminate 15-second mobile UI freezes by implementing token-by-token streaming AI responses in FlutterFlow using Supabase Edge Functions and custom Dart stream controllers.</description>
+    <category>AI &amp; Integrations</category>
+  </item>
+
+  <item>
+    <title>Fix: Google Maps blank screen on iOS release builds in FlutterFlow</title>
+    <link>https://jerry-dev-studio.web.app/blogs/fix-flutterflow-google-maps-ios</link>
+    <guid>https://jerry-dev-studio.web.app/blogs/fix-flutterflow-google-maps-ios</guid>
+    <pubDate>Fri, 18 Sep 2026 12:00:00 GMT</pubDate>
+    <description>Step-by-step resolution for the missing API key plist declaration that causes silent map failure on TestFlight and App Store releases.</description>
+    <category>FlutterFlow Fixes</category>
+  </item>
+
+  <item>
+    <title>How to create custom Dart actions that return complex data in FlutterFlow</title>
+    <link>https://jerry-dev-studio.web.app/blogs/custom-dart-action-with-return-value</link>
+    <guid>https://jerry-dev-studio.web.app/blogs/custom-dart-action-with-return-value</guid>
+    <pubDate>Sat, 12 Sep 2026 12:00:00 GMT</pubDate>
+    <description>Write type-safe Dart functions returning custom data types, JSON maps, and lists to use directly within your FlutterFlow UI builder.</description>
+    <category>Custom Code</category>
+  </item>
+
+  <item>
+    <title>Connecting Supabase Row Level Security with FlutterFlow authenticated users</title>
+    <link>https://jerry-dev-studio.web.app/blogs/supabase-auth-rls-flutterflow</link>
+    <guid>https://jerry-dev-studio.web.app/blogs/supabase-auth-rls-flutterflow</guid>
+    <pubDate>Sat, 29 Aug 2026 12:00:00 GMT</pubDate>
+    <description>How to pass JWT tokens correctly from FlutterFlow to Supabase so that your PostgreSQL RLS policies enforce real user tenancy.</description>
+    <category>Integrations</category>
+  </item>
+
+  <item>
+    <title>Resolving RenderFlex overflow errors in complex nested lists</title>
+    <link>https://jerry-dev-studio.web.app/blogs/nested-scrollview-renderflex-overflow</link>
+    <guid>https://jerry-dev-studio.web.app/blogs/nested-scrollview-renderflex-overflow</guid>
+    <pubDate>Fri, 14 Aug 2026 12:00:00 GMT</pubDate>
+    <description>Diagnosing unbounded height exceptions in ListView widgets inside Column components and the clean fix without breaking scrolling.</description>
+    <category>FlutterFlow Fixes</category>
+  </item>
+</channel>
+</rss>

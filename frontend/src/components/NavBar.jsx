@@ -26,18 +26,12 @@ export default function NavBar({ profile, onRequestQuote }) {
           className="system-heading flex items-center gap-2.5 text-lg font-bold text-white"
           onClick={() => setMenuOpen(false)}
         >
-          {profile?.photo ? (
-            <img
-              src={profile.photo}
-              alt={profile.name}
-              className="h-8 w-8 rounded-lg border border-neon-indigo/50 object-cover"
-            />
-          ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-neon-indigo to-neon-blue font-mono-ui text-xs font-bold text-white shadow-[0_0_12px_rgba(124,108,255,0.4)]">
-              {(profile?.name ? profile.name.slice(0, 2) : 'JW').toUpperCase()}
-            </span>
-          )}
-          <span>{profile?.name || 'Jahanzaib Waris'}</span>
+          <img
+            src={profile?.photo || '/logo.png'}
+            alt={profile?.name || 'Jerry Dev Studio'}
+            className="h-8 w-8 rounded-lg object-contain"
+          />
+          <span>{profile?.name || 'Jerry Dev Studio'}</span>
         </Link>
 
         {/* Desktop nav */}

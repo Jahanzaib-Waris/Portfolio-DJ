@@ -404,13 +404,19 @@ export default function BlogEditor() {
               <h1 className="text-base font-bold text-white leading-tight">
                 {form.title ? form.title : isNew ? 'Untitled Post' : 'Edit Post'}
               </h1>
-              <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide ${
-                  form.is_published ? 'bg-status-green/10 text-status-green' : 'bg-accent/10 text-accent'
-                }`}
-              >
-                {form.is_published ? 'Published' : 'Draft'}
-              </span>
+              {form.is_published && form.published_date > today() ? (
+                <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-[10px] font-mono tracking-wide text-neon-blue">
+                  Scheduled &middot; {form.published_date}
+                </span>
+              ) : (
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide ${
+                    form.is_published ? 'bg-status-green/10 text-status-green' : 'bg-accent/10 text-accent'
+                  }`}
+                >
+                  {form.is_published ? 'Live' : 'Draft'}
+                </span>
+              )}
               {dirty && <span className="text-[11px] text-accent font-medium">• Unsaved changes</span>}
             </div>
             {form.slug && (
@@ -459,7 +465,7 @@ export default function BlogEditor() {
             </SystemButton>
           ) : (
             <SystemButton onClick={() => save(true)} disabled={saving}>
-              Publish
+              {form.published_date > today() ? 'Schedule' : 'Publish'}
             </SystemButton>
           )}
         </div>

@@ -1,21 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Static and intentionally minimal: only the three top-level routes.
-  Individual blog post URLs aren't listed here because they're dynamic
-  content this static file can't know about at build time — Google's
-  crawler (which does execute JS) discovers them by following the links
-  from /blogs regardless. A fully enumerated sitemap would need either a
-  server-rendered endpoint or a build-time data fetch, which this static
-  Vite SPA doesn't currently have wired up.
--->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://portfolio-dj-j1sv.vercel.app/</loc>
+    <loc>https://jerry-dev-studio.web.app/</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://portfolio-dj-j1sv.vercel.app/blogs</loc>
+    <loc>https://jerry-dev-studio.web.app/solutions</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://portfolio-dj-j1sv.vercel.app/projects</loc>
+    <loc>https://jerry-dev-studio.web.app/projects</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/fix-flutterflow-google-maps-ios</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/custom-dart-action-with-return-value</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/supabase-auth-rls-flutterflow</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/nested-scrollview-renderflex-overflow</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/flutterflow-streaming-ai-sse-supabase</loc>
+    <lastmod>2026-11-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/flutterflow-revenuecat-subscriptions-webhooks</loc>
+    <lastmod>2026-11-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/flutterflow-offline-first-supabase-cache</loc>
+    <lastmod>2026-11-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/flutterflow-deep-links-universal-links-fix</loc>
+    <lastmod>2026-11-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/flutterflow-push-notifications-supabase-webhooks-fcm</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://jerry-dev-studio.web.app/blogs/flutterflow-listview-performance-optimization</loc>
+    <lastmod>2026-11-10</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>

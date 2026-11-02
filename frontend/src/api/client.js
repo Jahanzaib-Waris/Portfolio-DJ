@@ -1,199 +1,536 @@
-import axios from 'axios'
+import { supabase, isSupabaseConfigured, uploadMedia } from './supabase'
 
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from '../auth/tokenStore'
-
-// In local dev this stays '/api' and Vite's dev-server proxy forwards it to
-// Django. In production the frontend and backend are separate Vercel projects
-// on different domains, so VITE_API_BASE_URL must point at the deployed API, e.g.
-// https://your-api.vercel.app/api
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-})
-
-// A bare client for the refresh call itself, so the interceptors below can
-// never recurse into their own retry logic.
-const authClient = axios.create({ baseURL: API_BASE_URL })
-
-// Set by AuthProvider so a failed refresh can drop the app back to the login
-// screen. Kept as a callback to avoid importing React state into this module.
+/**
+ * Session expired handler callback registered by AuthProvider.
+ */
 let onSessionExpired = null
-
 export const setSessionExpiredHandler = (fn) => {
   onSessionExpired = fn
 }
 
-apiClient.interceptors.request.use((config) => {
-  const token = getAccessToken()
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  return config
-})
-
-// Only one refresh in flight at a time: several requests can 401 together, and
-// with token rotation the second refresh would present an already-blacklisted
-// token and fail. They all await the same promise instead.
-let refreshPromise = null
-
-export function refreshAccessToken() {
-  const refresh = getRefreshToken()
-  if (!refresh) return Promise.reject(new Error('No refresh token stored.'))
-
-  if (!refreshPromise) {
-    refreshPromise = authClient
-      .post('/auth/token/refresh/', { refresh })
-      .then((res) => {
-        setAccessToken(res.data.access)
-        // ROTATE_REFRESH_TOKENS is on server-side, so each refresh returns a new
-        // refresh token and blacklists the old one. Failing to store it here
-        // would break the *next* refresh.
-        if (res.data.refresh) setRefreshToken(res.data.refresh)
-        return res.data.access
-      })
-      .finally(() => {
-        refreshPromise = null
-      })
+/**
+ * Refresh access token helper (handled automatically by Supabase client).
+ */
+export async function refreshAccessToken() {
+  if (!isSupabaseConfigured) return null
+  const { data, error } = await supabase.auth.getSession()
+  if (error || !data.session) {
+    if (onSessionExpired) onSessionExpired()
+    throw new Error('No active Supabase session')
   }
-
-  return refreshPromise
+  return data.session.access_token
 }
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const original = error.config
-
-    const isAuthCall = original?.url?.includes('/auth/token')
-    if (error.response?.status !== 401 || original?._retried || isAuthCall) {
-      return Promise.reject(error)
-    }
-
-    // A 401 on a request we never authenticated is just a protected endpoint
-    // being hit anonymously — nothing to refresh.
-    if (!getRefreshToken()) return Promise.reject(error)
-
-    original._retried = true
-
-    try {
-      const token = await refreshAccessToken()
-      original.headers.Authorization = `Bearer ${token}`
-      return apiClient(original)
-    } catch (refreshError) {
-      clearTokens()
-      if (onSessionExpired) onSessionExpired()
-      return Promise.reject(refreshError)
-    }
-  },
-)
-
+// Fallback dummy client for backward-compatibility if any external module imports default
+const apiClient = {
+  get: () => Promise.resolve({ data: {} }),
+  post: () => Promise.resolve({ data: {} }),
+  patch: () => Promise.resolve({ data: {} }),
+  delete: () => Promise.resolve({ data: {} }),
+}
 export default apiClient
+
+/**
+ * Helper to normalize payload from FormData or plain Object into a DB-ready object.
+ * Uploads any File instances to Supabase Storage before returning the fields.
+ */
+async function processPayload(payload, folder = 'general') {
+  if (!payload) return {}
+
+  if (payload instanceof FormData) {
+    const data = {}
+    for (const [key, value] of payload.entries()) {
+      if (value instanceof File) {
+        if (value.size > 0) {
+          data[key] = await uploadMedia(value, folder)
+        }
+      } else if (value === '') {
+        data[key] = null
+      } else if (value === 'true') {
+        data[key] = true
+      } else if (value === 'false') {
+        data[key] = false
+      } else {
+        data[key] = value
+      }
+    }
+    return data
+  }
+
+  // Plain JSON object: check if any values are File objects
+  const data = { ...payload }
+  for (const [key, value] of Object.entries(data)) {
+    if (value instanceof File) {
+      data[key] = await uploadMedia(value, folder)
+    }
+  }
+  return data
+}
+
+/**
+ * Helper to build DRF-compatible pagination envelope { count, next, previous, results }.
+ */
+function toPaginatedResponse(data, count, page = 1, pageSize = 10) {
+  const from = (page - 1) * pageSize
+  const total = count ?? (Array.isArray(data) ? data.length : 0)
+  const hasNext = from + (data?.length || 0) < total
+
+  return {
+    count: total,
+    next: hasNext ? page + 1 : null,
+    previous: page > 1 ? page - 1 : null,
+    results: data || [],
+  }
+}
 
 /* ---------------------------------------------------------------- public site */
 
-export const getProfile = () => apiClient.get('/profile/').then((res) => res.data)
+export const getProfile = async () => {
+  if (!isSupabaseConfigured) return null
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle()
 
-export const getBranding = () => apiClient.get('/settings/branding/').then((res) => res.data)
+  if (error) throw error
+  return data
+}
 
-// Fire-and-forget: callers don't await this, so a failure (throttled, offline)
-// should never surface as an error anywhere in the public site.
-export const trackPageView = (path, referrer) =>
-  apiClient.post('/analytics/track/', { path, referrer }).catch(() => {})
+export const getBranding = async () => {
+  if (!isSupabaseConfigured) return { site_name: 'Jerry Dev Studio', logo: '', favicon: '' }
+  const { data, error } = await supabase
+    .from('site_branding')
+    .select('*')
+    .limit(1)
+    .maybeSingle()
 
-export const getSkills = (params) => apiClient.get('/profile/skills/', { params }).then((res) => res.data)
+  if (error) throw error
+  return data || { site_name: 'Jerry Dev Studio' }
+}
 
-export const getBlogPosts = (params) => apiClient.get('/blog/posts/', { params }).then((res) => res.data)
+export const getTheme = async () => {
+  if (!isSupabaseConfigured) return null
+  const { data, error } = await supabase
+    .from('site_theme')
+    .select('*')
+    .limit(1)
+    .maybeSingle()
 
-export const getBlogPost = (slug) => apiClient.get(`/blog/posts/${slug}/`).then((res) => res.data)
+  if (error) throw error
+  return data
+}
 
-export const getProjects = (params) => apiClient.get('/projects/', { params }).then((res) => res.data)
+// Fire-and-forget page view beacon
+export const trackPageView = async (path, referrer = '') => {
+  if (!isSupabaseConfigured) return
+  try {
+    const isBlog = path.startsWith('/blogs/')
+    const slug = isBlog ? path.replace(/^\/blogs\//, '').replace(/\/$/, '') : ''
 
-export const submitQuoteRequest = (payload) => apiClient.post('/quotes/', payload).then((res) => res.data)
+    // Hash or generate session key for visitor deduplication
+    let sessionKey = localStorage.getItem('__pv_session')
+    if (!sessionKey) {
+      sessionKey = 's_' + Math.random().toString(36).substring(2, 12)
+      localStorage.setItem('__pv_session', sessionKey)
+    }
 
-export const resumeDownloadUrl = `${API_BASE_URL}/profile/resume/`
+    await supabase.from('page_views').insert({
+      path,
+      referrer: referrer || '',
+      is_blog_post: isBlog,
+      slug,
+      session_key: sessionKey,
+    })
+  } catch {
+    // Analytics failures must never surface in UI
+  }
+}
+
+export const getSkills = async (params = {}) => {
+  if (!isSupabaseConfigured) return []
+  const page = parseInt(params.page, 10) || 1
+  const pageSize = parseInt(params.page_size, 10) || 100
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  const { data, count, error } = await supabase
+    .from('skills')
+    .select('*', { count: 'exact' })
+    .order('display_order', { ascending: true })
+    .order('name', { ascending: true })
+    .range(from, to)
+
+  if (error) throw error
+  return toPaginatedResponse(data, count, page, pageSize)
+}
+
+export const getBlogPosts = async (params = {}) => {
+  if (!isSupabaseConfigured) return []
+  const page = parseInt(params.page, 10) || 1
+  const pageSize = parseInt(params.page_size, 10) || 10
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  let query = supabase
+    .from('blog_posts')
+    .select('*', { count: 'exact' })
+    .order('published_date', { ascending: false })
+
+  // Admin sees drafts and scheduled posts if logged in; public only sees published on or before today
+  const { data: sessionData } = await supabase.auth.getSession()
+  if (!sessionData?.session) {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    query = query.eq('is_published', true).lte('published_date', todayStr)
+  }
+
+  const { data, count, error } = await query.range(from, to)
+  if (error) throw error
+  return toPaginatedResponse(data, count, page, pageSize)
+}
+
+export const getBlogPost = async (slug) => {
+  if (!isSupabaseConfigured) return null
+  const { data: sessionData } = await supabase.auth.getSession()
+  let query = supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', slug)
+
+  // Public visitors can only access posts that are published and whose scheduled date has arrived
+  if (!sessionData?.session) {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    query = query.eq('is_published', true).lte('published_date', todayStr)
+  }
+
+  const { data, error } = await query.maybeSingle()
+  if (error) throw error
+  return data
+}
+
+export const getProjects = async (params = {}) => {
+  if (!isSupabaseConfigured) return []
+  const page = parseInt(params.page, 10) || 1
+  const pageSize = parseInt(params.page_size, 10) || 10
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  const { data, count, error } = await supabase
+    .from('projects')
+    .select('*', { count: 'exact' })
+    .order('display_order', { ascending: true })
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  if (error) throw error
+
+  // Compute tech_stack_list convenience array
+  const formatted = (data || []).map((p) => ({
+    ...p,
+    tech_stack_list: p.tech_stack
+      ? p.tech_stack.split(',').map((s) => s.trim()).filter(Boolean)
+      : [],
+  }))
+
+  return toPaginatedResponse(formatted, count, page, pageSize)
+}
+
+export const submitQuoteRequest = async (payload) => {
+  if (!isSupabaseConfigured) return { status: 'mocked' }
+  const { data, error } = await supabase
+    .from('quote_requests')
+    .insert([payload])
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const resumeDownloadUrl = '#'
 
 /* --------------------------------------------------------------------- admin */
 
-export const obtainTokens = (username, password) =>
-  authClient.post('/auth/token/', { username, password }).then((res) => res.data)
+export const obtainTokens = async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  if (error) throw error
 
-export const blacklistRefreshToken = (refresh) =>
-  authClient.post('/auth/token/blacklist/', { refresh })
+  return {
+    access: data.session.access_token,
+    refresh: data.session.refresh_token,
+    user: {
+      id: data.user.id,
+      email: data.user.email,
+      username: data.user.email.split('@')[0],
+      is_staff: true,
+    },
+  }
+}
 
-export const getCurrentUser = () => apiClient.get('/auth/me/').then((res) => res.data)
+export const blacklistRefreshToken = async () => {
+  await supabase.auth.signOut()
+}
 
-export const changePassword = (payload) => apiClient.post('/auth/change-password/', payload).then((res) => res.data)
+export const getCurrentUser = async () => {
+  const { data: { user }, error } = await supabase.auth.getUser()
+  if (error || !user) throw new Error('Not authenticated')
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.email.split('@')[0],
+    is_staff: true,
+  }
+}
 
-export const updateBranding = (payload) =>
-  apiClient.patch('/settings/branding/', payload).then((res) => res.data)
+export const changePassword = async (payload) => {
+  const { data, error } = await supabase.auth.updateUser({
+    password: payload.new_password,
+  })
+  if (error) throw error
+  return data
+}
 
-export const getTheme = () => apiClient.get('/settings/theme/').then((res) => res.data)
+export const updateBranding = async (payload) => {
+  const fields = await processPayload(payload, 'branding')
+  const { data, error } = await supabase
+    .from('site_branding')
+    .upsert({ id: 1, ...fields, updated_at: new Date().toISOString() })
+    .select()
+    .single()
 
-export const updateTheme = (payload) => apiClient.patch('/settings/theme/', payload).then((res) => res.data)
+  if (error) throw error
+  return data
+}
 
-export const getQuoteRequests = (params) => apiClient.get('/quotes/', { params }).then((res) => res.data)
+export const updateTheme = async (payload) => {
+  const fields = await processPayload(payload, 'theme')
+  const { data, error } = await supabase
+    .from('site_theme')
+    .upsert({ id: 1, ...fields, updated_at: new Date().toISOString() })
+    .select()
+    .single()
 
-export const getAnalyticsSummary = (params) =>
-  apiClient.get('/analytics/summary/', { params }).then((res) => res.data)
+  if (error) throw error
+  return data
+}
+
+export const getQuoteRequests = async (params = {}) => {
+  const page = parseInt(params.page, 10) || 1
+  const pageSize = parseInt(params.page_size, 10) || 10
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+
+  const { data, count, error } = await supabase
+    .from('quote_requests')
+    .select('*', { count: 'exact' })
+    .order('submitted_at', { ascending: false })
+    .range(from, to)
+
+  if (error) throw error
+  return toPaginatedResponse(data, count, page, pageSize)
+}
+
+export const deleteQuoteRequest = async (id) => {
+  const { error } = await supabase.from('quote_requests').delete().eq('id', id)
+  if (error) throw error
+  return { success: true }
+}
+
+export const getAnalyticsSummary = async (params = {}) => {
+  const days = parseInt(params.days, 10) || 30
+
+  // 1. Try RPC get_analytics_summary
+  const { data, error } = await supabase.rpc('get_analytics_summary', { days })
+  if (!error && data) return data
+
+  // 2. Client-side fallback calculation if stored procedure isn't installed yet
+  const cutoff = new Date(Date.now() - days * 86400000).toISOString()
+  const { data: views } = await supabase
+    .from('page_views')
+    .select('*')
+    .gte('created_at', cutoff)
+
+  const { data: quotes } = await supabase
+    .from('quote_requests')
+    .select('id, submitted_at')
+    .gte('submitted_at', cutoff)
+
+  const viewsList = views || []
+  const quotesList = quotes || []
+  const visitors = new Set(viewsList.map((v) => v.session_key).filter(Boolean))
+
+  // Aggregate daily series
+  const dayMap = {}
+  viewsList.forEach((v) => {
+    const d = v.created_at.slice(0, 10)
+    dayMap[d] = (dayMap[d] || 0) + 1
+  })
+  const series = Object.entries(dayMap).map(([day, count]) => ({ day, count })).sort((a, b) => a.day.localeCompare(b.day))
+
+  // Aggregate quotes trend
+  const qMap = {}
+  quotesList.forEach((q) => {
+    const d = q.submitted_at.slice(0, 10)
+    qMap[d] = (qMap[d] || 0) + 1
+  })
+  const quotes_trend = Object.entries(qMap).map(([day, count]) => ({ day, count })).sort((a, b) => a.day.localeCompare(b.day))
+
+  return {
+    days,
+    total_views: viewsList.length,
+    total_visitors: visitors.size,
+    series,
+    top_pages: [],
+    top_posts: [],
+    top_referrers: [],
+    quotes_trend,
+  }
+}
 
 /* ----------------------------------------------------------------- blog CMS */
 
-// Payloads are either a plain object (JSON) or FormData when a new cover image
-// is being uploaded. Axios sets the multipart content-type itself when handed
-// FormData, so nothing extra is needed here.
+export const createBlogPost = async (payload) => {
+  const fields = await processPayload(payload, 'blog')
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .insert([{ ...fields, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }])
+    .select()
+    .single()
 
-export const createBlogPost = (payload) =>
-  apiClient.post('/blog/posts/', payload).then((res) => res.data)
+  if (error) throw error
+  return data
+}
 
-export const updateBlogPost = (slug, payload) =>
-  apiClient.patch(`/blog/posts/${slug}/`, payload).then((res) => res.data)
+export const updateBlogPost = async (slug, payload) => {
+  const fields = await processPayload(payload, 'blog')
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq('slug', slug)
+    .select()
+    .single()
 
-export const deleteBlogPost = (slug) => apiClient.delete(`/blog/posts/${slug}/`)
+  if (error) throw error
+  return data
+}
 
-// Inline image upload for the rich-text editor's content body — distinct from
-// a post's own cover_image field, since a post can hold any number of these.
-export const uploadBlogImage = (file) => {
-  const data = new FormData()
-  data.append('image', file)
-  return apiClient.post('/blog/posts/upload_image/', data).then((res) => res.data)
+export const deleteBlogPost = async (slug) => {
+  const { error } = await supabase.from('blog_posts').delete().eq('slug', slug)
+  if (error) throw error
+  return { success: true }
+}
+
+export const uploadBlogImage = async (file) => {
+  const url = await uploadMedia(file, 'blog/inline')
+  return { url }
 }
 
 /* ------------------------------------------------------------------ projects */
 
-export const getProject = (id) => apiClient.get(`/projects/${id}/`).then((res) => res.data)
+export const getProject = async (id) => {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('id', id)
+    .single()
 
-export const createProject = (payload) =>
-  apiClient.post('/projects/', payload).then((res) => res.data)
+  if (error) throw error
+  return {
+    ...data,
+    tech_stack_list: data.tech_stack
+      ? data.tech_stack.split(',').map((s) => s.trim()).filter(Boolean)
+      : [],
+  }
+}
 
-export const updateProject = (id, payload) =>
-  apiClient.patch(`/projects/${id}/`, payload).then((res) => res.data)
+export const createProject = async (payload) => {
+  const fields = await processPayload(payload, 'projects')
+  const { data, error } = await supabase
+    .from('projects')
+    .insert([{ ...fields, created_at: new Date().toISOString() }])
+    .select()
+    .single()
 
-export const deleteProject = (id) => apiClient.delete(`/projects/${id}/`)
+  if (error) throw error
+  return data
+}
+
+export const updateProject = async (id, payload) => {
+  const fields = await processPayload(payload, 'projects')
+  const { data, error } = await supabase
+    .from('projects')
+    .update(fields)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const deleteProject = async (id) => {
+  const { error } = await supabase.from('projects').delete().eq('id', id)
+  if (error) throw error
+  return { success: true }
+}
 
 /* -------------------------------------------------------------------- skills */
 
-export const createSkill = (payload) =>
-  apiClient.post('/profile/skills/', payload).then((res) => res.data)
+export const createSkill = async (payload) => {
+  const { data, error } = await supabase
+    .from('skills')
+    .insert([payload])
+    .select()
+    .single()
 
-export const updateSkill = (id, payload) =>
-  apiClient.patch(`/profile/skills/${id}/`, payload).then((res) => res.data)
+  if (error) throw error
+  return data
+}
 
-export const deleteSkill = (id) => apiClient.delete(`/profile/skills/${id}/`)
+export const updateSkill = async (id, payload) => {
+  const { data, error } = await supabase
+    .from('skills')
+    .update(payload)
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data
+}
+
+export const deleteSkill = async (id) => {
+  const { error } = await supabase.from('skills').delete().eq('id', id)
+  if (error) throw error
+  return { success: true }
+}
 
 /* ------------------------------------------------------------------- profile */
 
-// Profile is a singleton: POST creates the one row (409 if it exists), PATCH updates it.
-export const createProfile = (payload) =>
-  apiClient.post('/profile/', payload).then((res) => res.data)
+export const createProfile = async (payload) => {
+  const fields = await processPayload(payload, 'profile')
+  const { data, error } = await supabase
+    .from('profiles')
+    .insert([{ id: 1, ...fields, updated_at: new Date().toISOString() }])
+    .select()
+    .single()
 
-export const updateProfile = (payload) =>
-  apiClient.patch('/profile/', payload).then((res) => res.data)
+  if (error) throw error
+  return data
+}
 
-/* -------------------------------------------------------------- quote inbox */
+export const updateProfile = async (payload) => {
+  const fields = await processPayload(payload, 'profile')
+  const { data, error } = await supabase
+    .from('profiles')
+    .upsert({ id: 1, ...fields, updated_at: new Date().toISOString() })
+    .select()
+    .single()
 
-export const deleteQuoteRequest = (id) => apiClient.delete(`/quotes/${id}/`)
+  if (error) throw error
+  return data
+}
