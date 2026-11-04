@@ -72,7 +72,6 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
     try {
       await submitQuoteRequest({
         name: form.full_name.trim(),
-        full_name: form.full_name.trim(),
         email: form.email.trim(),
         service: form.service,
         backend: form.backend,
@@ -80,8 +79,6 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
         timeline: form.timeline,
         project_link: form.project_link.trim(),
         project_details: form.details.trim(),
-        details: form.details.trim(),
-        company_website: form.company_website,
       })
 
       setStatus('success')
@@ -115,7 +112,7 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
         setErrors(mapped)
         setGlobalError(serverErrors.detail || 'Something went wrong. Please check the fields above and try again.')
       } else {
-        setGlobalError('Something went wrong. Please try again.')
+        setGlobalError(err.message || 'Something went wrong. Please try again.')
       }
     }
   }

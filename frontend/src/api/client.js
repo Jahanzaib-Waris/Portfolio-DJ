@@ -238,14 +238,26 @@ export const getProjects = async (params = {}) => {
 
 export const submitQuoteRequest = async (payload) => {
   if (!isSupabaseConfigured) return { status: 'mocked' }
-  const { data, error } = await supabase
+
+  // Clean and map payload strictly to existing quote_requests table columns
+  const cleanPayload = {
+    name: (payload.name || payload.full_name || '').trim(),
+    email: (payload.email || '').trim(),
+    service: payload.service || '',
+    backend: payload.backend || '',
+    budget: payload.budget || '',
+    timeline: payload.timeline || '',
+    project_link: (payload.project_link || '').trim(),
+    project_details: (payload.project_details || payload.details || '').trim(),
+  }
+
+  // Do not chain .select() because unauthenticated public visitors do not have SELECT permissions on quote_requests
+  const { error } = await supabase
     .from('quote_requests')
-    .insert([payload])
-    .select()
-    .single()
+    .insert([cleanPayload])
 
   if (error) throw error
-  return data
+  return { success: true }
 }
 
 export const resumeDownloadUrl = '#'
