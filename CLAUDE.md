@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) and Antigravity when
 ## What this is
 
 **Jerry Dev Studio** ([https://jerry-dev-studio.web.app/](https://jerry-dev-studio.web.app/)): A high-performance FlutterFlow & mobile engineering studio portfolio, client portal, and technical publication.
-- **Frontend**: React 19 + Vite SPA (`frontend/`) styled with the **FlowBase** design system (`#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted Manrope & Fira Code variable fonts).
+- **Frontend**: React 19 + Vite SPA (`frontend/`) styled with the **FlowBase** design system (`#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted Plus Jakarta Sans, Inter, & JetBrains Mono variable fonts).
 - **Backend / Database**: **Supabase** (PostgreSQL, Supabase Auth, Supabase Storage, and Row Level Security).
 - **Hosting & CDN**: **Firebase Hosting** (Project ID: `jerry-dev-studio`).
 - **CMS & Control Panel**: Custom route-guarded admin panel (`/admin`) featuring the **FlowBase Visual Block Builder V2**, runtime-editable theme tokens, and lead inbox.
