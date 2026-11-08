@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 
-import { deleteQuoteRequest, getQuoteRequests } from '../../api/client'
+import { convertQuoteToLead, deleteQuoteRequest, getQuoteRequests } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import SearchInput from '../../components/admin/SearchInput'
 import StatusPanel from '../../components/StatusPanel'
@@ -41,6 +42,21 @@ export default function QuoteInbox() {
   const [pendingDelete, setPendingDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+
+  const [convertingId, setConvertingId] = useState(null)
+  const [convertedMap, setConvertedMap] = useState({})
+
+  const handleConvertToDeal = async (quote) => {
+    setConvertingId(quote.id)
+    try {
+      const created = await convertQuoteToLead(quote)
+      setConvertedMap((prev) => ({ ...prev, [quote.id]: created.id }))
+    } catch (err) {
+      alert('Could not convert quote to deal: ' + (err.message || 'Unknown error'))
+    } finally {
+      setConvertingId(null)
+    }
+  }
 
   useEffect(() => {
     document.title = 'Quote requests — Control Panel'
@@ -121,7 +137,25 @@ export default function QuoteInbox() {
                   )}
                 </button>
 
-                <div className="flex shrink-0 gap-2 text-xs">
+                <div className="flex shrink-0 items-center gap-2 text-xs">
+                  {convertedMap[quote.id] ? (
+                    <Link
+                      to="/admin/crm"
+                      className="rounded-md border border-emerald-500/50 bg-emerald-500/10 px-2.5 py-1.5 text-emerald-400 font-semibold transition-colors hover:bg-emerald-500/20"
+                    >
+                      ✓ In CRM Pipeline →
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={convertingId === quote.id}
+                      onClick={() => handleConvertToDeal(quote)}
+                      className="rounded-md border border-neon-indigo/50 bg-neon-indigo/10 px-2.5 py-1.5 text-white font-medium transition-colors hover:bg-neon-indigo/20 disabled:opacity-50"
+                      title="Convert this quote request into a tracked CRM Deal"
+                    >
+                      {convertingId === quote.id ? 'Converting...' : '💼 Convert to Deal'}
+                    </button>
+                  )}
                   <a
                     href={`mailto:${quote.email}?subject=${encodeURIComponent('Re: your project enquiry')}`}
                     className="rounded-md border border-neon-blue/50 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10"

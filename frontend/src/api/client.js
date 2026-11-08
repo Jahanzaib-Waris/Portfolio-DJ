@@ -546,3 +546,139 @@ export const updateProfile = async (payload) => {
   if (error) throw error
   return data
 }
+
+/* ------------------------------------------------------------------- CRM & Sales */
+
+export const getCrmLeads = async (params = {}) => {
+  let query = supabase.from('crm_leads').select('*', { count: 'exact' })
+
+  if (params.stage && params.stage !== 'all') {
+    query = query.eq('stage', params.stage)
+  }
+  if (params.temperature && params.temperature !== 'all') {
+    query = query.eq('temperature', params.temperature)
+  }
+  if (params.source && params.source !== 'all') {
+    query = query.eq('source', params.source)
+  }
+
+  // Ordering
+  if (params.order === 'value_desc') {
+    query = query.order('deal_value', { ascending: false })
+  } else if (params.order === 'follow_up_asc') {
+    query = query.order('next_follow_up', { ascending: true, nullsFirst: false })
+  } else {
+    query = query.order('created_at', { ascending: false })
+  }
+
+  const { data, count, error } = await query
+  if (error) throw error
+  return { items: data || [], count: count || 0 }
+}
+
+export const getCrmLead = async (id) => {
+  const { data, error } = await supabase
+    .from('crm_leads')
+    .select('*, quote_requests(*)')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const createCrmLead = async (payload) => {
+  const { data, error } = await supabase
+    .from('crm_leads')
+    .insert([
+      {
+        ...payload,
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const updateCrmLead = async (id, patch) => {
+  const { data, error } = await supabase
+    .from('crm_leads')
+    .update({
+      ...patch,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const deleteCrmLead = async (id) => {
+  const { error } = await supabase.from('crm_leads').delete().eq('id', id)
+  if (error) throw error
+  return { success: true }
+}
+
+export const getCrmActivities = async (leadId) => {
+  const { data, error } = await supabase
+    .from('crm_activities')
+    .select('*')
+    .eq('lead_id', leadId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return data || []
+}
+
+export const addCrmActivity = async (leadId, payload) => {
+  const { data, error } = await supabase
+    .from('crm_activities')
+    .insert([
+      {
+        lead_id: leadId,
+        type: payload.type || 'note',
+        content: payload.content || '',
+      },
+    ])
+    .select()
+    .single()
+  if (error) throw error
+  return data
+}
+
+export const deleteCrmActivity = async (activityId) => {
+  const { error } = await supabase.from('crm_activities').delete().eq('id', activityId)
+  if (error) throw error
+  return { success: true }
+}
+
+export const convertQuoteToLead = async (quote) => {
+  // Parse budget estimate into numeric deal value if available
+  let dealValue = 0
+  if (quote.budget) {
+    const num = quote.budget.replace(/[^0-9]/g, '')
+    if (num) dealValue = parseFloat(num)
+  }
+
+  const payload = {
+    name: quote.name,
+    email: quote.email,
+    company: quote.company || '',
+    job_title: 'Inbound Lead',
+    phone: '',
+    linkedin_url: '',
+    company_website: quote.project_link || '',
+    stage: 'lead',
+    temperature: 'hot',
+    source: 'website_inbound',
+    deal_value: dealValue,
+    currency: 'USD',
+    tech_stack: [quote.service, quote.backend].filter(Boolean),
+    notes: `Website Quote Submission:\n\nService: ${quote.service}\nBackend: ${quote.backend}\nBudget: ${quote.budget}\nTimeline: ${quote.timeline}\n\nProject Details:\n${quote.project_details}`,
+    quote_request_id: quote.id,
+  }
+
+  return createCrmLead(payload)
+}
+

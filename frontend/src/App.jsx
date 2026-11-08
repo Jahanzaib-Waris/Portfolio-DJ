@@ -30,6 +30,8 @@ const ProjectList = lazy(() => import('./pages/admin/ProjectList'))
 const QuoteInbox = lazy(() => import('./pages/admin/QuoteInbox'))
 const SkillsManager = lazy(() => import('./pages/admin/SkillsManager'))
 const Analytics = lazy(() => import('./pages/admin/Analytics'))
+const CrmPipeline = lazy(() => import('./pages/admin/crm/CrmPipeline'))
+const CrmProspects = lazy(() => import('./pages/admin/crm/CrmProspects'))
 const AccountSettings = lazy(() => import('./pages/admin/settings/AccountSettings'))
 const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSettings'))
 const ThemeEditor = lazy(() => import('./pages/admin/settings/ThemeEditor'))
@@ -83,6 +85,8 @@ function App() {
               <Route path="projects/:id/edit" element={<ProjectEditor />} />
               <Route path="skills" element={<SkillsManager />} />
               <Route path="profile" element={<ProfileEditor />} />
+              <Route path="crm" element={<CrmPipeline />} />
+              <Route path="crm/prospects" element={<CrmProspects />} />
               <Route path="quotes" element={<QuoteInbox />} />
               <Route path="settings/account" element={<AccountSettings />} />
               <Route path="settings/branding" element={<BrandingSettings />} />

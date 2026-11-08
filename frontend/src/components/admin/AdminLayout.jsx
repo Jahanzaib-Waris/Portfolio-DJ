@@ -28,6 +28,14 @@ const nav = [
       { to: '/admin/profile', label: 'Profile', ready: true },
     ],
   },
+  {
+    key: 'crm',
+    label: 'Sales & CRM',
+    children: [
+      { to: '/admin/crm', label: 'Pipeline & Deals', end: true, ready: true },
+      { to: '/admin/crm/prospects', label: 'Lead Prospector', ready: true },
+    ],
+  },
   { key: 'quotes', to: '/admin/quotes', label: 'Quote requests', ready: true },
   {
     key: 'settings',
