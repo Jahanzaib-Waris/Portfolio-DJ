@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import { getTheme, updateTheme } from '../../../api/client'
 import Field from '../../../components/admin/Field'
+import { useToast } from '../../../components/admin/toastStore'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
 import { Skeleton } from '../../../components/Skeleton'
@@ -89,6 +90,7 @@ function PreviewPanel({ theme }) {
 }
 
 export default function ThemeEditor() {
+  const toast = useToast()
   const [theme, setTheme] = useState(null)
   const [loadState, setLoadState] = useState('loading')
   const [saving, setSaving] = useState(false)
@@ -132,9 +134,12 @@ export default function ThemeEditor() {
       applyTheme(result)
       setDirty(false)
       setSaved(true)
+      toast.success('Theme updated and live styles applied!')
     } catch (error) {
       setFieldErrors(fieldErrorsFrom(error))
-      setFormError(formErrorFrom(error))
+      const err = formErrorFrom(error) || error?.message || 'Failed to update theme'
+      setFormError(err)
+      toast.error(err)
     } finally {
       setSaving(false)
     }

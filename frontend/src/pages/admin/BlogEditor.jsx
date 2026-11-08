@@ -5,6 +5,7 @@ import { createBlogPost, getBlogPost, updateBlogPost } from '../../api/client'
 import RichTextEditor from '../../components/admin/RichTextEditor'
 import BlogBlockBuilder from '../../components/admin/BlogBlockBuilder'
 import BlockPropertiesDrawer from '../../components/admin/BlockPropertiesDrawer'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -99,6 +100,7 @@ export default function BlogEditor() {
   const { slug: routeSlug } = useParams()
   const isNew = !routeSlug
   const navigate = useNavigate()
+  const toast = useToast()
 
   const [form, setForm] = useState(emptyPost)
   const [loadState, setLoadState] = useState(isNew ? 'ready' : 'loading')
@@ -353,9 +355,12 @@ export default function BlogEditor() {
       setRemoveCover(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
       setForm((prev) => ({ ...prev, is_published: Boolean(saved.is_published) }))
+      toast.success(isPublished ? 'Post published successfully!' : 'Draft saved successfully!')
     } catch (error) {
       setFieldErrors(fieldErrorsFrom(error))
-      setFormError(formErrorFrom(error))
+      const err = formErrorFrom(error) || error?.message || 'Could not save post'
+      setFormError(err)
+      toast.error(err)
     } finally {
       setSaving(false)
     }

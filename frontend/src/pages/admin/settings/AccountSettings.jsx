@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { changePassword } from '../../../api/client'
 import Field from '../../../components/admin/Field'
 import { inputClass } from '../../../components/admin/formStyles'
+import { useToast } from '../../../components/admin/toastStore'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
 
@@ -40,6 +41,8 @@ export default function AccountSettings() {
     setSaved(false)
   }
 
+  const toast = useToast()
+
   const save = async (e) => {
     e.preventDefault()
     setSaving(true)
@@ -48,13 +51,17 @@ export default function AccountSettings() {
     setSaved(false)
 
     if (form.new_password !== form.confirm_password) {
-      setFieldErrors({ confirm_password: 'Passwords do not match.' })
+      const err = 'Passwords do not match.'
+      setFieldErrors({ confirm_password: err })
+      toast.error(err)
       setSaving(false)
       return
     }
 
     if (form.new_password.length < 6) {
-      setFieldErrors({ new_password: 'Password must be at least 6 characters.' })
+      const err = 'Password must be at least 6 characters.'
+      setFieldErrors({ new_password: err })
+      toast.error(err)
       setSaving(false)
       return
     }
@@ -65,8 +72,11 @@ export default function AccountSettings() {
       })
       setForm(empty)
       setSaved(true)
+      toast.success('Admin password updated successfully!')
     } catch (error) {
-      setFormError(error?.message || 'Failed to change password. Try again.')
+      const err = error?.message || 'Failed to change password. Try again.'
+      setFormError(err)
+      toast.error(err)
     } finally {
       setSaving(false)
     }

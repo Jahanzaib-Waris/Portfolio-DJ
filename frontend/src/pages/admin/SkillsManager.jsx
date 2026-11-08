@@ -4,6 +4,7 @@ import { createSkill, deleteSkill, getSkills, updateSkill } from '../../api/clie
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import Field from '../../components/admin/Field'
 import { inputClass } from '../../components/admin/formStyles'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -12,6 +13,7 @@ import { fieldErrorsFrom, formErrorFrom, messageFor } from '../../utils/apiError
 const blank = { name: '', description: '', display_order: 0 }
 
 export default function SkillsManager() {
+  const toast = useToast()
   const [skills, setSkills] = useState([])
   const [loadState, setLoadState] = useState('loading')
 
@@ -51,11 +53,14 @@ export default function SkillsManager() {
     setCreateError(null)
     try {
       await createSkill(draft)
+      toast.success(`Added skill "${draft.name}"`)
       setDraft(blank)
       load()
     } catch (error) {
       setCreateErrors(fieldErrorsFrom(error))
-      setCreateError(formErrorFrom(error))
+      const err = formErrorFrom(error) || error?.message || 'Could not add skill'
+      setCreateError(err)
+      toast.error(err)
     } finally {
       setCreating(false)
     }
@@ -76,10 +81,12 @@ export default function SkillsManager() {
     setEditErrors({})
     try {
       await updateSkill(editingId, editDraft)
+      toast.success(`Updated "${editDraft.name}"`)
       setEditingId(null)
       load()
     } catch (error) {
       setEditErrors(fieldErrorsFrom(error))
+      toast.error(error?.message || 'Could not update skill')
     } finally {
       setSavingEdit(false)
     }
@@ -89,50 +96,63 @@ export default function SkillsManager() {
     setDeleting(true)
     try {
       await deleteSkill(pendingDelete.id)
+      toast.success(`Deleted "${pendingDelete.name}"`)
       setPendingDelete(null)
       load()
+    } catch (err) {
+      toast.error(err?.message || 'Failed to delete skill')
     } finally {
       setDeleting(false)
     }
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <p className="eyebrow system-heading text-xs text-neon-indigo">// Content</p>
-      <h1 className="mt-3 text-2xl text-white sm:text-3xl">Skills</h1>
-      <p className="mt-2 text-sm text-slate-400">
-        The tech stack cards on the home page. Lower display order shows first.
-      </p>
+    <div className="mx-auto max-w-4xl pb-16">
+      {/* Top Header */}
+      <div>
+        <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-1">
+          <span>Portfolio</span>
+          <span className="text-slate-600 font-mono">/</span>
+          <span className="text-slate-300 font-medium">Skills</span>
+        </nav>
+        <h1 className="text-2xl font-bold text-white sm:text-3xl">Technical Skills</h1>
+        <p className="mt-1 text-sm text-slate-400">
+          Technologies, frameworks, and architecture capabilities highlighted on the public portfolio.
+        </p>
+      </div>
 
-      <StatusPanel glow={false} className="mt-8 p-5">
-        <h2 className="system-heading text-sm text-white">Add a skill</h2>
+      {/* Add New Skill Form */}
+      <StatusPanel glow={false} className="mt-6 p-5 border-panel-edge">
+        <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+          <span>+ Add New Capability</span>
+        </h2>
         <form onSubmit={add} className="mt-4 space-y-4">
           <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-            <Field label="Name" htmlFor="new-name" error={messageFor(createErrors, 'name')}>
+            <Field label="Skill / Framework Name" htmlFor="new-name" error={messageFor(createErrors, 'name')}>
               <input
                 id="new-name"
                 required
                 value={draft.name}
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-                placeholder="Django"
+                placeholder="e.g. FlutterFlow, Supabase, Tailwind CSS"
                 className={inputClass}
               />
             </Field>
-            <Field label="Order" htmlFor="new-order" error={messageFor(createErrors, 'display_order')}>
+            <Field label="Display Order" htmlFor="new-order" error={messageFor(createErrors, 'display_order')}>
               <input
                 id="new-order"
                 type="number"
                 min={0}
                 value={draft.display_order}
                 onChange={(e) => setDraft({ ...draft, display_order: e.target.value })}
-                className={`${inputClass} sm:w-24`}
+                className={`${inputClass} sm:w-28`}
               />
             </Field>
           </div>
 
           <Field
-            label="Description"
-            hint="(short blurb)"
+            label="Short Capability Description"
+            hint="(1-2 line summary of expertise)"
             htmlFor="new-desc"
             error={messageFor(createErrors, 'description')}
           >
@@ -141,16 +161,22 @@ export default function SkillsManager() {
               maxLength={200}
               value={draft.description}
               onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-              placeholder="REST APIs, ORM, admin-driven CMS"
+              placeholder="e.g. Multi-platform architecture, custom actions, and rapid prototyping"
               className={inputClass}
             />
           </Field>
 
-          {createError && <p className="text-sm text-status-red">{createError}</p>}
+          {createError && (
+            <p role="alert" className="text-sm text-status-red">
+              {createError}
+            </p>
+          )}
 
-          <SystemButton type="submit" variant="primary" disabled={creating}>
-            {creating ? 'Adding...' : 'Add skill'}
-          </SystemButton>
+          <div className="flex justify-end">
+            <SystemButton type="submit" variant="primary" size="sm" disabled={creating}>
+              {creating ? 'Adding...' : '+ Add Skill'}
+            </SystemButton>
+          </div>
         </form>
       </StatusPanel>
 
@@ -158,7 +184,15 @@ export default function SkillsManager() {
         <p className="mt-8 text-sm text-status-red">Failed to load skills. Try refreshing.</p>
       )}
 
+      {/* Existing Skills List */}
       <div className="mt-6 space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400">
+            Configured Skills ({skills.length})
+          </h3>
+          <span className="text-xs text-slate-500 font-mono">Sorted by display order</span>
+        </div>
+
         {loadState === 'loading' &&
           [1, 2, 3].map((i) => (
             <StatusPanel key={i} glow={false} className="p-4">
@@ -167,12 +201,14 @@ export default function SkillsManager() {
           ))}
 
         {loadState === 'ready' && skills.length === 0 && (
-          <p className="text-sm text-slate-500">No skills yet.</p>
+          <StatusPanel className="p-8 text-center">
+            <p className="text-sm text-slate-400">No skills added yet.</p>
+          </StatusPanel>
         )}
 
         {skills.map((skill) =>
           editingId === skill.id ? (
-            <StatusPanel key={skill.id} className="space-y-3 p-4">
+            <div key={skill.id} className="p-4 rounded-xl border border-neon-blue/50 bg-panel/90 space-y-3 shadow-lg">
               <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
                 <Field label="Name" error={messageFor(editErrors, 'name')}>
                   <input
@@ -187,7 +223,7 @@ export default function SkillsManager() {
                     min={0}
                     value={editDraft.display_order}
                     onChange={(e) => setEditDraft({ ...editDraft, display_order: e.target.value })}
-                    className={`${inputClass} sm:w-24`}
+                    className={`${inputClass} sm:w-28`}
                   />
                 </Field>
               </div>
@@ -199,38 +235,48 @@ export default function SkillsManager() {
                   className={inputClass}
                 />
               </Field>
-              <div className="flex gap-2">
-                <SystemButton onClick={saveEdit} disabled={savingEdit} variant="primary">
-                  {savingEdit ? 'Saving...' : 'Save'}
-                </SystemButton>
-                <SystemButton onClick={() => setEditingId(null)} disabled={savingEdit}>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingId(null)}
+                  disabled={savingEdit}
+                  className="px-3 py-1.5 rounded-lg border border-panel-edge text-xs font-medium text-slate-300 hover:text-white"
+                >
                   Cancel
-                </SystemButton>
+                </button>
+                <button
+                  type="button"
+                  onClick={saveEdit}
+                  disabled={savingEdit}
+                  className="px-4 py-1.5 rounded-lg text-xs font-semibold bg-neon-blue text-abyss hover:bg-neon-blue/90"
+                >
+                  {savingEdit ? 'Saving...' : 'Save'}
+                </button>
               </div>
-            </StatusPanel>
+            </div>
           ) : (
-            <StatusPanel key={skill.id} className="flex flex-wrap items-center gap-4 p-4">
+            <StatusPanel key={skill.id} className="flex flex-wrap items-center justify-between gap-4 p-4 hover:border-slate-500/50 transition-colors">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-white">{skill.name}</h3>
-                  <span className="rounded-full bg-panel-edge/50 px-2 py-0.5 text-[10px] text-slate-400">
+                  <h4 className="text-sm font-semibold text-white">{skill.name}</h4>
+                  <span className="rounded-full bg-abyss border border-panel-edge px-2 py-0.5 text-xs font-mono text-slate-400">
                     #{skill.display_order}
                   </span>
                 </div>
                 {skill.description && (
-                  <p className="mt-1 truncate text-xs text-slate-500">{skill.description}</p>
+                  <p className="mt-1 text-xs text-slate-400 truncate">{skill.description}</p>
                 )}
               </div>
               <div className="flex shrink-0 gap-2 text-xs">
                 <button
                   onClick={() => startEdit(skill)}
-                  className="rounded-md border border-neon-blue/50 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10"
+                  className="rounded-lg border border-neon-blue/40 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10 font-medium"
                 >
                   Edit
                 </button>
                 <button
                   onClick={() => setPendingDelete(skill)}
-                  className="rounded-md border border-panel-edge px-3 py-1.5 text-slate-400 transition-colors hover:border-status-red/60 hover:text-status-red"
+                  className="rounded-lg border border-panel-edge px-3 py-1.5 text-slate-400 transition-colors hover:border-rose-500/60 hover:text-rose-400"
                 >
                   Delete
                 </button>
@@ -243,7 +289,7 @@ export default function SkillsManager() {
       <ConfirmDialog
         open={Boolean(pendingDelete)}
         title="Delete this skill?"
-        message={`"${pendingDelete?.name}" will be removed from the home page.`}
+        message={`"${pendingDelete?.name}" will be removed from the home page showcase.`}
         busy={deleting}
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}

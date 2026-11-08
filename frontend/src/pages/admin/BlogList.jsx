@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { deleteBlogPost, getBlogPosts } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import SearchInput from '../../components/admin/SearchInput'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -34,15 +35,19 @@ export default function BlogList() {
     setDeleteError(null)
   }, [])
 
+  const toast = useToast()
+
   const confirmDelete = async () => {
     setDeleting(true)
     setDeleteError(null)
     try {
       await deleteBlogPost(pendingDelete.slug)
+      toast.success(`Deleted "${pendingDelete.title}"`)
       setPendingDelete(null)
       reload()
     } catch {
       setDeleteError('Could not delete that post. Try again.')
+      toast.error('Could not delete that post. Try again.')
     } finally {
       setDeleting(false)
     }
@@ -103,20 +108,20 @@ export default function BlogList() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="truncate text-sm font-semibold text-white">{post.title}</h2>
                   {isScheduled ? (
-                    <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-[10px] font-medium tracking-wide text-neon-blue">
+                    <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2.5 py-0.5 text-xs font-mono font-medium tracking-wide text-neon-blue">
                       Scheduled &middot; {post.published_date}
                     </span>
                   ) : post.is_published ? (
-                    <span className="rounded-full bg-status-green/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-status-green">
+                    <span className="rounded-full bg-status-green/15 border border-status-green/30 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wide text-status-green">
                       Live
                     </span>
                   ) : (
-                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-accent">
+                    <span className="rounded-full bg-accent/15 border border-accent/30 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wide text-accent">
                       Draft
                     </span>
                   )}
                 </div>
-                <p className="mt-1 truncate text-xs text-slate-500">
+                <p className="mt-1 truncate text-xs text-slate-400">
                   {post.published_date} &middot; /{post.slug}
                 </p>
               </div>

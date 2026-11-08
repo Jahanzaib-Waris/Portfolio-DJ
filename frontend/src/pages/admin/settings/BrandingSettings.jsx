@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { getBranding, updateBranding } from '../../../api/client'
 import Field from '../../../components/admin/Field'
 import { fileInputClass, inputClass } from '../../../components/admin/formStyles'
+import { useToast } from '../../../components/admin/toastStore'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
 import { Skeleton } from '../../../components/Skeleton'
@@ -48,6 +49,7 @@ function ImageField({ label, hint, accept, existing, file, onChange, onRemove, e
 }
 
 export default function BrandingSettings() {
+  const toast = useToast()
   const [siteName, setSiteName] = useState('')
   const [loadState, setLoadState] = useState('loading')
   const [saving, setSaving] = useState(false)
@@ -105,9 +107,12 @@ export default function BrandingSettings() {
       setRemoveFavicon(false)
       setDirty(false)
       setSaved(true)
+      toast.success('Branding settings saved successfully!')
     } catch (error) {
       setFieldErrors(fieldErrorsFrom(error))
-      setFormError(formErrorFrom(error))
+      const err = formErrorFrom(error) || error?.message || 'Failed to update branding'
+      setFormError(err)
+      toast.error(err)
     } finally {
       setSaving(false)
     }

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createCrmLead, getCrmLeads, updateCrmLead } from '../../../api/client'
 import SearchInput from '../../../components/admin/SearchInput'
+import { useToast } from '../../../components/admin/toastStore'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
@@ -16,6 +17,8 @@ export default function CrmPipeline() {
   const [search, setSearch] = useState('')
   const [selectedTemperature, setSelectedTemperature] = useState('all')
   const [selectedSource, setSelectedSource] = useState('all')
+  const [viewMode, setViewMode] = useState('kanban')
+  const toast = useToast()
 
   // Selected lead for detail drawer
   const [activeLead, setActiveLead] = useState(null)
@@ -184,6 +187,7 @@ export default function CrmPipeline() {
       alert('Failed to create deal: ' + err.message)
     } finally {
       setCreatingDeal(false)
+      toast.success('New deal created!')
     }
   }
 
@@ -292,6 +296,36 @@ export default function CrmPipeline() {
               </option>
             ))}
           </select>
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center rounded-lg border border-panel-edge p-1 bg-abyss/40 shrink-0">
+            <button
+              type="button"
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded font-medium transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-neon-blue/20 text-neon-blue font-semibold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Kanban Board View"
+            >
+              <span>▦</span>
+              <span className="hidden sm:inline">Kanban</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-neon-blue/20 text-neon-blue font-semibold'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+              title="Stacked Stage List View (Ideal for mobile / compact screens)"
+            >
+              <span>☰</span>
+              <span className="hidden sm:inline">Stage List</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -302,7 +336,96 @@ export default function CrmPipeline() {
         </div>
       )}
 
+      {/* View Switch: Stacked List View */}
+      {viewMode === 'list' && (
+        <div className="mt-6 space-y-4">
+          {STAGES.map((stage, stageIdx) => {
+            const stageLeads = filteredLeads.filter((l) => l.stage === stage.key)
+            const stageTotal = stageLeads.reduce((acc, curr) => acc + (parseFloat(curr.deal_value) || 0), 0)
+
+            return (
+              <div key={stage.key} className="rounded-xl border border-panel-edge bg-panel/70 p-4">
+                <div className="flex items-center justify-between pb-3 border-b border-panel-edge/60">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className={`text-sm font-bold ${stage.color}`}>{stage.label}</h3>
+                    <span className="text-xs font-mono text-emerald-400 font-semibold">
+                      ${stageTotal.toLocaleString()}
+                    </span>
+                  </div>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-abyss border border-panel-edge font-mono text-slate-300">
+                    {stageLeads.length} deals
+                  </span>
+                </div>
+
+                <div className="mt-3 divide-y divide-panel-edge/50">
+                  {stageLeads.length === 0 ? (
+                    <p className="text-xs text-slate-500 py-3 text-center">No deals in this stage.</p>
+                  ) : (
+                    stageLeads.map((lead) => {
+                      const tempObj = TEMPERATURES.find((t) => t.key === lead.temperature)
+                      return (
+                        <div
+                          key={lead.id}
+                          onClick={() => handleOpenLead(lead)}
+                          className="py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 hover:bg-abyss/40 px-2 rounded-lg cursor-pointer transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold text-white hover:text-neon-blue">
+                                {lead.name}
+                              </span>
+                              {lead.company && (
+                                <span className="text-xs text-slate-400">@ {lead.company}</span>
+                              )}
+                              {tempObj && (
+                                <span className={`text-[10px] px-2 py-0.2 rounded border ${tempObj.badge}`}>
+                                  {tempObj.label}
+                                </span>
+                              )}
+                            </div>
+                            {lead.notes && (
+                              <p className="text-xs text-slate-400 truncate mt-0.5 max-w-xl">{lead.notes}</p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="font-mono text-sm font-bold text-emerald-400">
+                              ${parseFloat(lead.deal_value || 0).toLocaleString()}
+                            </span>
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                type="button"
+                                disabled={stageIdx === 0}
+                                onClick={(e) => handleQuickMove(e, lead, 'prev')}
+                                className="px-2 py-1 rounded bg-abyss hover:bg-panel-edge text-slate-300 disabled:opacity-20 text-xs font-mono"
+                                title="Move to previous stage"
+                              >
+                                ← Prev
+                              </button>
+                              <button
+                                type="button"
+                                disabled={stageIdx === STAGES.length - 1}
+                                onClick={(e) => handleQuickMove(e, lead, 'next')}
+                                className="px-2 py-1 rounded bg-abyss hover:bg-panel-edge text-slate-300 disabled:opacity-20 text-xs font-mono"
+                                title="Advance to next stage"
+                              >
+                                Next →
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
       {/* Kanban Board */}
+      {viewMode === 'kanban' && (
       <div className="mt-6 overflow-x-auto pb-4">
         <div className="min-w-[1100px] grid grid-cols-6 gap-3">
           {STAGES.map((stage, stageIdx) => {
@@ -428,6 +551,7 @@ export default function CrmPipeline() {
           })}
         </div>
       </div>
+      )}
 
       {/* Quick Add Deal Modal */}
       {showAddModal && (

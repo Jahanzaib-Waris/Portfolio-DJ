@@ -70,7 +70,7 @@ export default function AdminLogin() {
   }
 
   const inputClass =
-    'w-full rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 outline-none transition-colors focus:border-neon-blue'
+    'w-full rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-neon-blue focus:ring-2 focus:ring-neon-blue/30 focus:ring-offset-1 focus:ring-offset-void'
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-16">
@@ -82,7 +82,7 @@ export default function AdminLogin() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label htmlFor="email" className="system-heading mb-1 block text-xs text-slate-400">
+              <label htmlFor="email" className="system-heading mb-1.5 block text-xs font-semibold text-slate-300">
                 Email address
               </label>
               <input
@@ -100,7 +100,7 @@ export default function AdminLogin() {
             </div>
 
             <div>
-              <label htmlFor="password" className="system-heading mb-1 block text-xs text-slate-400">
+              <label htmlFor="password" className="system-heading mb-1.5 block text-xs font-semibold text-slate-300">
                 Password
               </label>
               <div className="relative">

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { convertQuoteToLead, deleteQuoteRequest, getQuoteRequests } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import SearchInput from '../../components/admin/SearchInput'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -46,13 +47,16 @@ export default function QuoteInbox() {
   const [convertingId, setConvertingId] = useState(null)
   const [convertedMap, setConvertedMap] = useState({})
 
+  const toast = useToast()
+
   const handleConvertToDeal = async (quote) => {
     setConvertingId(quote.id)
     try {
       const created = await convertQuoteToLead(quote)
       setConvertedMap((prev) => ({ ...prev, [quote.id]: created.id }))
+      toast.success(`Converted "${quote.name}" into a tracked CRM deal!`)
     } catch (err) {
-      alert('Could not convert quote to deal: ' + (err.message || 'Unknown error'))
+      toast.error('Could not convert quote: ' + (err.message || 'Unknown error'))
     } finally {
       setConvertingId(null)
     }
@@ -72,10 +76,12 @@ export default function QuoteInbox() {
     setDeleteError(null)
     try {
       await deleteQuoteRequest(pendingDelete.id)
+      toast.success('Quote request deleted.')
       setPendingDelete(null)
       reload()
     } catch {
       setDeleteError('Could not delete that request. Try again.')
+      toast.error('Could not delete that request. Try again.')
     } finally {
       setDeleting(false)
     }

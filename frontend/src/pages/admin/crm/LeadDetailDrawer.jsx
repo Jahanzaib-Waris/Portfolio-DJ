@@ -7,6 +7,7 @@ import {
   updateCrmLead,
 } from '../../../api/client'
 import ConfirmDialog from '../../../components/admin/ConfirmDialog'
+import { useToast } from '../../../components/admin/toastStore'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 
 const ACTIVITY_TYPES = [
@@ -24,6 +25,7 @@ export default function LeadDetailDrawer({
   onLeadUpdated,
   onLeadDeleted,
 }) {
+  const toast = useToast()
   const [formData, setFormData] = useState(null)
   const [techStackInput, setTechStackInput] = useState('')
   const [saving, setSaving] = useState(false)
@@ -143,8 +145,9 @@ export default function LeadDetailDrawer({
       })
       setActivities((prev) => [added, ...prev])
       setNewActivityContent('')
+      toast.success('Activity logged!')
     } catch (err) {
-      alert('Could not log activity: ' + err.message)
+      toast.error('Could not log activity: ' + err.message)
     } finally {
       setAddingActivity(false)
     }
@@ -154,8 +157,9 @@ export default function LeadDetailDrawer({
     try {
       await deleteCrmActivity(actId)
       setActivities((prev) => prev.filter((a) => a.id !== actId))
+      toast.success('Activity deleted.')
     } catch (err) {
-      alert('Could not delete activity: ' + err.message)
+      toast.error('Could not delete activity: ' + err.message)
     }
   }
 
@@ -164,10 +168,11 @@ export default function LeadDetailDrawer({
     try {
       await deleteCrmLead(lead.id)
       setPendingDelete(false)
+      toast.success('Lead deleted successfully.')
       onLeadDeleted(lead.id)
       onClose()
     } catch (err) {
-      alert('Could not delete lead: ' + err.message)
+      toast.error('Could not delete lead: ' + err.message)
     } finally {
       setDeleting(false)
     }

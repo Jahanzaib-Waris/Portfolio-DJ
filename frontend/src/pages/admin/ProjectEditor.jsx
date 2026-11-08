@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { createProject, getProject, updateProject } from '../../api/client'
+import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import Field from '../../components/admin/Field'
 import { fileInputClass, inputClass } from '../../components/admin/formStyles'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -24,6 +26,7 @@ export default function ProjectEditor() {
   const { id } = useParams()
   const isNew = !id
   const navigate = useNavigate()
+  const toast = useToast()
 
   const [form, setForm] = useState(empty)
   const [loadState, setLoadState] = useState(isNew ? 'ready' : 'loading')
@@ -124,10 +127,13 @@ export default function ProjectEditor() {
       setThumbFile(null)
       setRemoveThumb(false)
       if (fileRef.current) fileRef.current.value = ''
+      toast.success(isNew ? 'Project created successfully!' : 'Project changes saved!')
       if (isNew) navigate(`/admin/projects/${saved.id}/edit`, { replace: true })
     } catch (error) {
       setFieldErrors(fieldErrorsFrom(error))
-      setFormError(formErrorFrom(error))
+      const err = formErrorFrom(error) || error?.message || 'Could not save project.'
+      setFormError(err)
+      toast.error(err)
     } finally {
       setSaving(false)
     }
@@ -135,16 +141,16 @@ export default function ProjectEditor() {
 
   if (loadState === 'loading') {
     return (
-      <div className="mx-auto max-w-3xl space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-64 w-full" />
+      <div className="mx-auto max-w-4xl space-y-4">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-80 w-full" />
       </div>
     )
   }
 
   if (loadState === 'error') {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         <p className="text-sm text-status-red">That project could not be loaded.</p>
         <Link to="/admin/projects" className="mt-4 inline-block text-sm text-neon-blue">
           &larr; Back to projects
@@ -159,29 +165,35 @@ export default function ProjectEditor() {
     .filter(Boolean)
 
   return (
-    <div className="mx-auto max-w-3xl pb-16">
-      <Link to="/admin/projects" className="text-xs text-slate-400 transition-colors hover:text-neon-blue">
-        &larr; Back to projects
-      </Link>
-
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl text-white">{isNew ? 'New project' : 'Edit project'}</h1>
-        {dirty && <span className="text-xs text-accent">Unsaved changes</span>}
-      </div>
+    <div className="mx-auto max-w-4xl pb-16">
+      <AdminPageHeader
+        breadcrumbs={[
+          { label: 'Portfolio', to: '/admin/projects' },
+          { label: 'Projects', to: '/admin/projects' },
+          { label: isNew ? 'New Project' : form.title || 'Edit Project' },
+        ]}
+        title={isNew ? 'New Project' : form.title || 'Edit Project'}
+        badge={form.is_featured ? 'Featured' : null}
+        dirty={dirty}
+        saving={saving}
+        onSave={save}
+        backTo="/admin/projects"
+      />
 
       {formError && (
-        <p role="alert" className="mt-4 text-sm text-status-red">
+        <div role="alert" className="mb-6 p-4 rounded-lg bg-rose-500/10 border border-rose-500/40 text-rose-300 text-sm">
           {formError}
-        </p>
+        </div>
       )}
 
-      <StatusPanel glow={false} className="mt-6 space-y-4 p-5">
-        <Field label="Title" htmlFor="title" error={messageFor(fieldErrors, 'title')}>
+      <StatusPanel glow={false} className="space-y-5 p-6">
+        <Field label="Project Title" htmlFor="title" error={messageFor(fieldErrors, 'title')}>
           <input
             id="title"
             value={form.title}
             onChange={(e) => update({ title: e.target.value })}
             className={inputClass}
+            placeholder="e.g. FlutterFlow Healthcare App"
           />
         </Field>
 
@@ -192,11 +204,12 @@ export default function ProjectEditor() {
             value={form.description}
             onChange={(e) => update({ description: e.target.value })}
             className={inputClass}
+            placeholder="Detailed description of the problem solved, architecture, and deliverables..."
           />
         </Field>
 
         <Field
-          label="Tech stack"
+          label="Tech Stack"
           hint="(comma separated)"
           htmlFor="tech_stack"
           error={messageFor(fieldErrors, 'tech_stack')}
@@ -205,15 +218,15 @@ export default function ProjectEditor() {
             id="tech_stack"
             value={form.tech_stack}
             onChange={(e) => update({ tech_stack: e.target.value })}
-            placeholder="Django, React, Tailwind"
+            placeholder="FlutterFlow, Supabase, Firebase, Node.js"
             className={inputClass}
           />
           {previewTags.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
               {previewTags.map((tag) => (
                 <span
                   key={tag}
-                  className="border border-neon-indigo/50 px-2 py-0.5 text-[10px] text-neon-indigo"
+                  className="rounded border border-neon-indigo/50 bg-neon-indigo/10 px-2 py-0.5 text-xs font-mono font-medium text-neon-indigo"
                 >
                   {tag}
                 </span>
@@ -222,8 +235,8 @@ export default function ProjectEditor() {
           )}
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Repo URL" htmlFor="repo_url" error={messageFor(fieldErrors, 'repo_url')}>
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Repository URL" htmlFor="repo_url" error={messageFor(fieldErrors, 'repo_url')}>
             <input
               id="repo_url"
               type="url"
@@ -234,7 +247,7 @@ export default function ProjectEditor() {
             />
           </Field>
 
-          <Field label="Live URL" htmlFor="live_url" error={messageFor(fieldErrors, 'live_url')}>
+          <Field label="Live App / Demo URL" htmlFor="live_url" error={messageFor(fieldErrors, 'live_url')}>
             <input
               id="live_url"
               type="url"
@@ -246,10 +259,10 @@ export default function ProjectEditor() {
           </Field>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field
-            label="Display order"
-            hint="(lower shows first)"
+            label="Display Order"
+            hint="(lower number shows first)"
             htmlFor="display_order"
             error={messageFor(fieldErrors, 'display_order')}
           >
@@ -263,21 +276,21 @@ export default function ProjectEditor() {
             />
           </Field>
 
-          <Field label="Featured" hint="(shown on the home page)">
-            <label className="flex items-center gap-2 pt-2 text-sm text-slate-300">
+          <Field label="Featured Spotlight" hint="(displayed on website home page)">
+            <label className="flex items-center gap-2.5 pt-2 text-sm text-slate-200 cursor-pointer">
               <input
                 type="checkbox"
                 checked={form.is_featured}
                 onChange={(e) => update({ is_featured: e.target.checked })}
                 className="h-4 w-4 rounded border-panel-edge bg-abyss/60 accent-neon-blue"
               />
-              Show in Featured Work
+              <span>Highlight in Featured Work</span>
             </label>
           </Field>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Thumbnail" error={messageFor(fieldErrors, 'thumbnail')}>
+        <div className="pt-2 border-t border-panel-edge">
+          <Field label="Cover Thumbnail" error={messageFor(fieldErrors, 'thumbnail')}>
             <input
               ref={fileRef}
               type="file"
@@ -286,32 +299,47 @@ export default function ProjectEditor() {
               className={fileInputClass}
             />
             {(thumbPreview || (existingThumb && !removeThumb)) && (
-              <div className="mt-2 flex items-center gap-3">
+              <div className="mt-3 flex items-center gap-3">
                 <img
                   src={thumbPreview || existingThumb}
                   alt="Thumbnail preview"
-                  className="h-12 w-20 rounded border border-panel-edge object-cover"
+                  className="h-16 w-28 rounded-lg border border-panel-edge object-cover shadow-sm"
                 />
                 <button
                   type="button"
                   onClick={clearThumb}
-                  className="text-xs text-slate-400 transition-colors hover:text-status-red"
+                  className="px-2.5 py-1 text-xs rounded border border-panel-edge text-slate-300 hover:text-rose-400 hover:border-rose-500/40 transition-colors"
                 >
-                  Remove
+                  Remove Image
                 </button>
               </div>
             )}
             {removeThumb && (
-              <p className="mt-2 text-xs text-accent">Thumbnail will be removed on save.</p>
+              <p className="mt-2 text-xs text-amber-400">Thumbnail will be removed on save.</p>
             )}
           </Field>
         </div>
       </StatusPanel>
 
-      <div className="mt-6">
-        <SystemButton onClick={save} disabled={saving} variant="primary">
-          {saving ? 'Saving...' : 'Save'}
-        </SystemButton>
+      {/* Bottom Save & Cancel Bar */}
+      <div className="mt-6 flex items-center justify-between">
+        <Link
+          to="/admin/projects"
+          className="text-xs text-slate-400 hover:text-white transition-colors"
+        >
+          &larr; Back to all projects
+        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            to="/admin/projects"
+            className="px-4 py-2 rounded-lg border border-panel-edge text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </Link>
+          <SystemButton onClick={save} disabled={saving} variant="primary">
+            {saving ? 'Saving...' : 'Save Changes'}
+          </SystemButton>
+        </div>
       </div>
     </div>
   )

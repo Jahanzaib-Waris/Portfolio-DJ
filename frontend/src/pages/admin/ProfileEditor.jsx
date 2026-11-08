@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createProfile, getProfile, updateProfile } from '../../api/client'
+import AdminPageHeader from '../../components/admin/AdminPageHeader'
 import Field from '../../components/admin/Field'
 import { fileInputClass, inputClass } from '../../components/admin/formStyles'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -19,13 +21,13 @@ const empty = {
 }
 
 export default function ProfileEditor() {
+  const toast = useToast()
   const [form, setForm] = useState(empty)
   const [loadState, setLoadState] = useState('loading')
   // The Profile row may not exist yet — the API 404s until it's created once.
   const [exists, setExists] = useState(false)
 
   const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
   const [fieldErrors, setFieldErrors] = useState({})
   const [formError, setFormError] = useState(null)
   const [dirty, setDirty] = useState(false)
@@ -95,14 +97,12 @@ export default function ProfileEditor() {
   const update = (patch) => {
     setForm((prev) => ({ ...prev, ...patch }))
     setDirty(true)
-    setSaved(false)
   }
 
   const save = async () => {
     setSaving(true)
     setFieldErrors({})
     setFormError(null)
-    setSaved(false)
 
     try {
       const payload = buildPayload(
@@ -110,21 +110,23 @@ export default function ProfileEditor() {
         { photo: photoFile, resume: resumeFile },
         removePhoto ? ['photo'] : [],
       )
-      const result = exists ? await updateProfile(payload) : await createProfile(payload)
+      const saved = exists ? await updateProfile(payload) : await createProfile(payload)
 
       setExists(true)
       setDirty(false)
-      setSaved(true)
-      setExistingPhoto(result.photo || null)
-      setExistingResume(result.resume || null)
+      setExistingPhoto(saved.photo || null)
+      setExistingResume(saved.resume || null)
       setPhotoFile(null)
       setResumeFile(null)
       setRemovePhoto(false)
       if (photoRef.current) photoRef.current.value = ''
       if (resumeRef.current) resumeRef.current.value = ''
+      toast.success('Studio profile updated successfully!')
     } catch (error) {
       setFieldErrors(fieldErrorsFrom(error))
-      setFormError(formErrorFrom(error))
+      const err = formErrorFrom(error) || error?.message || 'Failed to save profile'
+      setFormError(err)
+      toast.error(err)
     } finally {
       setSaving(false)
     }
@@ -132,8 +134,8 @@ export default function ProfileEditor() {
 
   if (loadState === 'loading') {
     return (
-      <div className="mx-auto max-w-3xl space-y-4">
-        <Skeleton className="h-8 w-48" />
+      <div className="mx-auto max-w-4xl space-y-4">
+        <Skeleton className="h-10 w-48" />
         <Skeleton className="h-80 w-full" />
       </div>
     )
@@ -141,81 +143,78 @@ export default function ProfileEditor() {
 
   if (loadState === 'error') {
     return (
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-4xl">
         <p className="text-sm text-status-red">The profile could not be loaded.</p>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-3xl pb-16">
-      <p className="eyebrow system-heading text-xs text-neon-indigo">// Content</p>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl text-white sm:text-3xl">Profile</h1>
-        <div className="flex items-center gap-3 text-xs">
-          {dirty && <span className="text-accent">Unsaved changes</span>}
-          {saved && !dirty && <span className="text-status-green">Saved</span>}
-        </div>
-      </div>
-      <p className="mt-2 text-sm text-slate-400">
-        {exists
-          ? 'Drives the home page hero, navbar branding and footer.'
-          : 'No profile exists yet — filling this in creates it.'}
-      </p>
+    <div className="mx-auto max-w-4xl pb-16">
+      <AdminPageHeader
+        breadcrumbs={[
+          { label: 'Portfolio', to: '/admin/projects' },
+          { label: 'Profile' },
+        ]}
+        title="Studio Profile"
+        subtitle="Drives the home page hero, navbar branding, bio, and social metadata."
+        dirty={dirty}
+        saving={saving}
+        onSave={save}
+        saveLabel={exists ? 'Save Changes' : 'Create Profile'}
+      />
 
       {formError && (
-        <p role="alert" className="mt-4 text-sm text-status-red">
+        <div role="alert" className="mb-6 p-4 rounded-lg bg-rose-500/10 border border-rose-500/40 text-rose-300 text-sm">
           {formError}
-        </p>
+        </div>
       )}
 
-      <StatusPanel glow={false} className="mt-6 space-y-4 p-5">
-        <Field label="Name" htmlFor="name" error={messageFor(fieldErrors, 'name')}>
+      <StatusPanel glow={false} className="space-y-5 p-6">
+        <Field label="Display Name" htmlFor="name" error={messageFor(fieldErrors, 'name')}>
           <input
             id="name"
             value={form.name}
             onChange={(e) => update({ name: e.target.value })}
             className={inputClass}
+            placeholder="Jerry Waris"
           />
         </Field>
 
-        <Field
-          label="Tagline"
-          hint="(one line under your name)"
-          htmlFor="tagline"
-          error={messageFor(fieldErrors, 'tagline')}
-        >
+        <Field label="Professional Tagline" htmlFor="tagline" error={messageFor(fieldErrors, 'tagline')}>
           <input
             id="tagline"
-            maxLength={200}
             value={form.tagline}
             onChange={(e) => update({ tagline: e.target.value })}
             className={inputClass}
+            placeholder="FlutterFlow Architect & Full-Stack Engineer"
           />
         </Field>
 
-        <Field label="Bio" htmlFor="bio" error={messageFor(fieldErrors, 'bio')}>
+        <Field label="Biography" htmlFor="bio" error={messageFor(fieldErrors, 'bio')}>
           <textarea
             id="bio"
-            rows={4}
+            rows={5}
             value={form.bio}
             onChange={(e) => update({ bio: e.target.value })}
             className={inputClass}
+            placeholder="Tell prospective clients and employers about your engineering background, specializations, and approach..."
           />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Email" htmlFor="email" error={messageFor(fieldErrors, 'email')}>
+        <div className="grid gap-5 sm:grid-cols-3">
+          <Field label="Public Contact Email" htmlFor="email" error={messageFor(fieldErrors, 'email')}>
             <input
               id="email"
               type="email"
               value={form.email}
               onChange={(e) => update({ email: e.target.value })}
               className={inputClass}
+              placeholder="contact@studio.com"
             />
           </Field>
 
-          <Field label="GitHub URL" htmlFor="github_url" error={messageFor(fieldErrors, 'github_url')}>
+          <Field label="GitHub Profile URL" htmlFor="github_url" error={messageFor(fieldErrors, 'github_url')}>
             <input
               id="github_url"
               type="url"
@@ -225,89 +224,90 @@ export default function ProfileEditor() {
               className={inputClass}
             />
           </Field>
+
+          <Field label="LinkedIn Profile URL" htmlFor="linkedin_url" error={messageFor(fieldErrors, 'linkedin_url')}>
+            <input
+              id="linkedin_url"
+              type="url"
+              value={form.linkedin_url}
+              onChange={(e) => update({ linkedin_url: e.target.value })}
+              placeholder="https://linkedin.com/in/..."
+              className={inputClass}
+            />
+          </Field>
         </div>
 
-        <Field label="LinkedIn URL" htmlFor="linkedin_url" error={messageFor(fieldErrors, 'linkedin_url')}>
-          <input
-            id="linkedin_url"
-            type="url"
-            value={form.linkedin_url}
-            onChange={(e) => update({ linkedin_url: e.target.value })}
-            placeholder="https://linkedin.com/in/..."
-            className={inputClass}
-          />
-        </Field>
+        <div className="grid gap-5 sm:grid-cols-2 pt-4 border-t border-panel-edge">
+          <Field label="Profile Avatar / Photo" error={messageFor(fieldErrors, 'photo')}>
+            <input
+              ref={photoRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null
+                setPhotoFile(file)
+                if (file) setRemovePhoto(false)
+                setDirty(true)
+              }}
+              className={fileInputClass}
+            />
+            {(photoPreview || (existingPhoto && !removePhoto)) && (
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={photoPreview || existingPhoto}
+                  alt="Profile"
+                  className="h-16 w-16 rounded-full border border-panel-edge object-cover shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPhotoFile(null)
+                    setRemovePhoto(true)
+                    if (photoRef.current) photoRef.current.value = ''
+                    setDirty(true)
+                  }}
+                  className="px-2.5 py-1 text-xs rounded border border-panel-edge text-slate-300 hover:text-rose-400 hover:border-rose-500/40 transition-colors"
+                >
+                  Remove Photo
+                </button>
+              </div>
+            )}
+            {removePhoto && <p className="mt-2 text-xs text-amber-400">Photo will be removed on save.</p>}
+          </Field>
+
+          <Field label="Resume / CV Document" hint="(PDF file)" error={messageFor(fieldErrors, 'resume')}>
+            <input
+              ref={resumeRef}
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => {
+                setResumeFile(e.target.files?.[0] || null)
+                setDirty(true)
+              }}
+              className={fileInputClass}
+            />
+            {resumeFile ? (
+              <p className="mt-2 text-xs text-slate-300">Selected: {resumeFile.name}</p>
+            ) : (
+              existingResume && (
+                <a
+                  href={existingResume}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-neon-blue hover:underline"
+                >
+                  <span>📄 View current uploaded resume</span>
+                  <span>↗</span>
+                </a>
+              )
+            )}
+          </Field>
+        </div>
       </StatusPanel>
 
-      <StatusPanel glow={false} className="mt-5 grid gap-4 p-5 sm:grid-cols-2">
-        <Field label="Photo" error={messageFor(fieldErrors, 'photo')}>
-          <input
-            ref={photoRef}
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files?.[0] || null
-              setPhotoFile(file)
-              if (file) setRemovePhoto(false)
-              setDirty(true)
-            }}
-            className={fileInputClass}
-          />
-          {(photoPreview || (existingPhoto && !removePhoto)) && (
-            <div className="mt-2 flex items-center gap-3">
-              <img
-                src={photoPreview || existingPhoto}
-                alt="Profile preview"
-                className="h-14 w-14 rounded-full border border-panel-edge object-cover"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setPhotoFile(null)
-                  setRemovePhoto(true)
-                  if (photoRef.current) photoRef.current.value = ''
-                  setDirty(true)
-                }}
-                className="text-xs text-slate-400 transition-colors hover:text-status-red"
-              >
-                Remove
-              </button>
-            </div>
-          )}
-          {removePhoto && <p className="mt-2 text-xs text-accent">Photo will be removed on save.</p>}
-        </Field>
-
-        <Field label="Resume" hint="(PDF)" error={messageFor(fieldErrors, 'resume')}>
-          <input
-            ref={resumeRef}
-            type="file"
-            accept="application/pdf"
-            onChange={(e) => {
-              setResumeFile(e.target.files?.[0] || null)
-              setDirty(true)
-            }}
-            className={fileInputClass}
-          />
-          {resumeFile ? (
-            <p className="mt-2 text-xs text-slate-400">Selected: {resumeFile.name}</p>
-          ) : (
-            existingResume && (
-              <a
-                href={existingResume}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-2 inline-block text-xs text-neon-blue hover:glow-text"
-              >
-                View current resume
-              </a>
-            )
-          )}
-        </Field>
-      </StatusPanel>
-
-      <div className="mt-6">
+      <div className="mt-6 flex justify-end">
         <SystemButton onClick={save} disabled={saving} variant="primary">
-          {saving ? 'Saving...' : exists ? 'Save changes' : 'Create profile'}
+          {saving ? 'Saving...' : exists ? 'Save Changes' : 'Create Profile'}
         </SystemButton>
       </div>
     </div>

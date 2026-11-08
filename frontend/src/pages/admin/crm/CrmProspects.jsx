@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 import { createCrmLead, getCrmLeads } from '../../../api/client'
 import SearchInput from '../../../components/admin/SearchInput'
 import SystemButton from '../../../components/SystemButton'
+import { useToast } from '../../../components/admin/toastStore'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 import LeadDetailDrawer from './LeadDetailDrawer'
 
 export default function CrmProspects() {
+  const toast = useToast()
   const [leads, setLeads] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -129,9 +131,10 @@ export default function CrmProspects() {
         currency: 'USD',
         notes: '',
       })
+      toast.success(`Added target prospect "${newProspect.name}"`)
       handleOpenLead(created)
     } catch (err) {
-      alert('Failed to add prospect: ' + err.message)
+      toast.error('Failed to add prospect: ' + (err.message || 'Unknown error'))
     } finally {
       setCreating(false)
     }
@@ -163,6 +166,7 @@ export default function CrmProspects() {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+    toast.info('Exported filtered prospects to CSV.')
   }
 
   const todayStr = new Date().toISOString().slice(0, 10)

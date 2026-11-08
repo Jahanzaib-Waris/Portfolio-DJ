@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { deleteProject, getProjects } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import SearchInput from '../../components/admin/SearchInput'
+import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
 import { Skeleton } from '../../components/Skeleton'
@@ -36,15 +37,19 @@ export default function ProjectList() {
     setDeleteError(null)
   }, [])
 
+  const toast = useToast()
+
   const confirmDelete = async () => {
     setDeleting(true)
     setDeleteError(null)
     try {
       await deleteProject(pendingDelete.id)
+      toast.success(`Deleted project "${pendingDelete.title}"`)
       setPendingDelete(null)
       reload()
     } catch {
       setDeleteError('Could not delete that project. Try again.')
+      toast.error('Could not delete that project. Try again.')
     } finally {
       setDeleting(false)
     }
@@ -106,25 +111,25 @@ export default function ProjectList() {
                 className="h-12 w-16 shrink-0 rounded border border-panel-edge object-cover"
               />
             ) : (
-              <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded border border-dashed border-panel-edge text-[10px] text-slate-600">
-                no image
+              <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded border border-dashed border-panel-edge text-xs font-mono text-slate-400 bg-abyss/40">
+                no img
               </div>
             )}
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="truncate text-sm font-semibold text-white">{project.title}</h2>
-                <span className="rounded-full bg-panel-edge/50 px-2 py-0.5 text-[10px] text-slate-400">
+                <span className="rounded-full bg-abyss border border-panel-edge px-2 py-0.5 text-xs font-mono text-slate-300">
                   #{project.display_order}
                 </span>
                 {project.is_featured && (
-                  <span className="rounded-full bg-neon-blue/10 px-2 py-0.5 text-[10px] text-neon-blue">
+                  <span className="rounded-full bg-neon-blue/15 border border-neon-blue/30 px-2 py-0.5 text-xs font-mono font-medium text-neon-blue">
                     Featured
                   </span>
                 )}
               </div>
               {project.tech_stack_list?.length > 0 && (
-                <p className="mt-1 truncate text-xs text-slate-500">
+                <p className="mt-1 truncate text-xs text-slate-400">
                   {project.tech_stack_list.join(' · ')}
                 </p>
               )}
