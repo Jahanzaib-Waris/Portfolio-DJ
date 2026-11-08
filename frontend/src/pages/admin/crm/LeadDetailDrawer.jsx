@@ -3,6 +3,10 @@ import {
   enrichCompanyDecisionMaker,
 } from '../../../api/apolloClient'
 import {
+  generatePitchWithLLM,
+  getAiSettings,
+} from '../../../api/aiClient'
+import {
   addCrmActivity,
   deleteCrmActivity,
   deleteCrmLead,
@@ -54,6 +58,8 @@ export default function LeadDetailDrawer({
   const [pitchTone, setPitchTone] = useState('senior') // 'senior' | 'consultant' | 'punchy'
   const [copiedKey, setCopiedKey] = useState(null)
   const [loggingPitch, setLoggingPitch] = useState(false)
+  const [customAiPitch, setCustomAiPitch] = useState(null)
+  const [generatingAi, setGeneratingAi] = useState(false)
 
   useEffect(() => {
     if (lead) {
@@ -67,6 +73,7 @@ export default function LeadDetailDrawer({
       setTechStackInput(Array.isArray(lead.tech_stack) ? lead.tech_stack.join(', ') : '')
       setSaveSuccess(false)
       setSaveError(null)
+      setCustomAiPitch(null)
 
       // Fetch activities
       setActivitiesLoading(true)
@@ -478,7 +485,34 @@ Jerry Waris`
     }
   }
 
-  const pitch = getPitchContent()
+  // Handle Generate with AI (Ollama, Groq, OpenAI)
+  const handleGenerateWithAI = async () => {
+    const aiConfig = getAiSettings()
+    if (aiConfig.provider === 'algorithmic') {
+      toast.info('Algorithmic engine active. To use Ollama or Groq, select them in Settings > API Integrations.')
+      return
+    }
+
+    setGeneratingAi(true)
+    try {
+      const generated = await generatePitchWithLLM({
+        lead: formData,
+        angle: pitchAngle,
+        tone: pitchTone,
+        techStack: techStackInput,
+      })
+      if (generated) {
+        setCustomAiPitch(generated)
+        toast.success(`Generated custom pitch using ${generated.modelUsed}!`)
+      }
+    } catch (err) {
+      toast.error(err.message || 'AI generation failed.')
+    } finally {
+      setGeneratingAi(false)
+    }
+  }
+
+  const pitch = customAiPitch || getPitchContent()
   const emailLink = formData.email
     ? `mailto:${formData.email}?subject=${encodeURIComponent(pitch.subject)}&body=${encodeURIComponent(pitch.body)}`
     : null
@@ -724,6 +758,36 @@ Jerry Waris`
                 {copiedKey === 'inmail' ? '✓ Copied InMail' : '💼 Copy InMail'}
               </button>
 
+              {/* Polish with AI Button (Ollama / Groq / OpenAI) */}
+              <button
+                type="button"
+                onClick={handleGenerateWithAI}
+                disabled={generatingAi}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-neon-indigo/20 border border-neon-indigo/50 text-neon-indigo hover:bg-neon-indigo/30 transition-all disabled:opacity-50"
+              >
+                {generatingAi ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-neon-indigo border-t-transparent" />
+                    Generating AI Pitch...
+                  </>
+                ) : (
+                  <>
+                    <span>✨</span> {customAiPitch ? 'Regenerate AI' : 'Polish with AI'}
+                  </>
+                )}
+              </button>
+
+              {customAiPitch && (
+                <button
+                  type="button"
+                  onClick={() => setCustomAiPitch(null)}
+                  className="px-2 py-1 rounded text-[11px] text-slate-400 hover:text-white hover:underline font-mono"
+                  title="Revert to Jerry's algorithmic formula"
+                >
+                  ↩ Revert to Formula
+                </button>
+              )}
+
               {/* Log Activity to CRM Timeline */}
               <button
                 type="button"
@@ -780,9 +844,16 @@ Jerry Waris`
                 <span className="font-semibold text-slate-200">
                   Subject: <span className="font-normal text-white">{pitch.subject}</span>
                 </span>
-                <span className="text-[11px] text-slate-400 font-mono">
-                  {pitch.inmail.length} chars (InMail)
-                </span>
+                <div className="flex items-center gap-2">
+                  {customAiPitch?.modelUsed && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-neon-indigo/20 text-neon-indigo border border-neon-indigo/40 font-mono">
+                      ✨ {customAiPitch.modelUsed}
+                    </span>
+                  )}
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    {pitch.inmail.length} chars (InMail)
+                  </span>
+                </div>
               </div>
               <div className="whitespace-pre-wrap font-sans text-xs leading-relaxed select-all text-slate-300 max-h-56 overflow-y-auto">
                 {pitch.body}
