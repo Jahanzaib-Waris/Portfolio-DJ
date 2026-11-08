@@ -154,7 +154,7 @@ export default function BrandingSettings() {
         </p>
       )}
 
-      <StatusPanel glow={false} className="mt-6 space-y-4 p-5">
+      <StatusPanel glow={false} className="mt-6 space-y-4 p-4 sm:p-5">
         <Field label="Site name" htmlFor="site_name" error={messageFor(fieldErrors, 'site_name')}>
           <input
             id="site_name"

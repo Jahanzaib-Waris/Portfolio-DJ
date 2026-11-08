@@ -36,14 +36,14 @@ function PreviewPanel({ theme }) {
 
   return (
     <div
-      className="rounded-lg p-6"
+      className="rounded-lg p-3.5 sm:p-6"
       style={{
         background: theme.color_void,
         border: `1px solid ${theme.color_panel_edge}`,
       }}
     >
       <div
-        className="p-5"
+        className="p-3.5 sm:p-5"
         style={{
           background: theme.color_panel,
           border: `1px solid ${cardBorder}`,
@@ -63,7 +63,7 @@ function PreviewPanel({ theme }) {
         >
           const example = true
         </code>
-        <div className="mt-4 flex gap-3">
+        <div className="mt-4 flex flex-wrap items-center gap-2.5 sm:gap-3">
           <button
             type="button"
             className="px-4 py-2 text-sm font-semibold"
@@ -187,7 +187,7 @@ export default function ThemeEditor() {
         <PreviewPanel theme={theme} />
       </div>
 
-      <StatusPanel glow={false} className="mt-5 p-5">
+      <StatusPanel glow={false} className="mt-5 p-4 sm:p-5">
         <p className="system-heading mb-3 text-sm text-white">Colors</p>
         <div className="grid gap-4 sm:grid-cols-2">
           {colorFields.map(([key, label]) => (
@@ -211,7 +211,7 @@ export default function ThemeEditor() {
         </div>
       </StatusPanel>
 
-      <StatusPanel glow={false} className="mt-5 grid gap-4 p-5 sm:grid-cols-2">
+      <StatusPanel glow={false} className="mt-5 grid gap-4 p-4 sm:p-5 sm:grid-cols-2">
         <Field label="Display font" htmlFor="font_display">
           <select
             id="font_display"
@@ -239,7 +239,7 @@ export default function ThemeEditor() {
         </Field>
       </StatusPanel>
 
-      <StatusPanel glow={false} className="mt-5 grid gap-4 p-5 sm:grid-cols-2">
+      <StatusPanel glow={false} className="mt-5 grid gap-4 p-4 sm:p-5 sm:grid-cols-2">
         <Field label="Corner radius" htmlFor="radius_scale">
           <select
             id="radius_scale"

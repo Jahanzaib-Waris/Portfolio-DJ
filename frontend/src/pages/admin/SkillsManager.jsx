@@ -122,7 +122,7 @@ export default function SkillsManager() {
       </div>
 
       {/* Add New Skill Form */}
-      <StatusPanel glow={false} className="mt-6 p-5 border-panel-edge">
+      <StatusPanel glow={false} className="mt-6 p-4 sm:p-5 border-panel-edge">
         <h2 className="text-sm font-semibold text-white flex items-center gap-2">
           <span>+ Add New Capability</span>
         </h2>
@@ -255,7 +255,7 @@ export default function SkillsManager() {
               </div>
             </div>
           ) : (
-            <StatusPanel key={skill.id} className="flex flex-wrap items-center justify-between gap-4 p-4 hover:border-slate-500/50 transition-colors">
+            <StatusPanel key={skill.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 hover:border-slate-500/50 transition-colors">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <h4 className="text-sm font-semibold text-white">{skill.name}</h4>
@@ -267,7 +267,7 @@ export default function SkillsManager() {
                   <p className="mt-1 text-xs text-slate-400 truncate">{skill.description}</p>
                 )}
               </div>
-              <div className="flex shrink-0 gap-2 text-xs">
+              <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto justify-end">
                 <button
                   onClick={() => startEdit(skill)}
                   className="rounded-lg border border-neon-blue/40 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10 font-medium"

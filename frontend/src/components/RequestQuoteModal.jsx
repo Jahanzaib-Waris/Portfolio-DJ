@@ -22,17 +22,17 @@ export default function RequestQuoteModal({ open, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 sm:p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2.5 sm:p-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="system-panel w-full max-w-xl max-h-[92vh] overflow-y-auto p-6 sm:p-8"
+        className="system-panel w-full max-w-xl max-h-[95vh] overflow-y-auto p-4 sm:p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-5 sm:mb-6 flex items-start justify-between gap-3 sm:gap-4">
           <div>
             <p className="fb-kicker mb-1">Start a project</p>
-            <h2 className="system-heading text-2xl text-white">Tell us about your app</h2>
+            <h2 className="system-heading text-xl sm:text-2xl text-white">Tell us about your app</h2>
             <p className="mt-1 text-xs text-[#A1A7CA]">
               Building something new, fixing something broken, or adding an integration? Send your project specifications and our engineering team will get back to you within 24 hours.
             </p>

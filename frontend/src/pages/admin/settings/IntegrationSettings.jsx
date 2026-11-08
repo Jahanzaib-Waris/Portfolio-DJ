@@ -235,7 +235,7 @@ export default function IntegrationSettings() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
           <SystemButton
             type="button"
             variant="ghost"
@@ -256,7 +256,7 @@ export default function IntegrationSettings() {
       </div>
 
       {/* -------------------- SECTION 1: Apollo.io Card -------------------- */}
-      <StatusPanel glow={false} className="p-6 space-y-6">
+      <StatusPanel glow={false} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-panel-edge">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-[#2860E1]/15 border border-[#2860E1]/40 flex items-center justify-center text-[#4B83FF] text-xl font-bold font-mono">
@@ -367,7 +367,7 @@ export default function IntegrationSettings() {
       </StatusPanel>
 
       {/* -------------------- SECTION 2: AI Engine & Ollama Provider Card -------------------- */}
-      <StatusPanel glow={false} className="p-6 space-y-6">
+      <StatusPanel glow={false} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-panel-edge">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-neon-indigo/15 border border-neon-indigo/40 flex items-center justify-center text-neon-indigo text-xl">
@@ -421,17 +421,17 @@ export default function IntegrationSettings() {
 
         {/* PROVIDER 1: Ollama Settings */}
         {aiProvider === 'ollama' && (
-          <div className="space-y-5 rounded-xl bg-abyss/60 border border-panel-edge p-5">
+          <div className="space-y-5 rounded-xl bg-abyss/60 border border-panel-edge p-3.5 sm:p-5">
             {/* Mode Switcher: Cloud vs Local */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-panel-edge">
-              <div className="flex items-center gap-1.5 p-1 bg-abyss rounded-xl border border-panel-edge w-fit">
+              <div className="flex flex-col xs:flex-row items-stretch xs:items-center gap-1.5 p-1 bg-abyss rounded-xl border border-panel-edge w-full xs:w-fit">
                 <button
                   type="button"
                   onClick={() => {
                     setOllamaMode('cloud')
                     setAiTestResult(null)
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     ollamaMode === 'cloud'
                       ? 'bg-neon-indigo/25 text-neon-indigo border border-neon-indigo/40 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200'
@@ -445,7 +445,7 @@ export default function IntegrationSettings() {
                     setOllamaMode('local')
                     setAiTestResult(null)
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     ollamaMode === 'local'
                       ? 'bg-neon-indigo/25 text-neon-indigo border border-neon-indigo/40 shadow-sm'
                       : 'text-slate-400 hover:text-slate-200'

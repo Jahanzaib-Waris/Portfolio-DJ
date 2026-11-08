@@ -186,7 +186,7 @@ export default function ProjectEditor() {
         </div>
       )}
 
-      <StatusPanel glow={false} className="space-y-5 p-6">
+      <StatusPanel glow={false} className="space-y-5 p-4 sm:p-6">
         <Field label="Project Title" htmlFor="title" error={messageFor(fieldErrors, 'title')}>
           <input
             id="title"
@@ -322,14 +322,14 @@ export default function ProjectEditor() {
       </StatusPanel>
 
       {/* Bottom Save & Cancel Bar */}
-      <div className="mt-6 flex items-center justify-between">
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <Link
           to="/admin/projects"
           className="text-xs text-slate-400 hover:text-white transition-colors"
         >
           &larr; Back to all projects
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
           <Link
             to="/admin/projects"
             className="px-4 py-2 rounded-lg border border-panel-edge text-xs font-semibold text-slate-400 hover:text-white transition-colors"

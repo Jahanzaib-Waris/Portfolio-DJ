@@ -529,9 +529,9 @@ Jerry Waris`
       <div className="absolute inset-0" onClick={onClose} />
 
       {/* Drawer Container */}
-      <div className="relative w-full max-w-2xl bg-panel border-l border-panel-edge h-full flex flex-col shadow-2xl z-10 overflow-y-auto">
+      <div className="relative w-full sm:max-w-xl md:max-w-2xl bg-panel border-l border-panel-edge h-full flex flex-col shadow-2xl z-10 overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md px-6 py-4 border-b border-panel-edge flex items-center justify-between">
+        <div className="sticky top-0 z-20 bg-panel/95 backdrop-blur-md px-3.5 sm:px-6 py-3 sm:py-4 border-b border-panel-edge flex items-center justify-between">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="text-xs uppercase tracking-wider text-neon-blue font-mono font-medium">
@@ -547,7 +547,7 @@ Jerry Waris`
                 </span>
               )}
             </div>
-            <h2 className="text-xl font-bold text-white truncate mt-1">
+            <h2 className="text-lg sm:text-xl font-bold text-white truncate mt-1">
               {formData.name || 'Unnamed Lead'}
               {formData.company && (
                 <span className="text-slate-400 font-normal ml-2">@ {formData.company}</span>
@@ -555,13 +555,13 @@ Jerry Waris`
             </h2>
           </div>
 
-          <div className="flex items-center gap-2 ml-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-2 sm:ml-4 shrink-0">
             <button
               onClick={() => handleSave()}
               disabled={saving}
-              className="px-4 py-1.5 rounded-md text-xs font-semibold bg-neon-blue text-abyss hover:bg-neon-blue/90 transition-all disabled:opacity-50"
+              className="px-3 sm:px-4 py-1.5 rounded-md text-xs font-semibold bg-neon-blue text-abyss hover:bg-neon-blue/90 transition-all disabled:opacity-50"
             >
-              {saving ? 'Saving...' : saveSuccess ? 'Saved ✓' : 'Save Changes'}
+              {saving ? 'Saving...' : saveSuccess ? 'Saved ✓' : 'Save'}
             </button>
             <button
               onClick={onClose}
@@ -576,7 +576,7 @@ Jerry Waris`
         </div>
 
         {/* Content Body */}
-        <div className="p-6 space-y-6 flex-1">
+        <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-6 flex-1">
           {saveError && (
             <div className="p-3 rounded-md bg-rose-500/10 border border-rose-500/40 text-rose-300 text-xs">
               {saveError}
@@ -1030,7 +1030,7 @@ Jerry Waris`
               <label className="text-xs uppercase tracking-wider text-slate-300 font-mono">
                 📅 Next Follow-Up Date
               </label>
-              <div className="flex gap-1.5 text-xs">
+              <div className="flex flex-wrap gap-1.5 text-xs">
                 <button
                   type="button"
                   onClick={() => setQuickFollowUp(1)}

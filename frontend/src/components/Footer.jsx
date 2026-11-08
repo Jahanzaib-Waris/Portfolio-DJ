@@ -34,7 +34,7 @@ export default function Footer({ profile }) {
   ].filter(Boolean)
 
   return (
-    <footer className="border-t border-panel-edge bg-void px-6 pt-16 pb-8">
+    <footer className="border-t border-panel-edge bg-void px-4 sm:px-6 pt-12 sm:pt-16 pb-8">
       <div className="mx-auto max-w-6xl">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8">
           {/* Brand info */}

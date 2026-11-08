@@ -103,39 +103,41 @@ export default function ProjectList() {
           ))}
 
         {filteredProjects.map((project) => (
-          <StatusPanel key={project.id} className="flex flex-wrap items-center gap-4 p-4">
-            {project.thumbnail ? (
-              <img
-                src={project.thumbnail}
-                alt=""
-                className="h-12 w-16 shrink-0 rounded border border-panel-edge object-cover"
-              />
-            ) : (
-              <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded border border-dashed border-panel-edge text-xs font-mono text-slate-400 bg-abyss/40">
-                no img
-              </div>
-            )}
+          <StatusPanel key={project.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {project.thumbnail ? (
+                <img
+                  src={project.thumbnail}
+                  alt=""
+                  className="h-12 w-16 shrink-0 rounded border border-panel-edge object-cover"
+                />
+              ) : (
+                <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded border border-dashed border-panel-edge text-xs font-mono text-slate-400 bg-abyss/40">
+                  no img
+                </div>
+              )}
 
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="truncate text-sm font-semibold text-white">{project.title}</h2>
-                <span className="rounded-full bg-abyss border border-panel-edge px-2 py-0.5 text-xs font-mono text-slate-300">
-                  #{project.display_order}
-                </span>
-                {project.is_featured && (
-                  <span className="rounded-full bg-neon-blue/15 border border-neon-blue/30 px-2 py-0.5 text-xs font-mono font-medium text-neon-blue">
-                    Featured
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="truncate text-sm font-semibold text-white">{project.title}</h2>
+                  <span className="rounded-full bg-abyss border border-panel-edge px-2 py-0.5 text-xs font-mono text-slate-300">
+                    #{project.display_order}
                   </span>
+                  {project.is_featured && (
+                    <span className="rounded-full bg-neon-blue/15 border border-neon-blue/30 px-2 py-0.5 text-xs font-mono font-medium text-neon-blue">
+                      Featured
+                    </span>
+                  )}
+                </div>
+                {project.tech_stack_list?.length > 0 && (
+                  <p className="mt-1 truncate text-xs text-slate-400">
+                    {project.tech_stack_list.join(' · ')}
+                  </p>
                 )}
               </div>
-              {project.tech_stack_list?.length > 0 && (
-                <p className="mt-1 truncate text-xs text-slate-400">
-                  {project.tech_stack_list.join(' · ')}
-                </p>
-              )}
             </div>
 
-            <div className="flex shrink-0 gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto justify-end">
               <Link
                 to={`/admin/projects/${project.id}/edit`}
                 className="rounded-md border border-neon-blue/50 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10"

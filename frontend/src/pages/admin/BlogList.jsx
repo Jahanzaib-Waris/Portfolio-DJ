@@ -103,7 +103,7 @@ export default function BlogList() {
           const isScheduled = post.is_published && post.published_date && post.published_date > todayStr
 
           return (
-            <StatusPanel key={post.id} className="flex flex-wrap items-center gap-4 p-4">
+            <StatusPanel key={post.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="truncate text-sm font-semibold text-white">{post.title}</h2>
@@ -126,7 +126,7 @@ export default function BlogList() {
                 </p>
               </div>
 
-            <div className="flex shrink-0 gap-2 text-xs">
+            <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto justify-end">
               {post.is_published && (
                 <Link
                   to={`/blogs/${post.slug}`}

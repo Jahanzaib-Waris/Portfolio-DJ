@@ -190,13 +190,13 @@ export default function Blogs() {
   const gridPosts = !isFiltered && filteredPosts.length > 0 ? filteredPosts.slice(1) : filteredPosts
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+    <div className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 py-8 sm:py-16">
       <div className="max-w-3xl">
         <p className="fb-kicker mb-3">// KNOWLEDGE BASE &amp; SOLUTIONS</p>
-        <h1 className="text-4xl text-white sm:text-5xl lg:text-6xl tracking-tight font-extrabold">
+        <h1 className="text-3xl text-white sm:text-5xl lg:text-6xl tracking-tight font-extrabold break-words">
           Blog &amp; Fixes
         </h1>
-        <p className="mt-4 max-w-2xl fb-lead text-base sm:text-lg text-[#A1A7CA]">
+        <p className="mt-3 sm:mt-4 max-w-2xl fb-lead text-base sm:text-lg text-[#A1A7CA]">
           Practical FlutterFlow fixes, custom Dart functions, and production architecture patterns you can integrate straight into your mobile and Supabase apps.
         </p>
       </div>

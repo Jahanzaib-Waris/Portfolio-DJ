@@ -306,7 +306,7 @@ export default function ClientRadar() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             to="/admin/crm"
             className="px-3.5 py-1.5 rounded-lg border border-panel-edge bg-abyss text-slate-300 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all flex items-center gap-1.5"
@@ -325,7 +325,7 @@ export default function ClientRadar() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key
           return (
@@ -333,7 +333,7 @@ export default function ClientRadar() {
               key={tab.key}
               type="button"
               onClick={() => setActiveTab(tab.key)}
-              className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
+              className={`p-3.5 sm:p-4 rounded-xl border text-left transition-all cursor-pointer ${
                 isActive
                   ? 'border-neon-blue bg-neon-blue/10 shadow-lg shadow-neon-blue/5'
                   : 'border-panel-edge bg-panel/60 hover:bg-panel/90 text-slate-400'
@@ -350,7 +350,7 @@ export default function ClientRadar() {
 
       {/* Search, Freshness & Stack Filter Bar (for HN & Remote tabs) */}
       {activeTab !== 'scanners' && (
-        <div className="space-y-3.5 p-4 rounded-xl bg-panel/40 border border-panel-edge">
+        <div className="space-y-3 sm:space-y-3.5 p-3.5 sm:p-4 rounded-xl bg-panel/40 border border-panel-edge">
           {/* Row 1: Primary Tech Stack & Keyword Search */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -403,7 +403,7 @@ export default function ClientRadar() {
             </div>
 
             {/* Sort Selector */}
-            <div className="flex items-center gap-2 self-end sm:self-auto">
+            <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
               <label htmlFor="radar-sort" className="text-[11px] font-mono text-slate-400 whitespace-nowrap">
                 Sort by:
               </label>
@@ -411,7 +411,7 @@ export default function ClientRadar() {
                 id="radar-sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-abyss border border-panel-edge rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-neon-blue font-medium cursor-pointer"
+                className="bg-abyss border border-panel-edge rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-neon-blue font-medium cursor-pointer flex-1 sm:flex-initial"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.id} value={opt.id} className="bg-panel text-white">
@@ -465,7 +465,7 @@ export default function ClientRadar() {
                 return (
                   <div
                     key={item.id}
-                    className={`relative flex flex-col justify-between rounded-xl border p-5 transition-all shadow-sm ${
+                    className={`relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-5 transition-all shadow-sm ${
                       isTopOpportunity
                         ? 'border-emerald-500/50 bg-panel/90 shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/25'
                         : opp.score >= 70
@@ -528,7 +528,7 @@ export default function ClientRadar() {
                             </span>
                             <span className="text-neon-blue font-bold">{opp.score} / 100 pts</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
                             <div className="flex justify-between">
                               <span className="text-slate-400">⏱️ Freshness ({opp.freshnessLabel}):</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
@@ -709,7 +709,7 @@ export default function ClientRadar() {
                 return (
                   <div
                     key={item.id}
-                    className={`relative flex flex-col justify-between rounded-xl border p-5 transition-all shadow-sm ${
+                    className={`relative flex flex-col justify-between rounded-xl border p-3.5 sm:p-5 transition-all shadow-sm ${
                       isTopOpportunity
                         ? 'border-emerald-500/50 bg-panel/90 shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/25'
                         : opp.score >= 70
@@ -769,7 +769,7 @@ export default function ClientRadar() {
                             </span>
                             <span className="text-neon-blue font-bold">{opp.score} / 100 pts</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
                             <div className="flex justify-between">
                               <span className="text-slate-400">⏱️ Freshness ({opp.freshnessLabel}):</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>

@@ -166,11 +166,11 @@ export default function Solutions() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pt-16 pb-20">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 pt-10 sm:pt-16 pb-14 sm:pb-20">
       {/* 1. Header with Kicker, Dynamic Title, Description, and Topic Chips */}
       <div className="max-w-3xl">
         <p className="fb-kicker mb-3 tracking-widest text-[#38BDF8]">TOPIC</p>
-        <h1 className="text-4xl text-white sm:text-5xl tracking-tight font-extrabold">
+        <h1 className="text-3xl text-white sm:text-5xl tracking-tight font-extrabold">
           {currentTopic.title}
         </h1>
         <p className="mt-3 text-base sm:text-lg text-[#A1A7CA] max-w-xl leading-relaxed">

@@ -96,7 +96,7 @@ export default function AccountSettings() {
         </p>
       )}
 
-      <StatusPanel glow={false} className="mt-6 space-y-4 p-5">
+      <StatusPanel glow={false} className="mt-6 space-y-4 p-4 sm:p-5">
         <form onSubmit={save} className="space-y-4">
           <Field label="New password" htmlFor="new_password" error={fieldErrors.new_password}>
             <div className="relative">

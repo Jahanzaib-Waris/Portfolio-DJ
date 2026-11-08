@@ -205,7 +205,7 @@ export default function CrmPipeline() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Link
             to="/admin/crm/prospects"
             className="px-3.5 py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors"
@@ -224,37 +224,37 @@ export default function CrmPipeline() {
       </div>
 
       {/* Metric Cards */}
-      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatusPanel className="p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Total Pipeline</p>
-          <p className="text-2xl font-extrabold font-display tracking-tight tabular-nums text-white mt-1">
+      <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+        <StatusPanel className="p-3 sm:p-4">
+          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Total Pipeline</p>
+          <p className="text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums text-white mt-1">
             ${metrics.totalPipeline.toLocaleString()}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Active + Won opportunities</p>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Active + Won opportunities</p>
         </StatusPanel>
 
-        <StatusPanel className="p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Active Deals</p>
-          <p className="text-2xl font-extrabold font-display tracking-tight tabular-nums text-neon-blue mt-1">
+        <StatusPanel className="p-3 sm:p-4">
+          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Active Deals</p>
+          <p className="text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums text-neon-blue mt-1">
             {metrics.activeDealsCount}
           </p>
-          <p className="text-xs text-slate-500 mt-1">In discussion or proposal</p>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">In discussion or proposal</p>
         </StatusPanel>
 
-        <StatusPanel className="p-4">
-          <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Closed Won</p>
-          <p className="text-2xl font-extrabold font-display tracking-tight tabular-nums text-emerald-400 mt-1">
+        <StatusPanel className="p-3 sm:p-4">
+          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Closed Won</p>
+          <p className="text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums text-emerald-400 mt-1">
             ${metrics.wonValue.toLocaleString()}
           </p>
-          <p className="text-xs text-emerald-500/80 mt-1">{metrics.wonCount} deals won</p>
+          <p className="text-[11px] sm:text-xs text-emerald-500/80 mt-1 truncate">{metrics.wonCount} deals won</p>
         </StatusPanel>
 
-        <StatusPanel className={`p-4 ${metrics.overdueCount > 0 ? 'border-amber-500/40 bg-amber-500/5' : ''}`}>
-          <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Follow-Ups Due</p>
-          <p className={`text-2xl font-extrabold font-display tracking-tight tabular-nums mt-1 ${metrics.overdueCount > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+        <StatusPanel className={`p-3 sm:p-4 ${metrics.overdueCount > 0 ? 'border-amber-500/40 bg-amber-500/5' : ''}`}>
+          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Follow-Ups Due</p>
+          <p className={`text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums mt-1 ${metrics.overdueCount > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
             {metrics.overdueCount}
           </p>
-          <p className="text-xs text-slate-500 mt-1">Due today or overdue</p>
+          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Due today or overdue</p>
         </StatusPanel>
       </div>
 
@@ -268,12 +268,12 @@ export default function CrmPipeline() {
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Temperature filter */}
           <select
             value={selectedTemperature}
             onChange={(e) => setSelectedTemperature(e.target.value)}
-            className="rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
+            className="flex-1 sm:flex-initial min-w-[120px] rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
           >
             <option value="all">All Temperatures</option>
             {TEMPERATURES.map((t) => (
@@ -287,7 +287,7 @@ export default function CrmPipeline() {
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
+            className="flex-1 sm:flex-initial min-w-[120px] rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
           >
             <option value="all">All Sources</option>
             {SOURCES.map((s) => (
@@ -298,11 +298,11 @@ export default function CrmPipeline() {
           </select>
 
           {/* View Mode Toggle */}
-          <div className="flex items-center rounded-lg border border-panel-edge p-1 bg-abyss/40 shrink-0">
+          <div className="flex items-center rounded-lg border border-panel-edge p-1 bg-abyss/40 shrink-0 w-full sm:w-auto justify-center sm:justify-start">
             <button
               type="button"
               onClick={() => setViewMode('kanban')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded font-medium transition-colors ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1 text-xs rounded font-medium transition-colors ${
                 viewMode === 'kanban'
                   ? 'bg-neon-blue/20 text-neon-blue font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
@@ -310,12 +310,12 @@ export default function CrmPipeline() {
               title="Kanban Board View"
             >
               <span>▦</span>
-              <span className="hidden sm:inline">Kanban</span>
+              <span>Kanban</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs rounded font-medium transition-colors ${
+              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-2.5 py-1 text-xs rounded font-medium transition-colors ${
                 viewMode === 'list'
                   ? 'bg-neon-blue/20 text-neon-blue font-semibold'
                   : 'text-slate-400 hover:text-slate-200'
@@ -323,7 +323,7 @@ export default function CrmPipeline() {
               title="Stacked Stage List View (Ideal for mobile / compact screens)"
             >
               <span>☰</span>
-              <span className="hidden sm:inline">Stage List</span>
+              <span>Stage List</span>
             </button>
           </div>
         </div>
@@ -555,8 +555,8 @@ export default function CrmPipeline() {
 
       {/* Quick Add Deal Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg bg-panel border border-panel-edge rounded-lg shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 overflow-hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4">
+          <div className="relative w-full max-w-lg bg-panel border border-panel-edge rounded-lg shadow-2xl p-4 sm:p-6 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-panel-edge">
               <h3 className="text-lg font-bold text-white">Create New Lead / Deal</h3>
               <button
@@ -568,7 +568,7 @@ export default function CrmPipeline() {
             </div>
 
             <form onSubmit={handleCreateDeal} className="mt-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">Name *</label>
                   <input
@@ -592,7 +592,7 @@ export default function CrmPipeline() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">Job Title</label>
                   <input
@@ -615,7 +615,7 @@ export default function CrmPipeline() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">LinkedIn Profile</label>
                   <input
@@ -639,7 +639,7 @@ export default function CrmPipeline() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">Stage</label>
                   <select

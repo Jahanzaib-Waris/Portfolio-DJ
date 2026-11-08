@@ -127,8 +127,8 @@ export default function QuoteInbox() {
         {filteredQuotes.map((quote) => {
           const isOpen = expanded === quote.id
           return (
-            <StatusPanel key={quote.id} className="p-4">
-              <div className="flex flex-wrap items-start gap-4">
+            <StatusPanel key={quote.id} className="p-3.5 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
                 <button
                   onClick={() => setExpanded(isOpen ? null : quote.id)}
                   className="min-w-0 flex-1 text-left"
@@ -143,7 +143,7 @@ export default function QuoteInbox() {
                   )}
                 </button>
 
-                <div className="flex shrink-0 items-center gap-2 text-xs">
+                <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto sm:shrink-0 justify-start sm:justify-end">
                   {convertedMap[quote.id] ? (
                     <Link
                       to="/admin/crm"
@@ -204,13 +204,13 @@ export default function QuoteInbox() {
                     </div>
                   )}
                   {quote.project_link && (
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-slate-400 break-all">
                       Link:{' '}
                       <a
                         href={quote.project_link}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-neon-blue hover:underline"
+                        className="text-neon-blue hover:underline break-all"
                       >
                         {quote.project_link}
                       </a>

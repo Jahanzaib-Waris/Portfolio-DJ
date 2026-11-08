@@ -183,18 +183,18 @@ export default function CrmProspects() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={exportCsv}
             disabled={filteredLeads.length === 0}
-            className="px-3.5 py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors disabled:opacity-40"
+            className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors disabled:opacity-40"
             title="Export filtered prospects to CSV"
           >
             📥 Export CSV
           </button>
           <Link
             to="/admin/crm"
-            className="px-3.5 py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors"
+            className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors"
           >
             📊 Visual Kanban Pipeline
           </Link>
@@ -224,7 +224,7 @@ export default function CrmProspects() {
           <select
             value={selectedTemperature}
             onChange={(e) => setSelectedTemperature(e.target.value)}
-            className="rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
+            className="flex-1 sm:flex-initial min-w-[120px] rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
           >
             <option value="all">All Temperatures</option>
             {TEMPERATURES.map((t) => (
@@ -238,7 +238,7 @@ export default function CrmProspects() {
           <select
             value={selectedStage}
             onChange={(e) => setSelectedStage(e.target.value)}
-            className="rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
+            className="flex-1 sm:flex-initial min-w-[120px] rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
           >
             <option value="all">All Stages</option>
             {STAGES.map((s) => (
@@ -252,7 +252,7 @@ export default function CrmProspects() {
           <select
             value={selectedSource}
             onChange={(e) => setSelectedSource(e.target.value)}
-            className="rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
+            className="flex-1 sm:flex-initial min-w-[120px] rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-xs text-slate-200 outline-none focus:border-neon-blue"
           >
             <option value="all">All Sources</option>
             {SOURCES.map((s) => (
@@ -443,10 +443,10 @@ export default function CrmProspects() {
 
       {/* Add Prospect Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative w-full max-w-lg bg-panel border border-panel-edge rounded-lg shadow-2xl p-6">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm flex items-center justify-center p-2.5 sm:p-4">
+          <div className="relative w-full max-w-lg bg-panel border border-panel-edge rounded-lg shadow-2xl p-4 sm:p-6 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-panel-edge">
-              <h3 className="text-lg font-bold text-white">Add Target Prospect</h3>
+              <h3 className="text-base sm:text-lg font-bold text-white">Add Target Prospect</h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-slate-400 hover:text-white"
@@ -456,7 +456,7 @@ export default function CrmProspects() {
             </div>
 
             <form onSubmit={handleCreateProspect} className="mt-4 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">Name *</label>
                   <input
@@ -480,7 +480,7 @@ export default function CrmProspects() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">Job Title</label>
                   <input
@@ -503,7 +503,7 @@ export default function CrmProspects() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">LinkedIn URL</label>
                   <input
@@ -526,7 +526,7 @@ export default function CrmProspects() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs text-slate-400 font-mono mb-1">Est. Deal Value ($)</label>
                   <input

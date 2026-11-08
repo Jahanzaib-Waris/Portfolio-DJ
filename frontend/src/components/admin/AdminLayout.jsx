@@ -282,11 +282,11 @@ export default function AdminLayout() {
       <div className="flex min-h-screen flex-col bg-void text-slate-100">
       {/* Top Header */}
       <header className="sticky top-0 z-40 border-b border-panel-edge/80 bg-void/90 backdrop-blur-md">
-        <div className="flex items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <button
               onClick={() => setMenuOpen((open) => !open)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 lg:hidden transition-colors"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 lg:hidden transition-colors shrink-0"
               aria-label={menuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={menuOpen}
             >
@@ -298,16 +298,16 @@ export default function AdminLayout() {
                 )}
               </svg>
             </button>
-            <Link to="/admin" className="system-heading flex items-center gap-2.5 text-base font-bold text-white hover:text-neon-blue transition-colors">
-              <img src="/logo.png" alt="Jerry Dev Studio" className="h-6 w-6 rounded object-contain" />
-              <span>{siteName ? `${siteName}` : 'Jerry Dev Studio'}</span>
-              <span className="hidden sm:inline-block text-xs font-normal text-slate-500 font-mono">
+            <Link to="/admin" className="system-heading flex items-center gap-2 text-base font-bold text-white hover:text-neon-blue transition-colors min-w-0">
+              <img src="/logo.png" alt="Jerry Dev Studio" className="h-6 w-6 rounded object-contain shrink-0" />
+              <span className="truncate max-w-[130px] xs:max-w-[190px] sm:max-w-none">{siteName ? `${siteName}` : 'Jerry Dev Studio'}</span>
+              <span className="hidden sm:inline-block text-xs font-normal text-slate-500 font-mono shrink-0">
                 / control-panel
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
             <Link
               to="/"
               target="_blank"
@@ -323,7 +323,7 @@ export default function AdminLayout() {
             </div>
             <button
               onClick={handleLogout}
-              className="rounded-lg border border-panel-edge px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-status-red/60 hover:text-status-red hover:bg-status-red/10"
+              className="rounded-lg border border-panel-edge px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-status-red/60 hover:text-status-red hover:bg-status-red/10"
             >
               Log out
             </button>
@@ -350,7 +350,7 @@ export default function AdminLayout() {
               className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
               onClick={() => setMenuOpen(false)}
             />
-            <div className="fixed inset-y-0 left-0 w-72 bg-panel border-r border-panel-edge shadow-2xl p-5 flex flex-col justify-between z-10 overflow-y-auto">
+            <div className="fixed inset-y-0 left-0 w-[84vw] max-w-xs bg-panel border-r border-panel-edge shadow-2xl p-4 sm:p-5 flex flex-col justify-between z-10 overflow-y-auto">
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-panel-edge mb-4">
                   <div className="flex items-center gap-2">
@@ -385,7 +385,7 @@ export default function AdminLayout() {
         )}
 
         {/* Main Content Viewport */}
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="min-w-0 flex-1 p-3 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

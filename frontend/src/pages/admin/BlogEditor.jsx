@@ -395,48 +395,48 @@ export default function BlogEditor() {
   return (
     <div className="mx-auto max-w-7xl pb-16">
       {/* Top Sticky Header */}
-      <div className="sticky top-0 z-30 -mx-4 -mt-4 mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/80 bg-abyss/90 px-5 py-3 backdrop-blur-md">
-        <div className="flex items-center gap-3">
+      <div className="sticky top-0 z-30 -mx-3 -mt-3 sm:-mx-6 sm:-mt-6 lg:-mx-8 lg:-mt-8 mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/80 bg-abyss/90 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 backdrop-blur-md">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <Link
             to="/admin/blog"
-            className="rounded-lg border border-panel-edge/80 bg-white/[0.02] p-1.5 text-xs text-slate-400 transition-colors hover:border-neon-blue hover:text-white"
+            className="rounded-lg border border-panel-edge/80 bg-white/[0.02] p-1.5 text-xs text-slate-400 transition-colors hover:border-neon-blue hover:text-white shrink-0"
             title="Back to post list"
           >
             &larr;
           </Link>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-white leading-tight">
+              <h1 className="text-sm sm:text-base font-bold text-white leading-tight truncate">
                 {form.title ? form.title : isNew ? 'Untitled Post' : 'Edit Post'}
               </h1>
               {form.is_published && form.published_date > today() ? (
-                <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-[10px] font-mono tracking-wide text-neon-blue">
+                <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-[10px] font-mono tracking-wide text-neon-blue shrink-0">
                   Scheduled &middot; {form.published_date}
                 </span>
               ) : (
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide ${
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide shrink-0 ${
                     form.is_published ? 'bg-status-green/10 text-status-green' : 'bg-accent/10 text-accent'
                   }`}
                 >
                   {form.is_published ? 'Live' : 'Draft'}
                 </span>
               )}
-              {dirty && <span className="text-[11px] text-accent font-medium">• Unsaved changes</span>}
+              {dirty && <span className="text-[11px] text-accent font-medium shrink-0">• Unsaved</span>}
             </div>
             {form.slug && (
-              <span className="font-mono text-[11px] text-slate-500">/blogs/{form.slug}</span>
+              <span className="font-mono text-[11px] text-slate-500 truncate block">/blogs/{form.slug}</span>
             )}
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
           {isNew && (
             <button
               type="button"
               onClick={handleLoadSampleCaseStudy}
-              className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
               title="Populate with the App Store Review Case Study blocks"
             >
               <span>⚡</span> Load Case Study
@@ -447,7 +447,7 @@ export default function BlogEditor() {
           <button
             type="button"
             onClick={() => setSidebarOpen((prev) => !prev)}
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 sm:px-3 py-1.5 text-xs font-medium transition-colors ${
               sidebarOpen
                 ? 'border-neon-blue/60 bg-neon-blue/10 text-neon-blue'
                 : 'border-panel-edge bg-abyss/60 text-slate-400 hover:text-white'
@@ -487,14 +487,14 @@ export default function BlogEditor() {
         {/* Main Content Area (8 cols if sidebar open, 12 cols if collapsed) */}
         <div className={`${sidebarOpen ? 'lg:col-span-8' : 'lg:col-span-12'} space-y-4`}>
           {/* Inline Title & Excerpt Quick Field */}
-          <StatusPanel glow={false} className="p-5 space-y-3">
+          <StatusPanel glow={false} className="p-3.5 sm:p-5 space-y-3">
             <div>
               <input
                 id="title"
                 placeholder="Post Title..."
                 value={form.title}
                 onChange={(e) => handleTitle(e.target.value)}
-                className="w-full bg-transparent text-2xl font-bold text-white placeholder-slate-600 outline-none"
+                className="w-full bg-transparent text-xl sm:text-2xl font-bold text-white placeholder-slate-600 outline-none"
               />
               {errorFor('title')}
             </div>
@@ -512,12 +512,12 @@ export default function BlogEditor() {
           </StatusPanel>
 
           {/* Builder Canvas */}
-          <StatusPanel glow={false} className="p-5">
+          <StatusPanel glow={false} className="p-3.5 sm:p-5">
             {/* Mode Switcher */}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/60 pb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">Editor Mode:</span>
-                <div className="flex items-center rounded-lg border border-panel-edge bg-abyss/80 p-0.5 text-xs">
+                <div className="flex flex-wrap items-center rounded-lg border border-panel-edge bg-abyss/80 p-0.5 text-xs">
                   <button
                     type="button"
                     onClick={() => switchMode('blocks')}

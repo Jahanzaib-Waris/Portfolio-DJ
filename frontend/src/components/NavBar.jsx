@@ -20,18 +20,18 @@ export default function NavBar({ profile, onRequestQuote }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-panel-edge bg-void/72 backdrop-blur-[14px] backdrop-saturate-[160%]">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5">
         <Link
           to="/"
-          className="flex items-center gap-2.5 text-base font-bold font-display tracking-tight text-white hover:opacity-95 transition-opacity"
+          className="flex items-center gap-2.5 text-base font-bold font-display tracking-tight text-white hover:opacity-95 transition-opacity min-w-0"
           onClick={() => setMenuOpen(false)}
         >
           <img
             src={profile?.photo || '/logo.png'}
             alt={profile?.name || 'Jerry Dev Studio'}
-            className="h-8 w-8 rounded-lg object-contain"
+            className="h-8 w-8 rounded-lg object-contain shrink-0"
           />
-          <span>{profile?.name || 'Jerry Dev Studio'}</span>
+          <span className="truncate max-w-[170px] xs:max-w-[220px] sm:max-w-none">{profile?.name || 'Jerry Dev Studio'}</span>
         </Link>
 
         {/* Desktop nav */}
@@ -59,7 +59,7 @@ export default function NavBar({ profile, onRequestQuote }) {
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMenuOpen((open) => !open)}
-          className="flex h-9 w-9 items-center justify-center rounded-md border border-panel-edge text-slate-200 sm:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-md border border-panel-edge text-slate-200 sm:hidden shrink-0"
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
         >
@@ -77,7 +77,7 @@ export default function NavBar({ profile, onRequestQuote }) {
 
       {/* Mobile menu panel */}
       {menuOpen && (
-        <div className="border-t border-panel-edge px-6 py-4 sm:hidden bg-[#0A0C16]">
+        <div className="border-t border-panel-edge px-4 sm:px-6 py-4 sm:hidden bg-[#0A0C16]">
           <div className="flex flex-col gap-4">
             {navLinks.map((link) =>
               link.isAnchor ? (

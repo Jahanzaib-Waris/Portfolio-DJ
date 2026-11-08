@@ -88,11 +88,11 @@ export default function Projects() {
   const displayList = projects.length > 0 ? projects : (loadState !== 'loading' ? fallbackProjects : [])
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-16">
       <div className="max-w-2xl">
         <p className="fb-kicker mb-3">STUDIO PORTFOLIO</p>
-        <h1 className="text-4xl text-white sm:text-5xl tracking-tight font-extrabold">Projects</h1>
-        <p className="mt-4 max-w-lg fb-lead">
+        <h1 className="text-3xl text-white sm:text-5xl tracking-tight font-extrabold">Projects</h1>
+        <p className="mt-3 sm:mt-4 max-w-lg fb-lead">
           A showcase of production FlutterFlow and Flutter mobile applications built and shipped for clients worldwide.
         </p>
       </div>
@@ -183,21 +183,21 @@ export default function Projects() {
       {/* Case Study Detail Modal */}
       {selectedProject && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 sm:p-6 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2.5 sm:p-6 backdrop-blur-sm"
           onClick={() => setSelectedProject(null)}
         >
           <div
-            className="system-panel w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 sm:p-8"
+            className="system-panel w-full max-w-2xl max-h-[94vh] overflow-y-auto p-4 sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-4 mb-6">
+            <div className="flex items-start justify-between gap-4 mb-5 sm:mb-6">
               <div>
                 <p className="fb-kicker mb-1">Project Case Study</p>
-                <h2 className="system-heading text-2xl text-white">{selectedProject.title}</h2>
+                <h2 className="system-heading text-xl sm:text-2xl text-white">{selectedProject.title}</h2>
               </div>
               <button
                 onClick={() => setSelectedProject(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-panel-edge text-slate-400 hover:text-white hover:border-neon-indigo transition-colors cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-panel-edge text-slate-400 hover:text-white hover:border-neon-indigo transition-colors cursor-pointer shrink-0"
                 aria-label="Close"
               >
                 &#x2715;
@@ -208,7 +208,7 @@ export default function Projects() {
               <img
                 src={selectedProject.thumbnail}
                 alt={selectedProject.title}
-                className="w-full h-56 object-cover rounded-xl border border-panel-edge mb-6"
+                className="w-full h-40 sm:h-56 object-cover rounded-xl border border-panel-edge mb-6"
               />
             )}
 
@@ -247,15 +247,15 @@ export default function Projects() {
               </div>
             </div>
 
-            <div className="mt-8 pt-5 border-t border-panel-edge flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-8 pt-5 border-t border-panel-edge flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex gap-2">
                 {selectedProject.live_url && (
-                  <SystemButton as="a" href={selectedProject.live_url} target="_blank" rel="noreferrer" variant="outline" size="sm">
+                  <SystemButton as="a" href={selectedProject.live_url} target="_blank" rel="noreferrer" variant="outline" size="sm" className="flex-1 sm:flex-initial text-center">
                     Open App ↗
                   </SystemButton>
                 )}
                 {selectedProject.repo_url && (
-                  <SystemButton as="a" href={selectedProject.repo_url} target="_blank" rel="noreferrer" variant="outline" size="sm">
+                  <SystemButton as="a" href={selectedProject.repo_url} target="_blank" rel="noreferrer" variant="outline" size="sm" className="flex-1 sm:flex-initial text-center">
                     Source Repo
                   </SystemButton>
                 )}
@@ -267,6 +267,7 @@ export default function Projects() {
                 }}
                 variant="primary"
                 size="sm"
+                className="w-full sm:w-auto text-center"
               >
                 Build a similar app &rarr;
               </SystemButton>

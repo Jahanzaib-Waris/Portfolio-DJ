@@ -318,7 +318,7 @@ export default function BlogBlockBuilder({
                   <span className="text-[10px] text-slate-500">#{index + 1}</span>
                 </div>
 
-                <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-100 sm:opacity-60 sm:group-hover:opacity-100 transition-opacity">
                   <button
                     type="button"
                     onClick={() => moveBlock(index, index - 1)}
@@ -378,7 +378,7 @@ export default function BlogBlockBuilder({
                 <button
                   type="button"
                   onClick={() => setInsertIndex(index + 1)}
-                  className="absolute -bottom-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-panel-edge bg-slate-900 text-[11px] text-slate-400 opacity-0 transition-all hover:scale-110 hover:border-neon-blue hover:text-neon-blue group-hover:opacity-100 shadow-md"
+                  className="absolute -bottom-2.5 z-10 flex h-5 w-5 items-center justify-center rounded-full border border-panel-edge bg-slate-900 text-[11px] text-slate-400 opacity-70 sm:opacity-0 transition-all hover:scale-110 hover:border-neon-blue hover:text-neon-blue sm:group-hover:opacity-100 shadow-md"
                   title="Insert element here"
                 >
                   +
@@ -405,10 +405,10 @@ export default function BlogBlockBuilder({
 
       {/* Add Modal */}
       {insertIndex !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs">
-          <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-panel-edge bg-slate-950 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-2.5 sm:p-4 backdrop-blur-xs">
+          <div className="flex max-h-[92vh] sm:max-h-[85vh] w-full max-w-2xl flex-col rounded-2xl border border-panel-edge bg-slate-950 shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="border-b border-panel-edge p-4">
+            <div className="border-b border-panel-edge p-3.5 sm:p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-base font-semibold text-white">Add Element or Container</h3>
@@ -440,7 +440,7 @@ export default function BlogBlockBuilder({
             </div>
 
             {/* Modal Categories */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
               {allFilteredBlocks.map((cat) => (
                 <div key={cat.category} className="space-y-2">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-slate-500 font-semibold">

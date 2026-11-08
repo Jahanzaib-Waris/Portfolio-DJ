@@ -285,16 +285,24 @@
 
   .fb-window pre {
     margin: 0;
-    padding: 1.4rem 1.1rem;
+    padding: 1.1rem 0.85rem;
     overflow-x: auto;
     font-family: var(--font-mono-ui);
-    font-size: clamp(0.78rem, 1.2vw, 0.9rem);
-    line-height: 1.75;
+    font-size: clamp(0.72rem, 1.1vw, 0.9rem);
+    line-height: 1.7;
     color: #d7dbf5;
     background: transparent;
     border: 0;
     scrollbar-width: thin;
     scrollbar-color: #2a2f55 transparent;
+  }
+
+  @media (min-width: 640px) {
+    .fb-window pre {
+      padding: 1.4rem 1.1rem;
+      font-size: clamp(0.78rem, 1.2vw, 0.9rem);
+      line-height: 1.75;
+    }
   }
 
   .fb-window .c { color: #6b7299; font-style: italic; }
@@ -1772,14 +1780,21 @@
 
   .fb-field--pills span {
     display: inline-block;
-    padding: 0.55rem 1rem;
+    padding: 0.42rem 0.75rem;
     border: 1px solid var(--color-panel-edge);
     border-radius: 999px;
     background: #0D1024;
     color: var(--color-muted);
-    font-size: 0.88rem;
+    font-size: 0.8rem;
     font-weight: 600;
     transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  @media (min-width: 640px) {
+    .fb-field--pills span {
+      padding: 0.55rem 1rem;
+      font-size: 0.88rem;
+    }
   }
 
   .fb-field--pills label:hover span {

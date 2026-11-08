@@ -290,7 +290,7 @@ export default function BlogDetail() {
         aria-hidden="true"
       />
 
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+      <div className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 py-6 sm:py-12">
         {/* Modern Breadcrumbs Navigation */}
         <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center gap-2 text-xs font-medium text-[#A1A7CA]">
           <Link to="/" className="hover:text-white transition-colors">
@@ -360,13 +360,13 @@ export default function BlogDetail() {
                 </div>
 
                 {/* Display Title */}
-                <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-[2.85rem] leading-[1.18]">
+                <h1 className="mt-5 text-2xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-[2.85rem] leading-[1.18] break-words">
                   {effectivePost.title}
                 </h1>
 
                 {/* Lead Excerpt */}
                 {effectivePost.excerpt && (
-                  <p className="mt-5 text-lg sm:text-xl text-slate-200 leading-relaxed font-normal">
+                  <p className="mt-4 sm:mt-5 text-base sm:text-xl text-slate-200 leading-relaxed font-normal">
                     {effectivePost.excerpt}
                   </p>
                 )}
@@ -386,7 +386,7 @@ export default function BlogDetail() {
                   </div>
 
                   {/* Share buttons */}
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
                       onClick={handleCopyLink}
@@ -430,7 +430,7 @@ export default function BlogDetail() {
 
                 {/* Mobile Collapsible Table of Contents (screens < lg) */}
                 {toc.length > 0 && (
-                  <div className="mt-8 lg:hidden rounded-2xl border border-panel-edge bg-abyss/85 p-4 sm:p-5 shadow-lg">
+                  <div className="mt-8 lg:hidden rounded-2xl border border-panel-edge bg-abyss/85 p-3.5 sm:p-5 shadow-lg">
                     <button
                       type="button"
                       onClick={() => setMobileTocOpen(!mobileTocOpen)}

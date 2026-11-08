@@ -281,27 +281,27 @@ String timeAgo(DateTime date) {
     <div className="space-y-0">
       {/* 1. Hero */}
       <section className="fb-hero relative overflow-hidden">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-12 px-6 lg:flex-row">
-          <div className="flex-1 space-y-6 text-center lg:text-left">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 sm:gap-12 px-4 sm:px-6 lg:flex-row">
+          <div className="flex-1 space-y-5 sm:space-y-6 text-center lg:text-left min-w-0">
             <div>
               <span className="eyebrow">FlutterFlow &amp; Flutter developer</span>
             </div>
 
-            <h1 className="fb-hero__title text-4xl font-extrabold leading-[1.02] tracking-[-0.045em] text-[#ECEEFB] sm:text-5xl lg:text-[3.8rem]">
+            <h1 className="fb-hero__title text-3xl font-extrabold leading-[1.05] tracking-[-0.045em] text-[#ECEEFB] sm:text-5xl lg:text-[3.8rem] break-words">
               Ship FlutterFlow apps{' '}
               <span className="fb-grad-text">that actually work.</span>
             </h1>
 
-            <p className="fb-lead mx-auto max-w-xl text-[#A1A7CA] lg:mx-0">
+            <p className="fb-lead mx-auto max-w-xl text-[#A1A7CA] lg:mx-0 text-sm sm:text-base">
               {profile?.bio ||
                 'Practical fixes for real FlutterFlow problems, custom Dart code you can paste straight into your project, and hands-on help when you need an app built, rescued or connected.'}
             </p>
 
-            <div className="fb-hero-actions flex flex-col sm:flex-row justify-center gap-4 pt-2 lg:justify-start">
-              <SystemButton onClick={onRequestQuote} size="lg" variant="primary">
+            <div className="fb-hero-actions flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pt-2 lg:justify-start">
+              <SystemButton onClick={onRequestQuote} size="lg" variant="primary" className="w-full sm:w-auto">
                 Get help with your app
               </SystemButton>
-              <SystemButton as={Link} to="/blogs" size="lg" variant="outline">
+              <SystemButton as={Link} to="/blogs" size="lg" variant="outline" className="w-full sm:w-auto">
                 Browse the fixes &rarr;
               </SystemButton>
             </div>
@@ -352,7 +352,7 @@ String timeAgo(DateTime date) {
 
       {/* 2. Services Overview (Tinted section) */}
       <section id="services" className="fb-section fb-section--alt">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="fb-section__head max-w-2xl">
             <p className="fb-kicker">Studio Capabilities</p>
             <h2 className="fb-section__title">Build it, fix it, or wire it up.</h2>
@@ -377,7 +377,7 @@ String timeAgo(DateTime date) {
 
       {/* 3. About Section */}
       <section id="about" className="fb-section">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="fb-about__grid">
             <div className="fb-about__intro">
               <p className="fb-kicker">About Jerry Dev Studio</p>
@@ -444,7 +444,7 @@ String timeAgo(DateTime date) {
 
       {/* 4. My Process (Tinted section with 5 steps and connector) */}
       <section id="process" className="fb-section fb-section--alt">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="fb-section__head max-w-2xl">
             <p className="fb-kicker">My process</p>
             <h2 className="fb-section__title">A clear process, from first message to launch.</h2>
@@ -496,7 +496,7 @@ String timeAgo(DateTime date) {
 
       {/* 5. Featured Work */}
       <section className="fb-section">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mb-10 flex items-end justify-between">
             <div>
               <p className="fb-kicker mb-3">Featured Work</p>
@@ -549,7 +549,7 @@ String timeAgo(DateTime date) {
 
       {/* 5.5 Client Endorsements / Testimonials */}
       <section className="fb-section">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="fb-section__head max-w-2xl">
             <p className="fb-kicker">Client Feedback</p>
             <h2 className="fb-section__title">Trusted by Founders &amp; Mobile Teams</h2>
@@ -586,7 +586,7 @@ String timeAgo(DateTime date) {
 
       {/* 6. Start a project Enquiry Section (§8.2) */}
       <section id="start" className="fb-section fb-section--alt">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="grid gap-12 lg:grid-cols-12 items-start">
             {/* Form card (60% -> 7 cols on lg) */}
             <div className="fb-form-card lg:col-span-7">
@@ -627,7 +627,7 @@ String timeAgo(DateTime date) {
 
       {/* 7. Closing Call to Action */}
       <section className="fb-section fb-section--tight">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="fb-cta">
             <p className="fb-kicker mb-3 text-center">Stuck on something?</p>
             <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl text-center">

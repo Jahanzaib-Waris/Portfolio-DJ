@@ -137,7 +137,7 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-panel-edge">
         <div>
           <p className="eyebrow text-xs text-neon-indigo">// Command Center</p>
-          <h1 className="mt-2 text-2xl text-white font-bold font-display tracking-tight sm:text-3xl">
+          <h1 className="mt-2 text-xl text-white font-bold font-display tracking-tight sm:text-3xl">
             Welcome back, <span className="text-neon-blue">{usernameDisplay}</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">
@@ -146,28 +146,28 @@ export default function Dashboard() {
         </div>
 
         {/* Quick Action Launchpad */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
           <Link
             to="/admin/blog/new"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-neon-blue/15 border border-neon-blue/40 text-neon-blue hover:bg-neon-blue/25 text-xs font-semibold transition-all"
+            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-neon-blue/15 border border-neon-blue/40 text-neon-blue hover:bg-neon-blue/25 text-xs font-semibold transition-all"
           >
             <span>✍️</span> + New Post
           </Link>
           <Link
             to="/admin/projects/new"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-abyss border border-panel-edge text-slate-200 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all"
+            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-abyss border border-panel-edge text-slate-200 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all"
           >
             <span>💼</span> + Add Project
           </Link>
           <Link
             to="/admin/crm/radar"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-neon-indigo/15 border border-neon-indigo/40 text-neon-indigo hover:bg-neon-indigo/25 text-xs font-semibold transition-all"
+            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-neon-indigo/15 border border-neon-indigo/40 text-neon-indigo hover:bg-neon-indigo/25 text-xs font-semibold transition-all"
           >
             <span>📡</span> Client Radar
           </Link>
           <Link
             to="/admin/crm"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold transition-all"
+            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold transition-all"
           >
             <span>⚡</span> + Log Deal
           </Link>
@@ -175,12 +175,12 @@ export default function Dashboard() {
       </div>
 
       {/* Interactive Metric Cards (Clickable) */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((card, i) => (
           <Link
             key={i}
             to={card.to}
-            className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-5 transition-all duration-200 hover:border-neon-blue/60 hover:-translate-y-1 hover:shadow-lg"
+            className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-4 sm:p-5 transition-all duration-200 hover:border-neon-blue/60 hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium">
