@@ -36,6 +36,7 @@ const ClientRadar = lazy(() => import('./pages/admin/crm/ClientRadar'))
 const AccountSettings = lazy(() => import('./pages/admin/settings/AccountSettings'))
 const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSettings'))
 const ThemeEditor = lazy(() => import('./pages/admin/settings/ThemeEditor'))
+const IntegrationSettings = lazy(() => import('./pages/admin/settings/IntegrationSettings'))
 const AdminNotFound = lazy(() => import('./pages/admin/AdminNotFound'))
 
 function AdminLoading() {
@@ -93,6 +94,7 @@ function App() {
               <Route path="settings/account" element={<AccountSettings />} />
               <Route path="settings/branding" element={<BrandingSettings />} />
               <Route path="settings/theme" element={<ThemeEditor />} />
+              <Route path="settings/integrations" element={<IntegrationSettings />} />
               <Route path="*" element={<AdminNotFound />} />
             </Route>
           </Route>

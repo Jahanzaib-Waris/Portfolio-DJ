@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { enrichCompanyDecisionMaker } from '../../../api/apolloClient'
 import { createCrmLead } from '../../../api/client'
 import {
   fetchHNHiringOpportunities,
@@ -92,22 +93,62 @@ export default function ClientRadar() {
     )
   }, [remoteItems, search])
 
+  // 1-Click Apollo Enrichment for Radar Leads
+  const [enrichingRadarId, setEnrichingRadarId] = useState(null)
+
+  const handleRadarEnrich = async (item) => {
+    setEnrichingRadarId(item.id)
+    try {
+      const contact = await enrichCompanyDecisionMaker({
+        domain: item.website,
+        company: item.company,
+      })
+
+      const updateList = (prevList) =>
+        prevList.map((it) => {
+          if (it.id !== item.id) return it
+          return {
+            ...it,
+            email: contact.email || it.email,
+            decisionMaker: `${contact.name} (${contact.job_title})`,
+            linkedin: contact.linkedin_url || it.linkedin,
+          }
+        })
+
+      setHnItems(updateList)
+      setRemoteItems(updateList)
+
+      toast.success(
+        `Found ${contact.name} (${contact.job_title}) ${contact.email ? `• ${contact.email}` : ''}!`
+      )
+    } catch (err) {
+      toast.error(err.message || 'Apollo enrichment failed.')
+    } finally {
+      setEnrichingRadarId(null)
+    }
+  }
+
   // 1-Click Import to CRM Pipeline
   const handleImportToCrm = async (item) => {
     setImportingId(item.id)
     try {
       const isHn = item.source === 'hacker_news'
+      const contactName = item.decisionMaker
+        ? item.decisionMaker.split(' (')[0]
+        : `${item.company} Hiring Lead`
+
       const payload = {
-        name: `${item.company} Hiring Lead`,
+        name: contactName,
         company: item.company,
         job_title: item.title,
         email: item.email || '',
+        linkedin_url: item.linkedin || '',
         company_website: item.website || '',
         stage: 'lead',
-        temperature: item.isFounderDirect ? 'hot' : 'warm',
+        temperature: item.isFounderDirect || item.decisionMaker ? 'hot' : 'warm',
         source: isHn ? 'cold_outreach' : 'website_inbound',
         deal_value: 0,
-        notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}\n\nProject Scope / Overview:\n${item.fullText}`,
+        notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}${item.decisionMaker ? `\nVerified Executive: ${item.decisionMaker}` : ''}\n\nProject Scope / Overview:\n${item.fullText}`,
         tech_stack: ['Flutter', 'Mobile', 'Supabase'],
       }
 
@@ -300,8 +341,8 @@ export default function ClientRadar() {
                         {item.description}
                       </p>
 
-                      {/* Detected Email */}
-                      {item.email && (
+                      {/* Detected or Enriched Email */}
+                      {item.email ? (
                         <div className="mt-3 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs">
                           <span className="text-emerald-300 font-mono font-medium truncate">
                             ✉️ {item.email}
@@ -312,6 +353,46 @@ export default function ClientRadar() {
                           >
                             Send Email &rarr;
                           </a>
+                        </div>
+                      ) : (
+                        <div className="mt-3 p-2 rounded-lg bg-abyss/60 border border-panel-edge flex items-center justify-between text-xs">
+                          <span className="text-slate-400 font-mono text-[11px] truncate">
+                            No email in post
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRadarEnrich(item)}
+                            disabled={enrichingRadarId === item.id}
+                            className="text-neon-blue hover:text-white font-semibold ml-2 whitespace-nowrap flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          >
+                            {enrichingRadarId === item.id ? (
+                              <>
+                                <span className="h-2.5 w-2.5 animate-spin rounded-full border border-neon-blue border-t-transparent" />
+                                Scanning Apollo...
+                              </>
+                            ) : (
+                              <>
+                                <span>⚡</span> Find Founder (Apollo)
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Verified Decision Maker Tag */}
+                      {item.decisionMaker && (
+                        <div className="mt-2 text-[11px] text-neon-blue font-mono flex items-center justify-between">
+                          <span>⚡ Verified: <strong className="text-white">{item.decisionMaker}</strong></span>
+                          {item.linkedin && (
+                            <a
+                              href={item.linkedin}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[#70B5F9] hover:underline"
+                            >
+                              LinkedIn ↗
+                            </a>
+                          )}
                         </div>
                       )}
                     </div>
@@ -429,6 +510,61 @@ export default function ClientRadar() {
                       <p className="mt-3 text-xs text-slate-300 leading-relaxed line-clamp-3">
                         {item.description}
                       </p>
+
+                      {/* Detected or Enriched Email */}
+                      {item.email ? (
+                        <div className="mt-3 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs">
+                          <span className="text-emerald-300 font-mono font-medium truncate">
+                            ✉️ {item.email}
+                          </span>
+                          <a
+                            href={`mailto:${item.email}?subject=Flutter & Mobile Engineering Support — Jerry Dev Studio`}
+                            className="text-emerald-400 hover:underline font-semibold ml-2 whitespace-nowrap"
+                          >
+                            Send Email &rarr;
+                          </a>
+                        </div>
+                      ) : (
+                        <div className="mt-3 p-2 rounded-lg bg-abyss/60 border border-panel-edge flex items-center justify-between text-xs">
+                          <span className="text-slate-400 font-mono text-[11px] truncate">
+                            Direct email not listed
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRadarEnrich(item)}
+                            disabled={enrichingRadarId === item.id}
+                            className="text-neon-blue hover:text-white font-semibold ml-2 whitespace-nowrap flex items-center gap-1 cursor-pointer disabled:opacity-50"
+                          >
+                            {enrichingRadarId === item.id ? (
+                              <>
+                                <span className="h-2.5 w-2.5 animate-spin rounded-full border border-neon-blue border-t-transparent" />
+                                Scanning Apollo...
+                              </>
+                            ) : (
+                              <>
+                                <span>⚡</span> Find Founder (Apollo)
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Verified Decision Maker Tag */}
+                      {item.decisionMaker && (
+                        <div className="mt-2 text-[11px] text-neon-blue font-mono flex items-center justify-between">
+                          <span>⚡ Verified: <strong className="text-white">{item.decisionMaker}</strong></span>
+                          {item.linkedin && (
+                            <a
+                              href={item.linkedin}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[#70B5F9] hover:underline"
+                            >
+                              LinkedIn ↗
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-5 pt-3.5 border-t border-panel-edge flex items-center justify-between gap-2">

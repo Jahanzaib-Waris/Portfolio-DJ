@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import {
+  enrichCompanyDecisionMaker,
+} from '../../../api/apolloClient'
+import {
   addCrmActivity,
   deleteCrmActivity,
   deleteCrmLead,
@@ -43,8 +46,14 @@ export default function LeadDetailDrawer({
   const [pendingDelete, setPendingDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  // Quick pitch templates
-  const [pitchTemplate, setPitchTemplate] = useState('intro')
+  // Apollo enrichment state
+  const [enriching, setEnriching] = useState(false)
+
+  // AI Pitch Engine state
+  const [pitchAngle, setPitchAngle] = useState('rescue') // 'rescue' | 'mvp' | 'scale'
+  const [pitchTone, setPitchTone] = useState('senior') // 'senior' | 'consultant' | 'punchy'
+  const [copiedKey, setCopiedKey] = useState(null)
+  const [loggingPitch, setLoggingPitch] = useState(false)
 
   useEffect(() => {
     if (lead) {
@@ -188,51 +197,284 @@ export default function LeadDetailDrawer({
     handleChange('next_follow_up', `${yyyy}-${mm}-${dd}`)
   }
 
-  // Pitch template generator
+  // Handle Apollo Contact Enrichment
+  const handleApolloEnrich = async () => {
+    const website = formData.company_website
+    const company = formData.company
+    if (!website && !company) {
+      toast.error('Please enter a company website or name to enrich from Apollo.')
+      return
+    }
+
+    setEnriching(true)
+    try {
+      const contact = await enrichCompanyDecisionMaker({
+        domain: website,
+        company: company,
+      })
+
+      const isDefaultName =
+        !formData.name ||
+        formData.name.toLowerCase().includes('lead') ||
+        formData.name.toLowerCase().includes('hiring')
+
+      const updated = {
+        ...formData,
+        name: isDefaultName && contact.name ? contact.name : contact.name || formData.name,
+        job_title: contact.job_title || formData.job_title,
+        email: contact.email || formData.email,
+        linkedin_url: contact.linkedin_url || formData.linkedin_url,
+        company: contact.company || formData.company,
+        company_website: contact.domain
+          ? contact.domain.startsWith('http')
+            ? contact.domain
+            : `https://${contact.domain}`
+          : formData.company_website,
+      }
+
+      setFormData(updated)
+      await handleSave(updated)
+
+      try {
+        const act = await addCrmActivity(lead.id, {
+          type: 'note',
+          content: `⚡ Apollo.io Enriched: Decision-maker ${contact.name} (${contact.job_title})${contact.email ? ` • ${contact.email}` : ''}`,
+        })
+        setActivities((prev) => [act, ...prev])
+      } catch {
+        // ignore
+      }
+
+      toast.success(`Found ${contact.name} (${contact.job_title})!`)
+    } catch (err) {
+      toast.error(err.message || 'Apollo enrichment failed.')
+    } finally {
+      setEnriching(false)
+    }
+  }
+
+  // Handle Copy with visual feedback
+  const handleCopy = (text, key) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    setCopiedKey(key)
+    toast.success('Copied to clipboard!')
+    setTimeout(() => setCopiedKey(null), 2000)
+  }
+
+  // AI Personalized Pitch Generator
   const getPitchContent = () => {
-    const name = formData.name || 'there'
-    const company = formData.company || 'your team'
-    if (pitchTemplate === 'intro') {
-      return {
-        subject: `Quick question regarding ${company}'s frontend / web engineering`,
-        body: `Hi ${name},
+    const rawName = (formData.name || '').trim()
+    const firstName =
+      rawName && !rawName.toLowerCase().includes('lead') && !rawName.toLowerCase().includes('hiring')
+        ? rawName.split(' ')[0]
+        : 'there'
+    const company = (formData.company || '').trim() || 'your team'
+    const stack = techStackInput.trim() || 'Flutter & Supabase'
 
-I came across your work at ${company} and was impressed by what you are building. I'm Jerry Waris, a full-stack engineer specializing in high-performance web applications (React, Next.js, Node, Supabase/Django).
+    if (pitchAngle === 'rescue') {
+      const subject = `Resolving ${company}'s mobile / Flutter engineering blockers`
+      const inmail = `Hi ${firstName}, saw what you're building at ${company}. As a senior mobile engineer (Flutter/Supabase), I help teams debug state bottlenecks, custom Dart integrations, and App Store blockers. Would love to share quick insights: https://jerry-dev-studio.web.app/projects`
 
-Are you currently looking to accelerate product development, modernize your user interface, or build new digital features this quarter?
+      let body = ''
+      if (pitchTone === 'senior') {
+        body = `Hi ${firstName},
 
-Here is a quick look at my engineering portfolio: https://jerry-dev-studio.web.app/projects
+I came across your work at ${company} and wanted to reach out directly regarding your engineering roadmap.
 
-Would you be open to a 10-minute introductory sync this week?
+I'm Jerry Waris, a senior full-stack and mobile engineer specializing in Flutter, FlutterFlow, and Supabase architecture. Technical founders frequently bring me in when roadmaps hit friction—whether that's complex FlutterFlow custom actions, state management bugs, slow backend queries, or App Store / Play Store rejection blockers.
+
+A few recent outcomes from my engineering studio:
+• Resolved production crashes and custom Dart integration blockers for cross-platform apps.
+• Hardened Supabase backends with robust Row-Level Security (RLS) policies and real-time synchronization.
+• Delivered critical features under aggressive timelines without sacrificing code quality.
+
+You can inspect my recent client work and engineering case studies here:
+https://jerry-dev-studio.web.app/projects
+
+Would you be open to a 10-minute technical sync this week to see if I can take those blockers off your plate?
 
 Best regards,
 Jerry Waris
-Full-Stack Software Engineer`,
-      }
-    } else if (pitchTemplate === 'followup') {
-      return {
-        subject: `Following up: engineering & architecture for ${company}`,
-        body: `Hi ${name},
+Senior Full-Stack & Mobile Engineer | Jerry Dev Studio
+https://jerry-dev-studio.web.app`
+      } else if (pitchTone === 'consultant') {
+        body = `Hi ${firstName},
 
-Just wanted to briefly follow up on my previous note. I'd love to learn more about the technical challenges ${company} is currently tackling.
+Technical blockers in production apps often cost teams weeks of stalled momentum and lost user trust.
 
-Let me know if you have 10 minutes for a quick chat later this week!
+I'm Jerry Waris, a senior software engineer who partners with venture-backed and high-growth startups to eliminate engineering bottlenecks across ${stack}. My focus is rapid turnaround: fixing stability issues, streamlining custom integrations, and ensuring your release pipeline is bulletproof.
+
+Recent client highlights:
+• Audit & stabilization of complex mobile codebases, eliminating repeat crash reports.
+• Supabase database optimization reducing latency and securing user tenancy.
+• Full technical sign-off enabling seamless App Store approvals.
+
+Check out verified project demos at https://jerry-dev-studio.web.app/projects
+
+Are you free for a quick 10-minute discovery call this Thursday to discuss ${company}'s current technical priorities?
 
 Best,
-Jerry Waris`,
+Jerry Waris
+Principal Engineer, Jerry Dev Studio`
+      } else {
+        body = `Hi ${firstName},
+
+Quick note regarding ${company}'s mobile roadmap.
+
+I'm Jerry Waris, a senior Flutter & Supabase engineer. I help founders eliminate sticky bugs, build custom Dart logic, and get production mobile apps past App Store blockers in days instead of months.
+
+Engineering portfolio & demos: https://jerry-dev-studio.web.app/projects
+
+Do you have 10 minutes this week for a brief technical chat?
+
+Best,
+Jerry Waris
+Jerry Dev Studio`
       }
+
+      return { subject, body, inmail }
+    } else if (pitchAngle === 'mvp') {
+      const subject = `Accelerating ${company}'s mobile MVP (production-ready in weeks)`
+      const inmail = `Hi ${firstName}, noticed ${company}'s growth. I specialize in rapid 0-to-1 mobile/web MVPs using FlutterFlow & Supabase—shipping production-grade apps in 2–4 weeks without tech debt. Portfolio: https://jerry-dev-studio.web.app/projects`
+
+      let body = ''
+      if (pitchTone === 'senior') {
+        body = `Hi ${firstName},
+
+Building a new mobile or web product usually forces a tough choice: spend months on custom code, or build a low-code prototype that breaks when scaling.
+
+I bridge that gap. I'm Jerry Waris, a senior engineer who combines the visual build velocity of FlutterFlow with custom Dart architecture and high-performance Supabase backends. You get a production-ready mobile app deployed to iOS & Android in 2–4 weeks—with clean, exportable code you completely own.
+
+Studio capabilities for ${company}:
+• End-to-end mobile MVP delivered in 2 to 4 weeks.
+• Scalable PostgreSQL & Supabase Auth, Storage, and Edge Functions.
+• Complete App Store & Google Play submission and launch readiness.
+
+Portfolio of recent launches: https://jerry-dev-studio.web.app/projects
+
+Would you be open to a 10-minute intro call this week to talk through your product vision?
+
+Best regards,
+Jerry Waris
+Senior Full-Stack & Mobile Engineer | Jerry Dev Studio`
+      } else if (pitchTone === 'consultant') {
+        body = `Hi ${firstName},
+
+Speed-to-market is the single biggest advantage for early-stage products.
+
+I help startups build and launch polished MVPs in under 4 weeks by leveraging modern high-velocity stacks (${stack}). Rather than burning quarters of engineering runway, you get a market-ready iOS and Android app that satisfies early adopters and investors alike.
+
+Recent deliverables include:
+• Full-stack mobile application shipped from zero to App Store in 21 days.
+• Multi-tenant Supabase architecture designed to scale seamlessly to 100k+ users.
+• Transparent sprints with direct engineer-to-founder communication.
+
+Live projects: https://jerry-dev-studio.web.app/projects
+
+If ${company} is planning an MVP launch this quarter, let's schedule a 10-minute intro call.
+
+Best,
+Jerry Waris
+Jerry Dev Studio`
+      } else {
+        body = `Hi ${firstName},
+
+I saw ${company} is expanding and wanted to see if you're looking to launch a mobile app or MVP this quarter.
+
+I build and ship production-ready Flutter & Supabase apps in 2 to 4 weeks, combining rapid UI velocity with rock-solid backend architecture.
+
+Case studies: https://jerry-dev-studio.web.app/projects
+
+Open to a quick 10-minute sync this week?
+
+Best,
+Jerry Waris`
+      }
+
+      return { subject, body, inmail }
     } else {
-      return {
-        subject: `Proposal review & technical discovery for ${company}`,
-        body: `Hi ${name},
+      const subject = `Senior engineering & backend architecture for ${company}`
+      const inmail = `Hi ${firstName}, reaching out regarding ${company}'s tech stack. I help engineering teams scale Flutter & Supabase architectures—clean code, rock-solid RLS, and high-performance backend pipelines. Demos: https://jerry-dev-studio.web.app/projects`
 
-Thanks for connecting! I have prepared recommendations and technical scope details tailored for ${company}.
+      let body = ''
+      if (pitchTone === 'senior') {
+        body = `Hi ${firstName},
 
-Please let me know when you have time for a quick walk-through.
+As applications grow, maintaining modular architecture and zero-regression velocity becomes critical.
+
+I'm Jerry Waris, a senior software engineer specializing in scalable mobile architecture, custom Dart logic, and hardened Supabase/PostgreSQL backends. I help engineering teams transition from rapid prototypes to high-performance enterprise-grade systems without slowing down feature delivery.
+
+Key technical competencies:
+• Modular state management (Riverpod/Bloc) and clean Dart architecture.
+• Enterprise Supabase: advanced Row-Level Security, custom Edge Functions, database indexing.
+• Automated CI/CD pipelines for seamless App Store and Play Store releases.
+
+Explore my architecture & solutions: https://jerry-dev-studio.web.app/solutions
+
+Let's connect for 10 minutes this week to discuss how I can support ${company}'s engineering initiatives.
+
+Best regards,
+Jerry Waris
+Senior Full-Stack & Mobile Engineer | Jerry Dev Studio`
+      } else if (pitchTone === 'consultant') {
+        body = `Hi ${firstName},
+
+Scaling technical infrastructure without compounding technical debt is one of the toughest challenges for high-growth products.
+
+I advise and support engineering teams building with ${stack}, ensuring backend security, real-time performance, and maintainable application structure that supports long-term product velocity.
+
+Recent impact:
+• Re-architected backend queries, dropping load latency by over 60%.
+• Implemented rigorous PostgreSQL security policies and automated schema migrations.
+• Audited and restructured front-end codebases for maintainability and testability.
+
+Portfolio & Case Studies: https://jerry-dev-studio.web.app/projects
+
+Would you have 10 minutes later this week for a brief introductory conversation?
 
 Best,
-Jerry Waris`,
+Jerry Waris
+Principal Engineer, Jerry Dev Studio`
+      } else {
+        body = `Hi ${firstName},
+
+Reaching out regarding ${company}'s engineering architecture.
+
+I'm Jerry Waris, a senior engineer specializing in scaling Flutter apps and Supabase backends. I help teams eliminate technical debt, optimize performance, and build scalable infrastructure.
+
+Engineering highlights: https://jerry-dev-studio.web.app/projects
+
+Free for a quick 10-minute sync this week?
+
+Best,
+Jerry Waris`
       }
+
+      return { subject, body, inmail }
+    }
+  }
+
+  // Handle Log Pitch Sent to CRM timeline
+  const handleLogPitchActivity = async () => {
+    setLoggingPitch(true)
+    try {
+      const angleLabels = {
+        rescue: 'Technical Rescue',
+        mvp: 'Rapid MVP Launch',
+        scale: 'Architecture & Scale',
+      }
+      const label = angleLabels[pitchAngle] || pitchAngle
+      const added = await addCrmActivity(lead.id, {
+        type: 'email',
+        content: `Sent "${label}" Pitch (${pitchTone} tone) to ${formData.email || formData.name}: "${pitch.subject}"`,
+      })
+      setActivities((prev) => [added, ...prev])
+      toast.success('Logged outreach pitch to CRM activity timeline!')
+    } catch (err) {
+      toast.error('Could not log activity: ' + err.message)
+    } finally {
+      setLoggingPitch(false)
     }
   }
 
@@ -330,43 +572,181 @@ Jerry Waris`,
             </div>
           </div>
 
-          {/* 1-Click Outreach Shortcuts (LinkedIn Sales Nav style) */}
-          <div className="p-4 rounded-lg bg-abyss/60 border border-panel-edge space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider text-neon-indigo font-mono font-medium">
-                ⚡ 1-Click Outreach Shortcuts
-              </span>
-              <div className="flex gap-1 text-[11px]">
-                {['intro', 'followup', 'proposal'].map((mode) => (
+          {/* Apollo.io 1-Click Contact Enrichment Banner */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-[#2860E1]/15 via-abyss to-neon-indigo/15 border border-[#2860E1]/40 space-y-2.5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2860E1]/25 border border-[#2860E1]/50 text-white text-base font-bold shrink-0">
+                  ⚡
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-white tracking-wide">
+                      Apollo.io Contact Enrichment
+                    </span>
+                    {formData.email && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                        Email Ready
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-300">
+                    Find verified Founder, CEO &amp; CTO direct email and LinkedIn profile from company domain.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleApolloEnrich}
+                disabled={enriching || (!formData.company_website && !formData.company)}
+                className="px-3.5 py-2 rounded-lg text-xs font-bold bg-[#2860E1] text-white hover:bg-[#2860E1]/90 transition-all disabled:opacity-40 flex items-center justify-center gap-2 shrink-0 shadow-md"
+              >
+                {enriching ? (
+                  <>
+                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Searching Apollo...
+                  </>
+                ) : (
+                  <>
+                    <span>⚡</span> Find Decision-Maker
+                  </>
+                )}
+              </button>
+            </div>
+            {!formData.company_website && !formData.company && (
+              <p className="text-[11px] text-amber-400/90 pl-1">
+                ⚠️ Enter a company name or website domain below to enable Apollo enrichment.
+              </p>
+            )}
+          </div>
+
+          {/* AI Personalized Cold Pitch Engine */}
+          <div className="p-4 rounded-xl bg-abyss/70 border border-panel-edge space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-panel-edge/60">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🧠</span>
+                <span className="text-xs uppercase tracking-wider text-neon-blue font-mono font-bold">
+                  AI Personalized Cold Pitch Engine
+                </span>
+              </div>
+
+              {/* Angle Switcher */}
+              <div className="flex flex-wrap gap-1 text-[11px]">
+                {[
+                  { key: 'rescue', label: '⚡ Technical Rescue' },
+                  { key: 'mvp', label: '🚀 Rapid MVP' },
+                  { key: 'scale', label: '🏛️ Architecture' },
+                ].map((angle) => (
                   <button
-                    key={mode}
+                    key={angle.key}
                     type="button"
-                    onClick={() => setPitchTemplate(mode)}
-                    className={`px-2 py-0.5 rounded capitalize ${
-                      pitchTemplate === mode
-                        ? 'bg-neon-indigo/30 text-neon-indigo font-semibold'
-                        : 'text-slate-400 hover:text-slate-200'
+                    onClick={() => setPitchAngle(angle.key)}
+                    className={`px-2.5 py-1 rounded-md transition-all font-medium ${
+                      pitchAngle === angle.key
+                        ? 'bg-neon-blue/20 border border-neon-blue/60 text-neon-blue font-semibold shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 border border-transparent'
                     }`}
                   >
-                    {mode}
+                    {angle.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 pt-1">
+            {/* Tone Selector & Context Indicators */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-mono text-[11px]">Tone:</span>
+                {[
+                  { key: 'senior', label: 'Senior Engineer' },
+                  { key: 'consultant', label: 'ROI Consultant' },
+                  { key: 'punchy', label: 'Punchy (Mobile)' },
+                ].map((tone) => (
+                  <button
+                    key={tone.key}
+                    type="button"
+                    onClick={() => setPitchTone(tone.key)}
+                    className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
+                      pitchTone === tone.key
+                        ? 'bg-panel-edge text-white font-medium'
+                        : 'text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    {tone.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+                <span>Target: <strong className="text-slate-200">{formData.company || 'Team'}</strong></span>
+                <span>•</span>
+                <span>Stack: <strong className="text-neon-blue">{techStackInput.trim() || 'Flutter & Supabase'}</strong></span>
+              </div>
+            </div>
+
+            {/* 1-Click Action Hub */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              {/* Send Email launcher */}
+              {emailLink ? (
+                <a
+                  href={emailLink}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-neon-blue/15 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/25 transition-all shadow-sm"
+                >
+                  ✉️ Open in Email Client
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => toast.error('No email available. Click "Find Decision-Maker" above to enrich with Apollo!')}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge text-slate-500 hover:text-slate-400 transition-colors"
+                >
+                  ✉️ Email (Needs Address)
+                </button>
+              )}
+
+              {/* Copy Body */}
+              <button
+                type="button"
+                onClick={() => handleCopy(pitch.body, 'body')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge bg-abyss text-slate-200 hover:text-white hover:border-slate-400 transition-all"
+              >
+                {copiedKey === 'body' ? '✓ Copied Pitch' : '📋 Copy Full Pitch'}
+              </button>
+
+              {/* Copy InMail snippet */}
+              <button
+                type="button"
+                onClick={() => handleCopy(pitch.inmail, 'inmail')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge bg-abyss text-[#70B5F9] hover:text-white hover:border-[#0A66C2] transition-all"
+                title="Short copy under 300 characters, ideal for LinkedIn InMail"
+              >
+                {copiedKey === 'inmail' ? '✓ Copied InMail' : '💼 Copy InMail'}
+              </button>
+
+              {/* Log Activity to CRM Timeline */}
+              <button
+                type="button"
+                onClick={handleLogPitchActivity}
+                disabled={loggingPitch}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge bg-abyss text-slate-400 hover:text-neon-indigo hover:border-neon-indigo/50 transition-all disabled:opacity-50"
+                title="Logs this pitch to the activity timeline below"
+              >
+                {loggingPitch ? 'Logging...' : '⚡ Log to Timeline'}
+              </button>
+
               {/* LinkedIn InMail / Profile */}
               {formData.linkedin_url ? (
                 <a
                   href={formData.linkedin_url}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-semibold bg-[#0A66C2]/20 border border-[#0A66C2]/50 text-[#70B5F9] hover:bg-[#0A66C2]/30 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0A66C2]/15 border border-[#0A66C2]/50 text-[#70B5F9] hover:bg-[#0A66C2]/25 transition-colors"
                 >
                   <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                     <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
                   </svg>
-                  Open LinkedIn Profile
+                  Profile ↗
                 </a>
               ) : (
                 <button
@@ -375,22 +755,10 @@ Jerry Waris`,
                     const query = encodeURIComponent(`${formData.name} ${formData.company || ''}`)
                     window.open(`https://www.linkedin.com/search/results/people/?keywords=${query}`, '_blank')
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge text-slate-400 hover:text-white transition-colors"
                 >
-                  🔍 Find on LinkedIn
+                  🔍 Find LinkedIn
                 </button>
-              )}
-
-              {/* Email Pitch */}
-              {emailLink ? (
-                <a
-                  href={emailLink}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-neon-blue/15 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/25 transition-colors"
-                >
-                  ✉️ Send {pitchTemplate.toUpperCase()} Email
-                </a>
-              ) : (
-                <span className="text-xs text-slate-500 py-1.5 px-2">No email provided</span>
               )}
 
               {/* WhatsApp */}
@@ -399,34 +767,27 @@ Jerry Waris`,
                   href={whatsappLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-500/15 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/25 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/25 transition-colors"
                 >
                   💬 WhatsApp
                 </a>
               )}
-
-              {/* Company Website */}
-              {formData.company_website && (
-                <a
-                  href={formData.company_website.startsWith('http') ? formData.company_website : `https://${formData.company_website}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 transition-colors"
-                >
-                  🌐 Visit Website
-                </a>
-              )}
             </div>
 
-            {/* Template Preview Snippet */}
-            <details className="mt-2 text-xs text-slate-400 cursor-pointer">
-              <summary className="hover:text-slate-300">View generated pitch preview</summary>
-              <div className="mt-2 p-3 bg-panel border border-panel-edge rounded text-slate-300 whitespace-pre-wrap font-sans text-xs select-all">
-                <strong>Subject:</strong> {pitch.subject}
-
-{pitch.body}
+            {/* Generated Pitch Live Preview Box */}
+            <div className="p-3.5 rounded-lg bg-panel border border-panel-edge text-slate-300 space-y-2 text-xs">
+              <div className="flex items-center justify-between pb-2 border-b border-panel-edge/60">
+                <span className="font-semibold text-slate-200">
+                  Subject: <span className="font-normal text-white">{pitch.subject}</span>
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {pitch.inmail.length} chars (InMail)
+                </span>
               </div>
-            </details>
+              <div className="whitespace-pre-wrap font-sans text-xs leading-relaxed select-all text-slate-300 max-h-56 overflow-y-auto">
+                {pitch.body}
+              </div>
+            </div>
           </div>
 
           {/* Primary Lead Fields */}
@@ -498,7 +859,19 @@ Jerry Waris`,
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 font-mono mb-1">Company Website</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs text-slate-400 font-mono">Company Website</label>
+                {formData.company_website && (
+                  <button
+                    type="button"
+                    onClick={handleApolloEnrich}
+                    disabled={enriching}
+                    className="text-[11px] text-neon-blue hover:underline flex items-center gap-1 font-mono"
+                  >
+                    ⚡ Apollo Scan
+                  </button>
+                )}
+              </div>
               <input
                 type="text"
                 value={formData.company_website || ''}
