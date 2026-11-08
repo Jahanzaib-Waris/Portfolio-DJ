@@ -232,7 +232,7 @@ String timeAgo(DateTime date) {
   )
 
   useDocumentMeta({
-    title: 'Jerry Dev Studio — Production FlutterFlow & Mobile App Engineering',
+    title: 'Jerry Dev Studio',
     description:
       profile?.tagline ||
       'Specialized FlutterFlow and Flutter mobile engineering studio. We architect, debug, and scale production mobile applications with Supabase and Firebase backends.',
