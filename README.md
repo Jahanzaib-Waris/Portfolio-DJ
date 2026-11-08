@@ -1,60 +1,70 @@
-# FlowBase Developer Portfolio
- 
-A personal developer portfolio and blog with a developer-focused FlowBase visual system (near-black `#0A0C16` canvas, violet `#6D5AF6` primary buttons, sky blue `#38BDF8` links, code window showcase, and self-hosted variable typography). Django REST Framework backend + React (Vite) frontend.
+# Jerry Dev Studio — Production Mobile Engineering & Technical Publication
 
-## Project structure
+> **Live Website:** [https://jerry-dev-studio.web.app/](https://jerry-dev-studio.web.app/)  
+> **Backend & Database:** Supabase (PostgreSQL 17, Storage, Auth, RLS)  
+> **Hosting & CDN:** Firebase Hosting (Project ID: `jerry-dev-studio`)
+
+A high-performance FlutterFlow & mobile engineering portfolio, client portal, and technical publication built with the custom **FlowBase** design system (`#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted Manrope and Fira Code variable typography).
+
+---
+
+## Architecture Overview
 
 ```
-backend/    Django + DRF project (config) with apps: profiles, blog, projects, quotes
-frontend/   React (Vite) + Tailwind CSS app, consumes the Django API
+frontend/     React 19 + Vite SPA (Client marketing, technical publication, FlowBase admin CMS)
+supabase/     PostgreSQL schema, Row Level Security (RLS) policies, storage buckets, migration seeds
+public/       Favicon suite, Web App Manifest, RSS 2.0 feed, sitemap.xml
+docs/         Architecture blueprints, SRS, testing guides, deployment reference
 ```
 
-## Backend setup
+---
 
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-# source .venv/bin/activate   # macOS/Linux
+## Features
 
-pip install -r requirements.txt
-copy .env.example .env        # then edit values as needed
+- **Automated Date-Based Blog Scheduling:** Zero-cron auto-publishing. Articles unlock automatically for public readers on their publication date while authenticated admins can preview future content.
+- **Modern Developer Publication UX:** `max-w-7xl` asymmetric canvas, sticky Table of Contents with real-time `IntersectionObserver` scroll-spy, fixed reading progress bar, high-contrast readable typography (18px body, 15.2px code blocks), and community errata feedback.
+- **Lead Generation & Client Enquiries:** Sanitized quote request pipeline with direct PostgreSQL RLS insertion and real-time admin inbox.
+- **Interactive Case Studies:** Deep-dive modal architecture presenting project challenges, architectural solutions, and tech stack chips.
+- **Route-Guarded Control Panel (`/admin`):** FlowBase Visual Block Builder V2, runtime-editable theme tokens, lead inbox, and password visibility toggles.
+- **SEO & Syndication:** Automated Schema.org JSON-LD generation (`WebSite`, `Organization`, `Blog`, `BlogPosting`, `BreadcrumbList`), RSS 2.0 (`/feed.xml`), and XML sitemap (`/sitemap.xml`).
 
-python manage.py migrate
-python manage.py createsuperuser
-python manage.py runserver
-```
+---
 
-The API runs at `http://127.0.0.1:8000/`. Django admin is at `http://127.0.0.1:8000/admin/`.
+## Quickstart
 
-By default the backend uses local SQLite. To use Supabase Postgres instead, set `SUPABASE_DB_HOST` (and the related `SUPABASE_DB_*` vars) in `backend/.env` — see `.env.example` for the full list.
-
-## Frontend setup
+### Frontend Development
 
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev      # Local Vite dev server (http://localhost:5173/)
+npm run build    # Production build to frontend/dist
+npm run lint     # Oxlint code linter
 ```
 
-The dev server runs at `http://localhost:5173/` and proxies `/api` and `/media` requests to the Django backend at `127.0.0.1:8000`.
+### Environment Configuration (`frontend/.env`)
 
-## API endpoints
+```env
+VITE_SUPABASE_URL=https://fbeegpzrbocqgyxeqqtc.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
-| Endpoint | Description |
-|---|---|
-| `GET /api/profile/` | Profile info (name, tagline, bio, photo, links) |
-| `GET /api/profile/skills/` | List skills (home page tech stack section) |
-| `GET /api/profile/resume/` | Download resume PDF |
-| `GET /api/blog/posts/` | List published blog posts |
-| `GET /api/blog/posts/<slug>/` | Blog post detail |
-| `GET /api/projects/` | List projects |
-| `POST /api/quotes/` | Submit a quote request |
+### Firebase Deployment
 
-## Content management
+```bash
+firebase deploy --only hosting
+```
 
-All content (profile, blog posts, projects, quote requests) is managed through the Django admin at `/admin/`. No frontend auth or CMS UI is required for the MVP.
+---
 
-## Deployment
+## Supabase Database Management
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full step-by-step guide to deploying the backend and frontend as two separate Vercel projects, and wiring both up to Supabase (Postgres + Storage).
+Database migrations, schema definitions, and blog migration scripts are maintained in `/supabase`:
+- `supabase/schema.sql`: Full database schema, indexes, RLS policies, and analytics RPCs.
+- `supabase/seed_scheduled_blogs.sql`: Editorial calendar and technical guide seed migration.
+
+---
+
+## License
+
+Proprietary — © Jerry Dev Studio. All rights reserved.
