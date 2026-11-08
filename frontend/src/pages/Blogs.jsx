@@ -185,18 +185,24 @@ export default function Blogs() {
     })
   }, [displayPosts, selectedCategory, searchQuery])
 
+  const isFiltered = searchQuery.trim().length > 0 || selectedCategory !== 'All'
+  const featuredPost = !isFiltered && filteredPosts.length > 0 ? filteredPosts[0] : null
+  const gridPosts = !isFiltered && filteredPosts.length > 0 ? filteredPosts.slice(1) : filteredPosts
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <div className="max-w-2xl">
-        <p className="fb-kicker mb-3">FROM THE BLOG</p>
-        <h1 className="text-4xl text-white sm:text-5xl tracking-tight font-extrabold">Blog &amp; Fixes</h1>
-        <p className="mt-4 max-w-lg fb-lead">
-          Practical FlutterFlow fixes, custom Dart functions, and architectural patterns you can paste straight into your projects.
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
+      <div className="max-w-3xl">
+        <p className="fb-kicker mb-3">// KNOWLEDGE BASE &amp; SOLUTIONS</p>
+        <h1 className="text-4xl text-white sm:text-5xl lg:text-6xl tracking-tight font-extrabold">
+          Blog &amp; Fixes
+        </h1>
+        <p className="mt-4 max-w-2xl fb-lead text-base sm:text-lg text-[#A1A7CA]">
+          Practical FlutterFlow fixes, custom Dart functions, and production architecture patterns you can integrate straight into your mobile and Supabase apps.
         </p>
       </div>
 
       {/* Search and Category Filter Toolbar */}
-      <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-y border-panel-edge/80 py-5">
         {/* Category Pills */}
         <div className="flex flex-wrap gap-2">
           {categories.map((cat) => (
@@ -204,9 +210,9 @@ export default function Blogs() {
               key={cat}
               type="button"
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-full px-3.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-neon-blue text-abyss font-bold shadow-sm shadow-neon-blue/20'
+                  ? 'bg-neon-blue text-abyss font-bold shadow-md shadow-neon-blue/20 scale-[1.02]'
                   : 'bg-panel-edge/40 text-[#A1A7CA] hover:bg-panel-edge hover:text-white border border-panel-edge'
               }`}
             >
@@ -216,13 +222,13 @@ export default function Blogs() {
         </div>
 
         {/* Search Input */}
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-80">
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search guides &amp; fixes..."
-            className="w-full rounded-xl border border-panel-edge bg-abyss/60 px-4 py-2 text-xs text-white placeholder-[#A1A7CA]/60 outline-none transition-colors focus:border-neon-blue"
+            placeholder="Search guides, fixes &amp; Dart code..."
+            className="w-full rounded-xl border border-panel-edge bg-abyss/60 px-4 py-2.5 text-xs text-white placeholder-[#A1A7CA]/60 outline-none transition-colors focus:border-neon-blue"
           />
           {searchQuery && (
             <button
@@ -237,59 +243,179 @@ export default function Blogs() {
         </div>
       </div>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-2">
-        {loadState === 'loading' && posts.length === 0 && [1, 2, 3, 4].map((i) => <CardSkeleton key={i} />)}
+      {/* Active filter counter pill */}
+      {isFiltered && (
+        <div className="mt-6 flex items-center justify-between text-xs text-[#A1A7CA]">
+          <span>
+            Showing <strong className="text-white">{filteredPosts.length}</strong>{' '}
+            {filteredPosts.length === 1 ? 'guide' : 'guides'}
+            {selectedCategory !== 'All' ? ` in "${selectedCategory}"` : ''}
+            {searchQuery ? ` matching "${searchQuery}"` : ''}
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('')
+              setSelectedCategory('All')
+            }}
+            className="text-neon-blue hover:underline font-semibold cursor-pointer"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
 
-        {filteredPosts.length === 0 && loadState !== 'loading' && (
-          <div className="sm:col-span-2 rounded-2xl border border-dashed border-panel-edge/80 bg-abyss/40 py-16 px-6 text-center">
-            <p className="text-base font-bold text-white mb-2">No matching guides found</p>
-            <p className="text-xs text-[#A1A7CA] mb-4">
-              Try adjusting your search terms or selecting another category.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('')
-                setSelectedCategory('All')
-              }}
-              className="text-xs font-semibold text-neon-blue hover:underline cursor-pointer"
-            >
-              Reset filters &rarr;
-            </button>
-          </div>
-        )}
+      {/* Loading Skeleton */}
+      {loadState === 'loading' && posts.length === 0 && (
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      )}
 
-        {filteredPosts.map((post) => (
-          <Link key={post.id} to={`/blogs/${post.slug}`}>
-            <div className="fb-card group cursor-pointer transition-transform hover:-translate-y-1">
-              {post.cover_image && (
-                <img
-                  src={post.cover_image}
-                  alt={post.title}
-                  loading="lazy"
-                  decoding="async"
-                  className="-mx-7 -mt-7 mb-2 h-44 w-[calc(100%+3.5rem)] object-cover rounded-t-[16px] border-b border-panel-edge"
-                />
-              )}
-              <div className="flex items-center gap-3 text-xs mb-1">
-                {post.category && (
-                  <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue">
-                    {post.category}
-                  </span>
-                )}
-                <span className="font-mono-ui text-[#A1A7CA] text-xs">{post.published_date}</span>
+      {/* Zero State */}
+      {filteredPosts.length === 0 && loadState !== 'loading' && (
+        <div className="mt-10 rounded-2xl border border-dashed border-panel-edge/80 bg-abyss/40 py-16 px-6 text-center">
+          <p className="text-base font-bold text-white mb-2">No matching guides found</p>
+          <p className="text-xs text-[#A1A7CA] mb-4">
+            Try adjusting your search terms or selecting another category.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('')
+              setSelectedCategory('All')
+            }}
+            className="text-xs font-semibold text-neon-blue hover:underline cursor-pointer"
+          >
+            Reset filters &rarr;
+          </button>
+        </div>
+      )}
+
+      {/* Featured Spotlight Hero Card */}
+      {featuredPost && (
+        <div className="mt-8 mb-12">
+          <Link to={`/blogs/${featuredPost.slug}`} className="group block">
+            <div className="relative overflow-hidden rounded-2xl border border-neon-blue/30 bg-gradient-to-br from-panel/90 via-abyss/80 to-[#0A0C16] p-6 sm:p-8 lg:p-10 transition-all duration-300 hover:border-neon-blue/60 hover:shadow-2xl hover:shadow-neon-blue/10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                {/* Hero Content */}
+                <div className="lg:col-span-7 space-y-4">
+                  <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-neon-blue/15 border border-neon-blue/40 px-3 py-1 text-[11px] font-bold text-neon-blue">
+                      <span className="h-1.5 w-1.5 rounded-full bg-neon-blue animate-pulse" />
+                      LATEST FEATURED GUIDE
+                    </span>
+                    {featuredPost.category && (
+                      <span className="fb-chip bg-neon-indigo/15 border-neon-indigo/30 text-neon-indigo font-semibold text-[11px]">
+                        {featuredPost.category}
+                      </span>
+                    )}
+                    <span className="font-mono-ui text-[#A1A7CA] text-xs">
+                      {featuredPost.published_date}
+                    </span>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight group-hover:text-neon-blue transition-colors">
+                    {featuredPost.title}
+                  </h2>
+
+                  {featuredPost.excerpt && (
+                    <p className="text-sm sm:text-base text-slate-300 line-clamp-3 leading-relaxed">
+                      {featuredPost.excerpt}
+                    </p>
+                  )}
+
+                  <div className="pt-2 flex items-center gap-4 text-xs font-semibold text-neon-blue">
+                    <span className="inline-flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform duration-200">
+                      Read Complete Architecture &amp; Code &rarr;
+                    </span>
+                    <span className="text-[#A1A7CA] font-normal">&middot; Jerry Dev Studio</span>
+                  </div>
+                </div>
+
+                {/* Hero Cover Image or Code Visual */}
+                <div className="lg:col-span-5">
+                  {featuredPost.cover_image ? (
+                    <div className="overflow-hidden rounded-xl border border-panel-edge bg-void/60 shadow-xl">
+                      <img
+                        src={featuredPost.cover_image}
+                        alt={featuredPost.title}
+                        loading="eager"
+                        className="h-56 sm:h-64 lg:h-72 w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-panel-edge/80 bg-void/80 p-5 font-mono text-xs text-slate-300 space-y-2">
+                      <div className="flex items-center gap-1.5 pb-2 border-b border-panel-edge/60 text-[#A1A7CA]">
+                        <span className="h-2 w-2 rounded-full bg-rose-500/80" />
+                        <span className="h-2 w-2 rounded-full bg-amber-500/80" />
+                        <span className="h-2 w-2 rounded-full bg-emerald-500/80" />
+                        <span className="ml-2 text-[10px]">architecture_spec.dart</span>
+                      </div>
+                      <p className="text-neon-blue">// Production Architecture Pattern</p>
+                      <p className="text-slate-400 line-clamp-4">{featuredPost.excerpt}</p>
+                    </div>
+                  )}
+                </div>
               </div>
-              <h2 className="text-lg font-bold text-white group-hover:text-neon-blue transition-colors">
-                {post.title}
-              </h2>
-              {post.excerpt && <p className="text-sm text-[#A1A7CA] mt-2 line-clamp-3">{post.excerpt}</p>}
             </div>
           </Link>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* 3-Column Responsive Grid for Articles */}
+      {gridPosts.length > 0 && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {gridPosts.map((post) => (
+            <Link key={post.id} to={`/blogs/${post.slug}`} className="group flex flex-col h-full">
+              <div className="flex flex-col h-full rounded-2xl border border-panel-edge bg-abyss/50 p-6 transition-all duration-200 hover:-translate-y-1 hover:border-neon-blue/40 hover:bg-abyss/80 hover:shadow-xl hover:shadow-neon-blue/5">
+                {post.cover_image && (
+                  <div className="-mx-6 -mt-6 mb-4 overflow-hidden rounded-t-2xl border-b border-panel-edge">
+                    <img
+                      src={post.cover_image}
+                      alt={post.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-44 w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2.5 text-xs mb-3">
+                  {post.category && (
+                    <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue text-[11px] font-semibold">
+                      {post.category}
+                    </span>
+                  )}
+                  <span className="font-mono-ui text-[#A1A7CA] text-xs">{post.published_date}</span>
+                </div>
+
+                <h2 className="text-base sm:text-lg font-bold text-white group-hover:text-neon-blue transition-colors line-clamp-2 leading-snug">
+                  {post.title}
+                </h2>
+
+                {post.excerpt && (
+                  <p className="text-xs sm:text-sm text-[#A1A7CA] mt-2.5 line-clamp-3 leading-relaxed flex-1">
+                    {post.excerpt}
+                  </p>
+                )}
+
+                <div className="mt-5 pt-4 border-t border-panel-edge/60 flex items-center justify-between text-xs font-semibold text-neon-blue">
+                  <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    Read guide &rarr;
+                  </span>
+                  <span className="text-[11px] text-[#A1A7CA] font-mono">Verified</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {hasMore && (
-        <div className="mt-12 flex flex-col items-center gap-3">
+        <div className="mt-14 flex flex-col items-center gap-3">
           <SystemButton onClick={loadMore} variant="outline" disabled={loadingMore}>
             {loadingMore ? 'Loading...' : 'Load more posts'}
           </SystemButton>

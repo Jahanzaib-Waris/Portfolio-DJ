@@ -16,6 +16,18 @@ export default function RichTextContent({ children, className = '' }) {
     const el = containerRef.current
     if (!el) return
 
+    const headings = el.querySelectorAll('h2, h3')
+    headings.forEach((heading) => {
+      if (!heading.id) {
+        const text = heading.textContent || ''
+        const id = text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/(^-|-$)+/g, '')
+        if (id) heading.id = id
+      }
+    })
+
     const preElements = el.querySelectorAll('pre')
     preElements.forEach((pre) => {
       if (pre.querySelector('.copy-code-btn')) return

@@ -807,6 +807,7 @@
     letter-spacing: -0.03em;
     color: #ECEEFB;
     line-height: 1.15;
+    scroll-margin-top: 6rem;
   }
 
   .markdown-body h1 { font-size: 1.6rem; margin: 2.6em 0 0.75rem; }
