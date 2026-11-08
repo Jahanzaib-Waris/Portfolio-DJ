@@ -1,7 +1,7 @@
 
 [functions.apollo-proxy]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 import_map = "./functions/apollo-proxy/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
@@ -12,7 +12,7 @@ entrypoint = "./functions/apollo-proxy/index.ts"
 
 [functions.ai-proxy]
 enabled = true
-verify_jwt = false
+verify_jwt = true
 import_map = "./functions/ai-proxy/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx

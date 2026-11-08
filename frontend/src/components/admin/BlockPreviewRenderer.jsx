@@ -1,3 +1,4 @@
+import DOMPurify from 'dompurify'
 import { renderSvgIcon, getChildLayoutStyles, getEmbedVideoUrl } from '../../utils/blogBlocks'
 
 /**
@@ -112,7 +113,7 @@ export default function BlockPreviewRenderer({
         return (
           <div className="fb-block fb-block-text !my-0 w-full">
             {block.html ? (
-              <div dangerouslySetInnerHTML={{ __html: block.html }} />
+              <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.html) }} />
             ) : (
               <p className="text-slate-600 italic">Empty text block — click to edit in sidebar</p>
             )}
@@ -391,7 +392,7 @@ export default function BlockPreviewRenderer({
       default: {
         return (
           <div className="fb-block !my-0">
-            <div dangerouslySetInnerHTML={{ __html: block.html || '<p class="text-slate-600 italic">Empty classic post content</p>' }} />
+            <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(block.html || '<p class="text-slate-600 italic">Empty classic post content</p>') }} />
           </div>
         )
       }

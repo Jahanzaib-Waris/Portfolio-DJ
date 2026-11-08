@@ -1,3 +1,5 @@
+import { supabase } from './supabase'
+
 /**
  * aiClient.js
  * Multi-provider AI client supporting:
@@ -9,6 +11,20 @@
 
 const STORAGE_KEY = 'jerry_studio_api_keys'
 const AI_PROXY_ENDPOINT = 'https://fbeegpzrbocqgyxeqqtc.supabase.co/functions/v1/ai-proxy'
+
+/**
+ * Helper to build authenticated headers for Supabase Edge Functions.
+ */
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession()
+  const token = data?.session?.access_token
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  return {
+    'Content-Type': 'application/json',
+    ...(anonKey ? { apikey: anonKey } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+}
 
 export function getAiSettings() {
   try {
@@ -137,11 +153,10 @@ export async function testOllamaCloudConnection(apiKey) {
   const timer = setTimeout(() => controller.abort(), 12000)
 
   try {
+    const authHeaders = await getAuthHeaders()
     const res = await fetch(AI_PROXY_ENDPOINT, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authHeaders,
       body: JSON.stringify({
         provider: 'ollama_cloud',
         action: 'test',
@@ -247,6 +262,7 @@ ${notes || 'Looking for senior mobile and backend engineering support.'}`
         throw new Error('Ollama Cloud API Key is required. Please enter it in Settings > API Integrations.')
       }
       endpoint = AI_PROXY_ENDPOINT
+      headers = await getAuthHeaders()
       model = settings.ollamaCloudModel || 'deepseek-v4.1-flash'
       modelLabel = `Ollama Cloud (${model})`
       bodyPayload = {

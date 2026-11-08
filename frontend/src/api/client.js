@@ -83,35 +83,114 @@ function toPaginatedResponse(data, count, page = 1, pageSize = 10) {
   }
 }
 
+/* ---------------------------------------------------------------- cache layer */
+
+/**
+ * In-memory + sessionStorage TTL Caching Layer
+ * Drastically reduces Supabase API egress, Realtime connection overhead, and DB queries.
+ */
+const clientCache = new Map()
+
+export function getCached(key, ttlMs = 5 * 60 * 1000) {
+  // 1. Check in-memory map
+  const mem = clientCache.get(key)
+  if (mem && Date.now() - mem.time < ttlMs) {
+    return mem.data
+  }
+
+  // 2. Check sessionStorage
+  try {
+    const raw = sessionStorage.getItem(`__jerry_cache_${key}`)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Date.now() - parsed.time < ttlMs) {
+        clientCache.set(key, parsed)
+        return parsed.data
+      }
+      sessionStorage.removeItem(`__jerry_cache_${key}`)
+    }
+  } catch {
+    // sessionStorage not available or parsing failed
+  }
+
+  return null
+}
+
+export function setCached(key, data) {
+  const item = { data, time: Date.now() }
+  clientCache.set(key, item)
+  try {
+    sessionStorage.setItem(`__jerry_cache_${key}`, JSON.stringify(item))
+  } catch {
+    // storage quota or private browsing
+  }
+}
+
+export function invalidateCache(keyPrefix = '') {
+  if (!keyPrefix) {
+    clientCache.clear()
+    try {
+      const keys = Object.keys(sessionStorage)
+      for (const k of keys) {
+        if (k.startsWith('__jerry_cache_')) sessionStorage.removeItem(k)
+      }
+    } catch {}
+    return
+  }
+
+  for (const k of clientCache.keys()) {
+    if (k.startsWith(keyPrefix)) clientCache.delete(k)
+  }
+
+  try {
+    const keys = Object.keys(sessionStorage)
+    for (const k of keys) {
+      if (k.startsWith(`__jerry_cache_${keyPrefix}`)) sessionStorage.removeItem(k)
+    }
+  } catch {}
+}
+
 /* ---------------------------------------------------------------- public site */
 
 export const getProfile = async () => {
   if (!isSupabaseConfigured) return null
+  const cached = getCached('profile', 10 * 60 * 1000)
+  if (cached) return cached
+
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, name, tagline, bio, photo, resume, email, github_url, linkedin_url, updated_at')
     .order('id', { ascending: true })
     .limit(1)
     .maybeSingle()
 
   if (error) throw error
+  setCached('profile', data)
   return data
 }
 
 export const getBranding = async () => {
   if (!isSupabaseConfigured) return { site_name: 'Jerry Dev Studio', logo: '', favicon: '' }
+  const cached = getCached('branding', 10 * 60 * 1000)
+  if (cached) return cached
+
   const { data, error } = await supabase
     .from('site_branding')
-    .select('*')
+    .select('id, site_name, logo, favicon, updated_at')
     .limit(1)
     .maybeSingle()
 
   if (error) throw error
-  return data || { site_name: 'Jerry Dev Studio' }
+  const res = data || { site_name: 'Jerry Dev Studio' }
+  setCached('branding', res)
+  return res
 }
 
 export const getTheme = async () => {
   if (!isSupabaseConfigured) return null
+  const cached = getCached('theme', 10 * 60 * 1000)
+  if (cached) return cached
+
   const { data, error } = await supabase
     .from('site_theme')
     .select('*')
@@ -119,13 +198,31 @@ export const getTheme = async () => {
     .maybeSingle()
 
   if (error) throw error
+  setCached('theme', data)
   return data
 }
+
+// Bot detection & 30-second path deduplication
+let lastTrackedPath = ''
+let lastTrackedTime = 0
 
 // Fire-and-forget page view beacon
 export const trackPageView = async (path, referrer = '') => {
   if (!isSupabaseConfigured) return
   try {
+    // Ignore automated headless crawlers & test suites
+    if (typeof navigator !== 'undefined' && (navigator.webdriver || /bot|crawler|spider|crawling/i.test(navigator.userAgent || ''))) {
+      return
+    }
+
+    // Deduplicate identical path visits within 30 seconds
+    const now = Date.now()
+    if (path === lastTrackedPath && now - lastTrackedTime < 30000) {
+      return
+    }
+    lastTrackedPath = path
+    lastTrackedTime = now
+
     const isBlog = path.startsWith('/blogs/')
     const slug = isBlog ? path.replace(/^\/blogs\//, '').replace(/\/$/, '') : ''
 
@@ -152,60 +249,92 @@ export const getSkills = async (params = {}) => {
   if (!isSupabaseConfigured) return []
   const page = parseInt(params.page, 10) || 1
   const pageSize = parseInt(params.page_size, 10) || 100
+  const cacheKey = `skills_${page}_${pageSize}`
+  const cached = getCached(cacheKey, 10 * 60 * 1000)
+  if (cached) return cached
+
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
   const { data, count, error } = await supabase
     .from('skills')
-    .select('*', { count: 'exact' })
+    .select('id, name, description, display_order', { count: 'exact' })
     .order('display_order', { ascending: true })
     .order('name', { ascending: true })
     .range(from, to)
 
   if (error) throw error
-  return toPaginatedResponse(data, count, page, pageSize)
+  const result = toPaginatedResponse(data, count, page, pageSize)
+  setCached(cacheKey, result)
+  return result
 }
 
 export const getBlogPosts = async (params = {}) => {
   if (!isSupabaseConfigured) return []
   const page = parseInt(params.page, 10) || 1
   const pageSize = parseInt(params.page_size, 10) || 10
+
+  // Check if admin is logged in
+  const { data: sessionData } = await supabase.auth.getSession()
+  const isAdmin = Boolean(sessionData?.session)
+
+  // Cache only for public visitors
+  const cacheKey = `blogs_public_${page}_${pageSize}`
+  if (!isAdmin) {
+    const cached = getCached(cacheKey, 5 * 60 * 1000)
+    if (cached) return cached
+  }
+
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
+  // Select only card/list metadata (EXCLUDES multi-kilobyte content column, saving ~90% egress)
   let query = supabase
     .from('blog_posts')
-    .select('*', { count: 'exact' })
+    .select('id, title, slug, category, excerpt, cover_image, published_date, is_published, created_at, updated_at', { count: 'exact' })
     .order('published_date', { ascending: false })
 
-  // Admin sees drafts and scheduled posts if logged in; public only sees published on or before today
-  const { data: sessionData } = await supabase.auth.getSession()
-  if (!sessionData?.session) {
+  if (!isAdmin) {
     const todayStr = new Date().toISOString().slice(0, 10)
     query = query.eq('is_published', true).lte('published_date', todayStr)
   }
 
   const { data, count, error } = await query.range(from, to)
   if (error) throw error
-  return toPaginatedResponse(data, count, page, pageSize)
+  const result = toPaginatedResponse(data, count, page, pageSize)
+  if (!isAdmin) {
+    setCached(cacheKey, result)
+  }
+  return result
 }
 
 export const getBlogPost = async (slug) => {
   if (!isSupabaseConfigured) return null
   const { data: sessionData } = await supabase.auth.getSession()
+  const isAdmin = Boolean(sessionData?.session)
+
+  const cacheKey = `blog_post_${slug}`
+  if (!isAdmin) {
+    const cached = getCached(cacheKey, 5 * 60 * 1000)
+    if (cached) return cached
+  }
+
   let query = supabase
     .from('blog_posts')
     .select('*')
     .eq('slug', slug)
 
   // Public visitors can only access posts that are published and whose scheduled date has arrived
-  if (!sessionData?.session) {
+  if (!isAdmin) {
     const todayStr = new Date().toISOString().slice(0, 10)
     query = query.eq('is_published', true).lte('published_date', todayStr)
   }
 
   const { data, error } = await query.maybeSingle()
   if (error) throw error
+  if (!isAdmin && data) {
+    setCached(cacheKey, data)
+  }
   return data
 }
 
@@ -213,12 +342,16 @@ export const getProjects = async (params = {}) => {
   if (!isSupabaseConfigured) return []
   const page = parseInt(params.page, 10) || 1
   const pageSize = parseInt(params.page_size, 10) || 10
+  const cacheKey = `projects_${page}_${pageSize}`
+  const cached = getCached(cacheKey, 5 * 60 * 1000)
+  if (cached) return cached
+
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
   const { data, count, error } = await supabase
     .from('projects')
-    .select('*', { count: 'exact' })
+    .select('id, title, description, tech_stack, thumbnail, repo_url, live_url, display_order, is_featured, created_at', { count: 'exact' })
     .order('display_order', { ascending: true })
     .order('created_at', { ascending: false })
     .range(from, to)
@@ -233,7 +366,9 @@ export const getProjects = async (params = {}) => {
       : [],
   }))
 
-  return toPaginatedResponse(formatted, count, page, pageSize)
+  const result = toPaginatedResponse(formatted, count, page, pageSize)
+  setCached(cacheKey, result)
+  return result
 }
 
 export const submitQuoteRequest = async (payload) => {
@@ -315,6 +450,7 @@ export const updateBranding = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('branding')
   return data
 }
 
@@ -327,6 +463,7 @@ export const updateTheme = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('theme')
   return data
 }
 
@@ -360,11 +497,13 @@ export const getAnalyticsSummary = async (params = {}) => {
   if (!error && data) return data
 
   // 2. Client-side fallback calculation if stored procedure isn't installed yet
+  // Prunes columns and limits scan to prevent excessive egress and memory pressure
   const cutoff = new Date(Date.now() - days * 86400000).toISOString()
   const { data: views } = await supabase
     .from('page_views')
-    .select('*')
+    .select('created_at, session_key, path')
     .gte('created_at', cutoff)
+    .limit(10000)
 
   const { data: quotes } = await supabase
     .from('quote_requests')
@@ -414,6 +553,8 @@ export const createBlogPost = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('blogs')
+  invalidateCache('blog_post_')
   return data
 }
 
@@ -427,12 +568,16 @@ export const updateBlogPost = async (slug, payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('blogs')
+  invalidateCache('blog_post_')
   return data
 }
 
 export const deleteBlogPost = async (slug) => {
   const { error } = await supabase.from('blog_posts').delete().eq('slug', slug)
   if (error) throw error
+  invalidateCache('blogs')
+  invalidateCache('blog_post_')
   return { success: true }
 }
 
@@ -468,6 +613,7 @@ export const createProject = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('projects')
   return data
 }
 
@@ -481,12 +627,14 @@ export const updateProject = async (id, payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('projects')
   return data
 }
 
 export const deleteProject = async (id) => {
   const { error } = await supabase.from('projects').delete().eq('id', id)
   if (error) throw error
+  invalidateCache('projects')
   return { success: true }
 }
 
@@ -500,6 +648,7 @@ export const createSkill = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('skills')
   return data
 }
 
@@ -512,12 +661,14 @@ export const updateSkill = async (id, payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('skills')
   return data
 }
 
 export const deleteSkill = async (id) => {
   const { error } = await supabase.from('skills').delete().eq('id', id)
   if (error) throw error
+  invalidateCache('skills')
   return { success: true }
 }
 
@@ -532,6 +683,7 @@ export const createProfile = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('profile')
   return data
 }
 
@@ -544,6 +696,7 @@ export const updateProfile = async (payload) => {
     .single()
 
   if (error) throw error
+  invalidateCache('profile')
   return data
 }
 

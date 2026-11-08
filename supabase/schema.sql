@@ -149,7 +149,7 @@ CREATE POLICY "Admin skills all" ON public.skills FOR ALL TO authenticated USING
 -- 3. BLOG POSTS
 DROP POLICY IF EXISTS "Public blog posts read published" ON public.blog_posts;
 CREATE POLICY "Public blog posts read published" ON public.blog_posts
-    FOR SELECT USING (is_published = true OR (auth.role() = 'authenticated'));
+    FOR SELECT USING ((is_published = true AND published_date <= CURRENT_DATE) OR (auth.role() = 'authenticated'));
 
 DROP POLICY IF EXISTS "Admin blog posts all" ON public.blog_posts;
 CREATE POLICY "Admin blog posts all" ON public.blog_posts FOR ALL TO authenticated USING (true) WITH CHECK (true);
@@ -158,15 +158,23 @@ CREATE POLICY "Admin blog posts all" ON public.blog_posts FOR ALL TO authenticat
 DROP POLICY IF EXISTS "Public projects read" ON public.projects;
 CREATE POLICY "Public projects read" ON public.projects FOR SELECT USING (true);
 
+-- 4. PROJECTS
 DROP POLICY IF EXISTS "Admin projects all" ON public.projects;
 CREATE POLICY "Admin projects all" ON public.projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
 -- 5. QUOTE REQUESTS
 DROP POLICY IF EXISTS "Public quote submit" ON public.quote_requests;
-CREATE POLICY "Public quote submit" ON public.quote_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public quote submit" ON public.quote_requests FOR INSERT WITH CHECK (
+    length(trim(name)) > 0 AND
+    length(trim(email)) > 3 AND
+    length(trim(project_details)) > 0
+);
 
 DROP POLICY IF EXISTS "Admin quotes read" ON public.quote_requests;
 CREATE POLICY "Admin quotes read" ON public.quote_requests FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Admin quotes update" ON public.quote_requests;
+CREATE POLICY "Admin quotes update" ON public.quote_requests FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin quotes delete" ON public.quote_requests;
 CREATE POLICY "Admin quotes delete" ON public.quote_requests FOR DELETE TO authenticated USING (true);
@@ -317,6 +325,35 @@ BEGIN
         'top_referrers', v_top_referrers,
         'quotes_trend', v_quotes_trend
     );
+END;
+$$;
+
+-- ==============================================================================
+-- STORED PROCEDURE: cleanup_old_page_views
+-- Automatically prunes page_views older than the retention threshold (default: 90 days)
+-- to keep the database footprint well below the Supabase 500 MB free tier limit.
+-- ==============================================================================
+CREATE OR REPLACE FUNCTION public.cleanup_old_page_views(retention_days INT DEFAULT 90)
+RETURNS BIGINT
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_deleted BIGINT;
+    v_cutoff TIMESTAMPTZ;
+BEGIN
+    IF auth.role() <> 'authenticated' THEN
+        RAISE EXCEPTION 'Unauthorized';
+    END IF;
+
+    retention_days := GREATEST(7, LEAST(retention_days, 365));
+    v_cutoff := TIMEZONE('utc', NOW()) - (retention_days || ' days')::INTERVAL;
+
+    DELETE FROM public.page_views
+    WHERE created_at < v_cutoff;
+
+    GET DIAGNOSTICS v_deleted = ROW_COUNT;
+    RETURN v_deleted;
 END;
 $$;
 

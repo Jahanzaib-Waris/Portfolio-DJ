@@ -1,3 +1,5 @@
+import { supabase } from './supabase'
+
 /**
  * apolloClient.js
  * Client-side integration for Apollo.io decision-maker discovery & contact enrichment.
@@ -6,6 +8,20 @@
 
 const STORAGE_KEY = 'jerry_studio_api_keys'
 const PROXY_ENDPOINT = 'https://fbeegpzrbocqgyxeqqtc.supabase.co/functions/v1/apollo-proxy'
+
+/**
+ * Helper to build authenticated headers for Supabase Edge Functions.
+ */
+async function getAuthHeaders() {
+  const { data } = await supabase.auth.getSession()
+  const token = data?.session?.access_token
+  const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+  return {
+    'Content-Type': 'application/json',
+    ...(anonKey ? { apikey: anonKey } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  }
+}
 
 /**
  * Extracts a clean domain hostname from a URL or raw string.
@@ -65,11 +81,10 @@ export async function testApolloConnection(apiKey) {
     throw new Error('Please enter an Apollo.io API key.')
   }
 
+  const authHeaders = await getAuthHeaders()
   const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders,
     body: JSON.stringify({
       apiKey: key,
       action: 'test',
@@ -105,11 +120,10 @@ export async function enrichCompanyDecisionMaker({ domain, company, apiKey }) {
     throw new Error('Please provide either a company website or company name to enrich.')
   }
 
+  const authHeaders = await getAuthHeaders()
   const res = await fetch(PROXY_ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: authHeaders,
     body: JSON.stringify({
       apiKey: key,
       action: 'enrich',

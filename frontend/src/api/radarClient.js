@@ -6,21 +6,34 @@
  * 3. Curated Freelance Market Scanners (Upwork, Contra, Wellfound)
  */
 
-const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes in-memory cache
+const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes cache
 const memoryCache = new Map()
 
 function getCached(key) {
   const item = memoryCache.get(key)
-  if (!item) return null
-  if (Date.now() - item.time > CACHE_TTL_MS) {
-    memoryCache.delete(key)
-    return null
+  if (item && Date.now() - item.time < CACHE_TTL_MS) {
+    return item.data
   }
-  return item.data
+  try {
+    const raw = sessionStorage.getItem(`__radar_cache_${key}`)
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Date.now() - parsed.time < CACHE_TTL_MS) {
+        memoryCache.set(key, parsed)
+        return parsed.data
+      }
+      sessionStorage.removeItem(`__radar_cache_${key}`)
+    }
+  } catch {}
+  return null
 }
 
 function setCache(key, data) {
-  memoryCache.set(key, { data, time: Date.now() })
+  const entry = { data, time: Date.now() }
+  memoryCache.set(key, entry)
+  try {
+    sessionStorage.setItem(`__radar_cache_${key}`, JSON.stringify(entry))
+  } catch {}
 }
 
 /**
