@@ -7,6 +7,10 @@ import {
   fetchRemoteJobs,
   FREELANCE_MARKET_SCANNERS,
 } from '../../../api/radarClient'
+import {
+  computeOpportunityScore,
+  matchesFreshnessWindow,
+} from '../../../api/radarScoring'
 import SearchInput from '../../../components/admin/SearchInput'
 import { useToast } from '../../../components/admin/toastStore'
 import { Skeleton } from '../../../components/Skeleton'
@@ -28,10 +32,28 @@ const FILTER_PILLS = [
   { id: 'contract', label: 'Contract / Freelance' },
 ]
 
+const FRESHNESS_PILLS = [
+  { id: 'all', label: 'All Freshness' },
+  { id: '24h', label: '🔥 Last 24 Hours' },
+  { id: '3d', label: '⚡ Last 3 Days' },
+  { id: '7d', label: '📅 Last 7 Days' },
+  { id: '14d', label: 'Active (< 14 Days)' },
+]
+
+const SORT_OPTIONS = [
+  { id: 'score', label: '🎯 Highest Opportunity Score (Default)' },
+  { id: 'newest', label: '⏱️ Freshness (Newest First)' },
+  { id: 'email', label: '✉️ Direct Email First' },
+  { id: 'alpha', label: '🏢 Company Name (A-Z)' },
+]
+
 export default function ClientRadar() {
   const [activeTab, setActiveTab] = useState('hn')
   const [search, setSearch] = useState('')
   const [filterPill, setFilterPill] = useState('all')
+  const [freshnessFilter, setFreshnessFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('score')
+  const [expandedScoreId, setExpandedScoreId] = useState(null)
 
   const [hnItems, setHnItems] = useState([])
   const [remoteItems, setRemoteItems] = useState([])
@@ -74,28 +96,95 @@ export default function ClientRadar() {
     }
   }, [activeTab, loadData])
 
-  // Filter items by search query
+  // Score and filter HN leads
+  const scoredHn = useMemo(() => {
+    return hnItems.map((item) => ({
+      ...item,
+      opportunity: computeOpportunityScore(item),
+    }))
+  }, [hnItems])
+
   const filteredHn = useMemo(() => {
-    if (!search.trim()) return hnItems
-    const q = search.toLowerCase()
-    return hnItems.filter(
-      (item) =>
-        item.company.toLowerCase().includes(q) ||
-        item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q),
-    )
-  }, [hnItems, search])
+    let list = scoredHn
+
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(
+        (item) =>
+          item.company.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          item.description.toLowerCase().includes(q),
+      )
+    }
+
+    if (freshnessFilter !== 'all') {
+      list = list.filter((item) => matchesFreshnessWindow(item.date, freshnessFilter))
+    }
+
+    return [...list].sort((a, b) => {
+      if (sortBy === 'score') {
+        return b.opportunity.score - a.opportunity.score
+      }
+      if (sortBy === 'newest') {
+        return new Date(b.date || 0) - new Date(a.date || 0)
+      }
+      if (sortBy === 'email') {
+        const aHas = Boolean(a.email)
+        const bHas = Boolean(b.email)
+        if (aHas !== bHas) return bHas ? 1 : -1
+        return b.opportunity.score - a.opportunity.score
+      }
+      if (sortBy === 'alpha') {
+        return a.company.localeCompare(b.company)
+      }
+      return 0
+    })
+  }, [scoredHn, search, freshnessFilter, sortBy])
+
+  // Score and filter Remote leads
+  const scoredRemote = useMemo(() => {
+    return remoteItems.map((item) => ({
+      ...item,
+      opportunity: computeOpportunityScore(item),
+    }))
+  }, [remoteItems])
 
   const filteredRemote = useMemo(() => {
-    if (!search.trim()) return remoteItems
-    const q = search.toLowerCase()
-    return remoteItems.filter(
-      (item) =>
-        item.company.toLowerCase().includes(q) ||
-        item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q),
-    )
-  }, [remoteItems, search])
+    let list = scoredRemote
+
+    if (search.trim()) {
+      const q = search.toLowerCase()
+      list = list.filter(
+        (item) =>
+          item.company.toLowerCase().includes(q) ||
+          item.title.toLowerCase().includes(q) ||
+          item.description.toLowerCase().includes(q),
+      )
+    }
+
+    if (freshnessFilter !== 'all') {
+      list = list.filter((item) => matchesFreshnessWindow(item.date, freshnessFilter))
+    }
+
+    return [...list].sort((a, b) => {
+      if (sortBy === 'score') {
+        return b.opportunity.score - a.opportunity.score
+      }
+      if (sortBy === 'newest') {
+        return new Date(b.date || 0) - new Date(a.date || 0)
+      }
+      if (sortBy === 'email') {
+        const aHas = Boolean(a.email)
+        const bHas = Boolean(b.email)
+        if (aHas !== bHas) return bHas ? 1 : -1
+        return b.opportunity.score - a.opportunity.score
+      }
+      if (sortBy === 'alpha') {
+        return a.company.localeCompare(b.company)
+      }
+      return 0
+    })
+  }, [scoredRemote, search, freshnessFilter, sortBy])
 
   // 1-Click Apollo Enrichment for Radar Leads
   const [enrichingRadarId, setEnrichingRadarId] = useState(null)
@@ -259,18 +348,19 @@ export default function ClientRadar() {
         })}
       </div>
 
-      {/* Search & Stack Filter Bar (for HN & Remote tabs) */}
+      {/* Search, Freshness & Stack Filter Bar (for HN & Remote tabs) */}
       {activeTab !== 'scanners' && (
-        <div className="space-y-4">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-            {/* Filter Pills */}
-            <div className="flex flex-wrap gap-2">
+        <div className="space-y-3.5 p-4 rounded-xl bg-panel/40 border border-panel-edge">
+          {/* Row 1: Primary Tech Stack & Keyword Search */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-mono text-slate-400 mr-1 hidden sm:inline">Stack:</span>
               {FILTER_PILLS.map((pill) => (
                 <button
                   key={pill.id}
                   type="button"
                   onClick={() => setFilterPill(pill.id)}
-                  className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all cursor-pointer ${
+                  className={`rounded-full px-3 py-1 text-xs font-semibold transition-all cursor-pointer ${
                     filterPill === pill.id
                       ? 'bg-neon-blue text-abyss font-bold shadow-md shadow-neon-blue/20'
                       : 'bg-panel-edge/40 text-slate-400 hover:bg-panel-edge hover:text-white border border-panel-edge'
@@ -282,12 +372,53 @@ export default function ClientRadar() {
             </div>
 
             {/* Keyword Search */}
-            <div className="w-full md:w-80">
+            <div className="w-full md:w-72">
               <SearchInput
                 value={search}
                 onChange={setSearch}
                 placeholder="Filter by company, keyword, or tech..."
               />
+            </div>
+          </div>
+
+          {/* Row 2: Freshness Window & Opportunity Sorting */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2.5 border-t border-panel-edge/60 text-xs">
+            {/* Freshness Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-mono text-slate-400 mr-1 hidden sm:inline">Freshness:</span>
+              {FRESHNESS_PILLS.map((fp) => (
+                <button
+                  key={fp.id}
+                  type="button"
+                  onClick={() => setFreshnessFilter(fp.id)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-all cursor-pointer flex items-center gap-1 ${
+                    freshnessFilter === fp.id
+                      ? 'bg-neon-indigo/25 text-neon-indigo border border-neon-indigo/50 font-semibold shadow-sm'
+                      : 'bg-abyss/40 text-slate-400 hover:text-slate-200 border border-panel-edge/60'
+                  }`}
+                >
+                  {fp.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Sort Selector */}
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <label htmlFor="radar-sort" className="text-[11px] font-mono text-slate-400 whitespace-nowrap">
+                Sort by:
+              </label>
+              <select
+                id="radar-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-abyss border border-panel-edge rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-neon-blue font-medium cursor-pointer"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.id} value={opt.id} className="bg-panel text-white">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -326,33 +457,105 @@ export default function ClientRadar() {
               {filteredHn.map((item) => {
                 const isImported = Boolean(importedMap[item.id])
                 const isImporting = importingId === item.id
+                const opp = item.opportunity || {}
+                const isTopOpportunity = opp.score >= 85
+                const isStale = opp.isStale
+                const isExpanded = expandedScoreId === item.id
 
                 return (
                   <div
                     key={item.id}
-                    className="relative flex flex-col justify-between rounded-xl border border-panel-edge bg-panel/75 p-5 transition-all hover:border-panel-edge/80 hover:bg-panel/95 shadow-sm"
+                    className={`relative flex flex-col justify-between rounded-xl border p-5 transition-all shadow-sm ${
+                      isTopOpportunity
+                        ? 'border-emerald-500/50 bg-panel/90 shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/25'
+                        : opp.score >= 70
+                        ? 'border-neon-blue/40 bg-panel/85 hover:border-neon-blue/60'
+                        : isStale
+                        ? 'border-panel-edge/60 bg-panel/40 opacity-80'
+                        : 'border-panel-edge bg-panel/75 hover:border-panel-edge/80 hover:bg-panel/95'
+                    }`}
                   >
                     <div>
                       {/* Top Meta Line */}
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold font-display text-white tracking-tight">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-bold font-display text-white tracking-tight truncate">
                               {item.company}
                             </h3>
                             {item.isFounderDirect && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                                 Direct Email
                               </span>
                             )}
                           </div>
-                          <p className="text-xs font-semibold text-neon-blue mt-0.5">{item.title}</p>
+                          <p className="text-xs font-semibold text-neon-blue mt-0.5 line-clamp-1">{item.title}</p>
                         </div>
 
-                        <span className="text-[11px] font-mono text-slate-500 whitespace-nowrap">
-                          {new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
+                        {/* Opportunity Score & Freshness Badge */}
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedScoreId(isExpanded ? null : item.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${opp.badgeColor}`}
+                            title="Click to view/hide AI score breakdown"
+                          >
+                            <span>{opp.score >= 85 ? '🔥' : opp.score >= 70 ? '⚡' : '📊'}</span>
+                            <span>{opp.score} pts</span>
+                            <span className="text-[10px] font-sans opacity-85 hidden sm:inline">• {opp.tierLabel}</span>
+                          </button>
+                          <span className={`text-[11px] font-mono flex items-center gap-1 ${
+                            opp.freshnessStatus === 'urgent'
+                              ? 'text-emerald-400 font-semibold'
+                              : opp.freshnessStatus === 'fresh'
+                              ? 'text-neon-blue'
+                              : isStale
+                              ? 'text-amber-400 font-medium'
+                              : 'text-slate-400'
+                          }`}>
+                            <span>{opp.freshnessStatus === 'urgent' ? '🔥' : isStale ? '⚠️' : '⏱️'}</span>
+                            <span>{opp.freshnessLabel}</span>
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Expandable Score Breakdown Box */}
+                      {isExpanded && (
+                        <div className="mt-3 p-3 rounded-lg bg-abyss/85 border border-panel-edge text-xs space-y-1.5 font-mono animate-fade-in">
+                          <div className="flex items-center justify-between text-slate-300 pb-1.5 border-b border-panel-edge/60">
+                            <span className="font-bold text-white flex items-center gap-1.5">
+                              <span>🎯</span> Opportunity Score Breakdown
+                            </span>
+                            <span className="text-neon-blue font-bold">{opp.score} / 100 pts</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">⏱️ Freshness ({opp.freshnessLabel}):</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">✉️ Reachability:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 30</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">📱 Studio Tech Fit:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.techMatch} / 25</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">💼 Deal Intent:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 10</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stale Lead Warning */}
+                      {isStale && (
+                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
+                          <span>⚠️</span>
+                          <span>Posted {opp.freshnessLabel}. Hiring founder may already have filled this position. Focus on 70+ point fresh leads!</span>
+                        </div>
+                      )}
 
                       {/* Location & Tags */}
                       <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
@@ -498,30 +701,102 @@ export default function ClientRadar() {
               {filteredRemote.map((item) => {
                 const isImported = Boolean(importedMap[item.id])
                 const isImporting = importingId === item.id
+                const opp = item.opportunity || {}
+                const isTopOpportunity = opp.score >= 85
+                const isStale = opp.isStale
+                const isExpanded = expandedScoreId === item.id
 
                 return (
                   <div
                     key={item.id}
-                    className="relative flex flex-col justify-between rounded-xl border border-panel-edge bg-panel/75 p-5 transition-all hover:border-panel-edge/80 hover:bg-panel/95 shadow-sm"
+                    className={`relative flex flex-col justify-between rounded-xl border p-5 transition-all shadow-sm ${
+                      isTopOpportunity
+                        ? 'border-emerald-500/50 bg-panel/90 shadow-md shadow-emerald-500/5 ring-1 ring-emerald-500/25'
+                        : opp.score >= 70
+                        ? 'border-neon-blue/40 bg-panel/85 hover:border-neon-blue/60'
+                        : isStale
+                        ? 'border-panel-edge/60 bg-panel/40 opacity-80'
+                        : 'border-panel-edge bg-panel/75 hover:border-panel-edge/80 hover:bg-panel/95'
+                    }`}
                   >
                     <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-base font-bold font-display text-white tracking-tight">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="text-base font-bold font-display text-white tracking-tight truncate">
                               {item.company}
                             </h3>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-neon-blue/15 text-neon-blue border border-neon-blue/30">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-neon-blue/15 text-neon-blue border border-neon-blue/30 shrink-0">
                               {item.sourceLabel}
                             </span>
                           </div>
-                          <p className="text-xs font-semibold text-slate-200 mt-0.5">{item.title}</p>
+                          <p className="text-xs font-semibold text-slate-200 mt-0.5 line-clamp-1">{item.title}</p>
                         </div>
 
-                        <span className="text-[11px] font-mono text-slate-500 whitespace-nowrap">
-                          {new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                        </span>
+                        {/* Opportunity Score & Freshness Badge */}
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedScoreId(isExpanded ? null : item.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${opp.badgeColor}`}
+                            title="Click to view/hide AI score breakdown"
+                          >
+                            <span>{opp.score >= 85 ? '🔥' : opp.score >= 70 ? '⚡' : '📊'}</span>
+                            <span>{opp.score} pts</span>
+                            <span className="text-[10px] font-sans opacity-85 hidden sm:inline">• {opp.tierLabel}</span>
+                          </button>
+                          <span className={`text-[11px] font-mono flex items-center gap-1 ${
+                            opp.freshnessStatus === 'urgent'
+                              ? 'text-emerald-400 font-semibold'
+                              : opp.freshnessStatus === 'fresh'
+                              ? 'text-neon-blue'
+                              : isStale
+                              ? 'text-amber-400 font-medium'
+                              : 'text-slate-400'
+                          }`}>
+                            <span>{opp.freshnessStatus === 'urgent' ? '🔥' : isStale ? '⚠️' : '⏱️'}</span>
+                            <span>{opp.freshnessLabel}</span>
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Expandable Score Breakdown Box */}
+                      {isExpanded && (
+                        <div className="mt-3 p-3 rounded-lg bg-abyss/85 border border-panel-edge text-xs space-y-1.5 font-mono animate-fade-in">
+                          <div className="flex items-center justify-between text-slate-300 pb-1.5 border-b border-panel-edge/60">
+                            <span className="font-bold text-white flex items-center gap-1.5">
+                              <span>🎯</span> Opportunity Score Breakdown
+                            </span>
+                            <span className="text-neon-blue font-bold">{opp.score} / 100 pts</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">⏱️ Freshness ({opp.freshnessLabel}):</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">✉️ Reachability:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 30</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">📱 Studio Tech Fit:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.techMatch} / 25</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-400">💼 Deal Intent:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 10</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stale Lead Warning */}
+                      {isStale && (
+                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
+                          <span>⚠️</span>
+                          <span>Posted {opp.freshnessLabel}. Remote listings decay quickly. Focus on 70+ point fresh leads!</span>
+                        </div>
+                      )}
 
                       <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                         <span className="px-2 py-0.5 rounded bg-abyss border border-panel-edge text-slate-300">
@@ -551,7 +826,7 @@ export default function ClientRadar() {
                             href={`mailto:${item.email}?subject=Flutter & Mobile Engineering Support — Jerry Dev Studio`}
                             className="text-emerald-400 hover:underline font-semibold ml-2 whitespace-nowrap"
                           >
-                            Send Email &rarr;
+                            Send Email →
                           </a>
                         </div>
                       ) : (
