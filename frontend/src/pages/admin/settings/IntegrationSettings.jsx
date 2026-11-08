@@ -4,6 +4,7 @@ import {
   getAiSettings,
   saveAiSettings,
   testGroqConnection,
+  testOllamaCloudConnection,
   testOllamaConnection,
 } from '../../../api/aiClient'
 import {
@@ -42,6 +43,10 @@ export default function IntegrationSettings() {
 
   // AI State
   const [aiProvider, setAiProvider] = useState('algorithmic') // 'ollama' | 'groq' | 'openai' | 'algorithmic'
+  const [ollamaMode, setOllamaMode] = useState('cloud') // 'cloud' | 'local'
+  const [ollamaKey, setOllamaKey] = useState('')
+  const [showOllamaKey, setShowOllamaKey] = useState(false)
+  const [ollamaCloudModel, setOllamaCloudModel] = useState('deepseek-v4.1-flash')
   const [ollamaUrl, setOllamaUrl] = useState('http://localhost:11434')
   const [ollamaModel, setOllamaModel] = useState('llama3.2')
   const [groqKey, setGroqKey] = useState('')
@@ -68,6 +73,9 @@ export default function IntegrationSettings() {
     // Load AI Settings
     const ai = getAiSettings()
     setAiProvider(ai.provider || 'algorithmic')
+    setOllamaMode(ai.ollamaMode || 'cloud')
+    setOllamaKey(ai.ollamaKey || '')
+    setOllamaCloudModel(ai.ollamaCloudModel || 'deepseek-v4.1-flash')
     setOllamaUrl(ai.ollamaUrl || 'http://localhost:11434')
     setOllamaModel(ai.ollamaModel || 'llama3.2')
     setGroqKey(ai.groqKey || '')
@@ -101,15 +109,26 @@ export default function IntegrationSettings() {
     }
   }
 
-  // Test AI Connection (Ollama or Groq)
+  // Test AI Connection (Ollama Cloud/Local or Groq)
   const handleTestAi = async () => {
     setTestingAi(true)
     setAiTestResult(null)
     try {
       if (aiProvider === 'ollama') {
-        const res = await testOllamaConnection(ollamaUrl)
-        setAiTestResult({ ok: true, message: res.message })
-        toast.success(res.message)
+        if (ollamaMode === 'cloud') {
+          if (!ollamaKey.trim()) {
+            toast.error('Please enter your Ollama.com API key first.')
+            setTestingAi(false)
+            return
+          }
+          const res = await testOllamaCloudConnection(ollamaKey.trim())
+          setAiTestResult({ ok: true, message: res.message })
+          toast.success(res.message)
+        } else {
+          const res = await testOllamaConnection(ollamaUrl)
+          setAiTestResult({ ok: true, message: res.message })
+          toast.success(res.message)
+        }
       } else if (aiProvider === 'groq') {
         const res = await testGroqConnection(groqKey)
         setAiTestResult({ ok: true, message: res.message })
@@ -142,6 +161,9 @@ export default function IntegrationSettings() {
 
       saveAiSettings({
         aiProvider,
+        ollamaMode,
+        ollamaKey: ollamaKey.trim(),
+        ollamaCloudModel: ollamaCloudModel.trim(),
         ollamaUrl: ollamaUrl.trim(),
         ollamaModel: ollamaModel.trim(),
         groqKey: groqKey.trim(),
@@ -165,6 +187,9 @@ export default function IntegrationSettings() {
       saveApiKeys({ apollo: '', apolloStatus: 'unconfigured' })
       saveAiSettings({
         aiProvider: 'algorithmic',
+        ollamaMode: 'cloud',
+        ollamaKey: '',
+        ollamaCloudModel: 'deepseek-v4.1-flash',
         ollamaUrl: 'http://localhost:11434',
         ollamaModel: 'llama3.2',
         groqKey: '',
@@ -174,6 +199,9 @@ export default function IntegrationSettings() {
       setApolloStatus('unconfigured')
       setTestResult(null)
       setAiProvider('algorithmic')
+      setOllamaMode('cloud')
+      setOllamaKey('')
+      setOllamaCloudModel('deepseek-v4.1-flash')
       setGroqKey('')
       setOpenaiKey('')
       setAiTestResult(null)
@@ -348,8 +376,8 @@ export default function IntegrationSettings() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">AI Engine &amp; LLM Provider</h2>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-neon-indigo/20 border border-neon-indigo/40 text-neon-indigo uppercase">
-                  {aiProvider}
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-neon-indigo/20 border border-neon-indigo/40 text-neon-indigo uppercase font-mono">
+                  {aiProvider === 'ollama' ? `Ollama (${ollamaMode === 'cloud' ? 'Cloud' : 'Local'})` : aiProvider}
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
@@ -366,7 +394,7 @@ export default function IntegrationSettings() {
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
-              { id: 'ollama', label: '🦙 Ollama (Local)', desc: '100% Free & Private' },
+              { id: 'ollama', label: '🦙 Ollama', desc: 'Cloud Key or Local Host' },
               { id: 'groq', label: '⚡ Groq (Llama 3)', desc: 'Free Cloud API' },
               { id: 'openai', label: '🤖 OpenAI / Cloud', desc: 'GPT-4o / Compatible' },
               { id: 'algorithmic', label: '📐 Built-in Formulas', desc: 'No AI Key Needed' },
@@ -393,94 +421,236 @@ export default function IntegrationSettings() {
 
         {/* PROVIDER 1: Ollama Settings */}
         {aiProvider === 'ollama' && (
-          <div className="space-y-4 rounded-xl bg-abyss/60 border border-panel-edge p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-1.5">
-                <span>🦙</span> Ollama Local / Self-Hosted Configuration
-              </span>
-              <span className="text-[11px] text-emerald-400 font-mono">Zero Rate Limits</span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1">
-                  Ollama Base URL
-                </label>
-                <input
-                  type="text"
-                  value={ollamaUrl}
-                  onChange={(e) => setOllamaUrl(e.target.value)}
-                  placeholder="http://localhost:11434"
-                  className={`${inputClass} font-mono text-xs`}
-                />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  Local: <code>http://localhost:11434</code> or Cloudflare Tunnel HTTPS URL
-                </span>
-              </div>
-
-              <div>
-                <label className="block text-xs font-mono text-slate-300 mb-1">
-                  Model Name
-                </label>
-                <input
-                  type="text"
-                  value={ollamaModel}
-                  onChange={(e) => setOllamaModel(e.target.value)}
-                  placeholder="llama3.2"
-                  className={`${inputClass} font-mono text-xs`}
-                />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  e.g. <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code>, <code>deepseek-r1</code>
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 pt-1">
-              <button
-                type="button"
-                onClick={handleTestAi}
-                disabled={testingAi}
-                className="px-4 py-2 rounded-lg text-xs font-semibold bg-neon-indigo/20 border border-neon-indigo/50 text-neon-indigo hover:bg-neon-indigo/30 transition-all disabled:opacity-40 flex items-center gap-2"
-              >
-                {testingAi ? (
-                  <>
-                    <span className="h-3 w-3 animate-spin rounded-full border-2 border-neon-indigo border-t-transparent" />
-                    Connecting to Ollama...
-                  </>
-                ) : (
-                  <>
-                    <span>🦙</span> Test Ollama Connection
-                  </>
-                )}
-              </button>
-
-              {aiTestResult && (
-                <span
-                  className={`text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 ${
-                    aiTestResult.ok
-                      ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
-                      : 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+          <div className="space-y-5 rounded-xl bg-abyss/60 border border-panel-edge p-5">
+            {/* Mode Switcher: Cloud vs Local */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-panel-edge">
+              <div className="flex items-center gap-1.5 p-1 bg-abyss rounded-xl border border-panel-edge w-fit">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOllamaMode('cloud')
+                    setAiTestResult(null)
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    ollamaMode === 'cloud'
+                      ? 'bg-neon-indigo/25 text-neon-indigo border border-neon-indigo/40 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  {aiTestResult.ok ? '✓' : '✗'} {aiTestResult.message}
-                </span>
+                  <span>☁️</span> Ollama Cloud (API Key)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOllamaMode('local')
+                    setAiTestResult(null)
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                    ollamaMode === 'local'
+                      ? 'bg-neon-indigo/25 text-neon-indigo border border-neon-indigo/40 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <span>💻</span> Ollama Local (Daemon)
+                </button>
+              </div>
+
+              {ollamaMode === 'cloud' ? (
+                <a
+                  href="https://ollama.com/settings/keys"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-neon-blue hover:underline flex items-center gap-1 self-start sm:self-auto font-medium"
+                >
+                  Manage Ollama Keys (ollama.com) ↗
+                </a>
+              ) : (
+                <span className="text-[11px] text-emerald-400 font-mono">Zero Rate Limits</span>
               )}
             </div>
 
-            <div className="rounded-lg bg-panel border border-panel-edge p-3.5 text-xs text-slate-400 space-y-1.5">
-              <p className="font-semibold text-slate-300 flex items-center gap-1">
-                <span>💡</span> Ollama Browser Quick-Start:
-              </p>
-              <p>
-                To allow your browser to connect to Ollama, start it with CORS enabled:
-              </p>
-              <pre className="p-2 rounded bg-abyss font-mono text-[11px] text-neon-blue overflow-x-auto">
-                OLLAMA_ORIGINS=&quot;*&quot; ollama serve
-              </pre>
-              <p className="text-[11px] text-slate-400">
-                On the production site (<code>https://jerry-dev-studio.web.app</code>), forward your Ollama port using Cloudflare Tunnel (<code>cloudflared tunnel --url http://localhost:11434</code>) and paste the HTTPS URL above to bypass HTTPS mixed content restrictions.
-              </p>
-            </div>
+            {/* Sub-Mode 1: Ollama Cloud */}
+            {ollamaMode === 'cloud' ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                      Ollama.com API Key
+                    </label>
+                    <div className="relative flex items-center">
+                      <input
+                        type={showOllamaKey ? 'text' : 'password'}
+                        value={ollamaKey}
+                        onChange={(e) => {
+                          setOllamaKey(e.target.value)
+                          setAiTestResult(null)
+                        }}
+                        placeholder="Paste key from ollama.com/settings/keys"
+                        className={`${inputClass} pr-10 font-mono text-xs`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOllamaKey((prev) => !prev)}
+                        className="absolute right-2 p-1 text-slate-400 hover:text-slate-200 transition-colors"
+                        title={showOllamaKey ? 'Hide key' : 'Show key'}
+                      >
+                        {showOllamaKey ? <EyeOffIcon /> : <EyeIcon />}
+                      </button>
+                    </div>
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Generated at <code className="text-neon-blue">ollama.com/settings/keys</code>
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                      Cloud Model
+                    </label>
+                    <select
+                      value={ollamaCloudModel}
+                      onChange={(e) => setOllamaCloudModel(e.target.value)}
+                      className={`${inputClass} font-mono text-xs`}
+                    >
+                      <option value="deepseek-v4.1-flash">deepseek-v4.1-flash (Recommended · Fast &amp; Smart)</option>
+                      <option value="gemma4:31b">gemma4:31b (Google Gemma 4)</option>
+                      <option value="mistral-large-4">mistral-large-4 (Mistral AI)</option>
+                      <option value="minimax-m3.1-flash">minimax-m3.1-flash (High Speed)</option>
+                      <option value="kimi-k3.1-pro">kimi-k3.1-pro (Moonshot Kimi)</option>
+                      <option value="gpt-oss:120b">gpt-oss:120b (High Reasoning)</option>
+                      <option value="llama3.2">llama3.2 (Meta)</option>
+                    </select>
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Tested &amp; verified on Ollama Cloud infrastructure
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleTestAi}
+                    disabled={testingAi || !ollamaKey.trim()}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold bg-neon-indigo/20 border border-neon-indigo/50 text-neon-indigo hover:bg-neon-indigo/30 transition-all disabled:opacity-40 flex items-center gap-2"
+                  >
+                    {testingAi ? (
+                      <>
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-neon-indigo border-t-transparent" />
+                        Testing Ollama Cloud...
+                      </>
+                    ) : (
+                      <>
+                        <span>⚡</span> Test Ollama Cloud Connection
+                      </>
+                    )}
+                  </button>
+
+                  {aiTestResult && (
+                    <span
+                      className={`text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 ${
+                        aiTestResult.ok
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                          : 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+                      }`}
+                    >
+                      {aiTestResult.ok ? '✓' : '✗'} {aiTestResult.message}
+                    </span>
+                  )}
+                </div>
+
+                <div className="rounded-lg bg-panel border border-panel-edge p-3.5 text-xs text-slate-400 space-y-1.5">
+                  <p className="font-semibold text-slate-300 flex items-center gap-1">
+                    <span>🚀</span> Zero Local Setup Required:
+                  </p>
+                  <p>
+                    Your Ollama Cloud API key communicates securely via Jerry Dev Studio&apos;s Supabase Edge Functions with automatic CORS bypass. You do not need to download models or run a daemon on your local computer.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Sub-Mode 2: Ollama Local */
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                      Ollama Base URL
+                    </label>
+                    <input
+                      type="text"
+                      value={ollamaUrl}
+                      onChange={(e) => setOllamaUrl(e.target.value)}
+                      placeholder="http://localhost:11434"
+                      className={`${inputClass} font-mono text-xs`}
+                    />
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Local: <code>http://localhost:11434</code> or Cloudflare Tunnel HTTPS URL
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-slate-300 mb-1.5">
+                      Model Name
+                    </label>
+                    <input
+                      type="text"
+                      value={ollamaModel}
+                      onChange={(e) => setOllamaModel(e.target.value)}
+                      placeholder="llama3.2"
+                      className={`${inputClass} font-mono text-xs`}
+                    />
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      e.g. <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code>, <code>deepseek-r1</code>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleTestAi}
+                    disabled={testingAi}
+                    className="px-4 py-2 rounded-lg text-xs font-semibold bg-neon-indigo/20 border border-neon-indigo/50 text-neon-indigo hover:bg-neon-indigo/30 transition-all disabled:opacity-40 flex items-center gap-2"
+                  >
+                    {testingAi ? (
+                      <>
+                        <span className="h-3 w-3 animate-spin rounded-full border-2 border-neon-indigo border-t-transparent" />
+                        Connecting to Local Ollama...
+                      </>
+                    ) : (
+                      <>
+                        <span>🦙</span> Test Local Connection
+                      </>
+                    )}
+                  </button>
+
+                  {aiTestResult && (
+                    <span
+                      className={`text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 ${
+                        aiTestResult.ok
+                          ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400'
+                          : 'bg-rose-500/10 border-rose-500/40 text-rose-300'
+                      }`}
+                    >
+                      {aiTestResult.ok ? '✓' : '✗'} {aiTestResult.message}
+                    </span>
+                  )}
+                </div>
+
+                <div className="rounded-lg bg-panel border border-panel-edge p-3.5 text-xs text-slate-400 space-y-1.5">
+                  <p className="font-semibold text-slate-300 flex items-center gap-1">
+                    <span>💡</span> Local Ollama Browser Quick-Start:
+                  </p>
+                  <p>
+                    To allow your browser to connect to a local Ollama daemon, start it with CORS enabled:
+                  </p>
+                  <pre className="p-2 rounded bg-abyss font-mono text-[11px] text-neon-blue overflow-x-auto">
+                    OLLAMA_ORIGINS=&quot;*&quot; ollama serve
+                  </pre>
+                  <p className="text-[11px] text-slate-400">
+                    On the production site (<code>https://jerry-dev-studio.web.app</code>), forward your Ollama port using Cloudflare Tunnel (<code>cloudflared tunnel --url http://localhost:11434</code>) and paste the HTTPS URL above to bypass HTTPS mixed content restrictions.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

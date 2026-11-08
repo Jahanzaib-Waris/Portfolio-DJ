@@ -8,6 +8,7 @@
  */
 
 const STORAGE_KEY = 'jerry_studio_api_keys'
+const AI_PROXY_ENDPOINT = 'https://fbeegpzrbocqgyxeqqtc.supabase.co/functions/v1/ai-proxy'
 
 export function getAiSettings() {
   try {
@@ -15,6 +16,9 @@ export function getAiSettings() {
     if (!raw) {
       return {
         provider: 'algorithmic',
+        ollamaMode: 'cloud', // 'cloud' | 'local'
+        ollamaKey: '',
+        ollamaCloudModel: 'deepseek-v4.1-flash',
         ollamaUrl: 'http://localhost:11434',
         ollamaModel: 'llama3.2',
         groqKey: '',
@@ -26,6 +30,9 @@ export function getAiSettings() {
     const data = JSON.parse(raw)
     return {
       provider: data.aiProvider || 'algorithmic',
+      ollamaMode: data.ollamaMode || 'cloud',
+      ollamaKey: (data.ollamaKey || '').trim(),
+      ollamaCloudModel: (data.ollamaCloudModel || 'deepseek-v4.1-flash').trim(),
       ollamaUrl: (data.ollamaUrl || 'http://localhost:11434').trim(),
       ollamaModel: (data.ollamaModel || 'llama3.2').trim(),
       groqKey: (data.groqKey || '').trim(),
@@ -36,6 +43,9 @@ export function getAiSettings() {
   } catch {
     return {
       provider: 'algorithmic',
+      ollamaMode: 'cloud',
+      ollamaKey: '',
+      ollamaCloudModel: 'deepseek-v4.1-flash',
       ollamaUrl: 'http://localhost:11434',
       ollamaModel: 'llama3.2',
       groqKey: '',
@@ -115,6 +125,52 @@ export async function testOllamaConnection(baseUrl = 'http://localhost:11434') {
 }
 
 /**
+ * Tests connection to Ollama Cloud API via Supabase Edge Function proxy.
+ */
+export async function testOllamaCloudConnection(apiKey) {
+  const key = (apiKey || '').trim()
+  if (!key) {
+    throw new Error('Please enter your Ollama.com API key (from ollama.com/settings/keys).')
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 12000)
+
+  try {
+    const res = await fetch(AI_PROXY_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        provider: 'ollama_cloud',
+        action: 'test',
+        apiKey: key,
+      }),
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+
+    const result = await res.json().catch(() => ({}))
+    if (!res.ok || result.success === false) {
+      throw new Error(result.error || `Ollama Cloud verification failed with status ${res.status}`)
+    }
+
+    return {
+      ok: true,
+      models: result.models || [],
+      message: result.message || 'Connected to Ollama Cloud API!',
+    }
+  } catch (err) {
+    clearTimeout(timer)
+    if (err.name === 'AbortError') {
+      throw new Error('Connection timed out reaching Ollama Cloud.')
+    }
+    throw err
+  }
+}
+
+/**
  * Tests connection to Groq API.
  */
 export async function testGroqConnection(apiKey) {
@@ -137,7 +193,7 @@ export async function testGroqConnection(apiKey) {
 }
 
 /**
- * Generates an AI-crafted cold pitch using Ollama, Groq, or OpenAI.
+ * Generates an AI-crafted cold pitch using Ollama (Cloud/Local), Groq, or OpenAI.
  */
 export async function generatePitchWithLLM({
   lead,
@@ -182,41 +238,97 @@ ${notes || 'Looking for senior mobile and backend engineering support.'}`
   let endpoint = ''
   let headers = { 'Content-Type': 'application/json' }
   let model = ''
+  let bodyPayload = null
+  let modelLabel = ''
 
   if (settings.provider === 'ollama') {
-    const cleanUrl = settings.ollamaUrl.replace(/\/+$/, '')
-    endpoint = `${cleanUrl}/v1/chat/completions`
-    model = settings.ollamaModel || 'llama3.2'
+    if (settings.ollamaMode === 'cloud') {
+      if (!settings.ollamaKey) {
+        throw new Error('Ollama Cloud API Key is required. Please enter it in Settings > API Integrations.')
+      }
+      endpoint = AI_PROXY_ENDPOINT
+      model = settings.ollamaCloudModel || 'deepseek-v4.1-flash'
+      modelLabel = `Ollama Cloud (${model})`
+      bodyPayload = {
+        provider: 'ollama_cloud',
+        action: 'chat',
+        apiKey: settings.ollamaKey,
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+      }
+    } else {
+      const cleanUrl = settings.ollamaUrl.replace(/\/+$/, '')
+      endpoint = `${cleanUrl}/v1/chat/completions`
+      model = settings.ollamaModel || 'llama3.2'
+      modelLabel = `Ollama Local (${model})`
+      bodyPayload = {
+        model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.7,
+      }
+    }
   } else if (settings.provider === 'groq') {
+    if (!settings.groqKey) {
+      throw new Error('Groq API Key is required. Please enter it in Settings > API Integrations.')
+    }
     endpoint = 'https://api.groq.com/openai/v1/chat/completions'
     headers.Authorization = `Bearer ${settings.groqKey}`
     model = settings.groqModel || 'llama-3.3-70b-versatile'
-  } else if (settings.provider === 'openai') {
-    endpoint = 'https://api.openai.com/v1/chat/completions'
-    headers.Authorization = `Bearer ${settings.openaiKey}`
-    model = settings.openaiModel || 'gpt-4o-mini'
-  }
-
-  const res = await fetch(endpoint, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
+    modelLabel = `Groq (${model})`
+    bodyPayload = {
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
       ],
       temperature: 0.7,
-    }),
+    }
+  } else if (settings.provider === 'openai') {
+    if (!settings.openaiKey) {
+      throw new Error('OpenAI API Key is required. Please enter it in Settings > API Integrations.')
+    }
+    endpoint = 'https://api.openai.com/v1/chat/completions'
+    headers.Authorization = `Bearer ${settings.openaiKey}`
+    model = settings.openaiModel || 'gpt-4o-mini'
+    modelLabel = `OpenAI (${model})`
+    bodyPayload = {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.7,
+    }
+  }
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(bodyPayload),
   })
 
   if (!res.ok) {
     const errText = await res.text()
-    throw new Error(`${settings.provider.toUpperCase()} request failed (${res.status}): ${errText}`)
+    let msg = errText
+    try {
+      const parsed = JSON.parse(errText)
+      msg = parsed.error?.message || parsed.error || errText
+    } catch {
+      // ignore
+    }
+    throw new Error(`${modelLabel || settings.provider.toUpperCase()} failed (${res.status}): ${msg}`)
   }
 
   const data = await res.json()
-  const content = data.choices?.[0]?.message?.content || ''
+  const rawData = data.data || data
+  const content = rawData.choices?.[0]?.message?.content || rawData.message?.content || ''
 
   // Parse JSON from response
   try {
@@ -227,7 +339,7 @@ ${notes || 'Looking for senior mobile and backend engineering support.'}`
         subject: parsed.subject || `Engineering support for ${company}`,
         body: parsed.body || content,
         inmail: parsed.inmail || parsed.body?.slice(0, 280) || '',
-        modelUsed: `${settings.provider} (${model})`,
+        modelUsed: modelLabel || `${settings.provider} (${model})`,
       }
     }
   } catch {
@@ -238,6 +350,6 @@ ${notes || 'Looking for senior mobile and backend engineering support.'}`
     subject: `Technical engineering & roadmap for ${company}`,
     body: content.trim(),
     inmail: content.trim().slice(0, 280),
-    modelUsed: `${settings.provider} (${model})`,
+    modelUsed: modelLabel || `${settings.provider} (${model})`,
   }
 }
