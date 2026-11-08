@@ -39,12 +39,19 @@ firebase deploy --only hosting   # Deploys frontend/dist to https://jerry-dev-st
 - **Client Quote Requests (`submitQuoteRequest`)**: Sanitized payload matching exact PostgreSQL `quote_requests` schema (`name`, `email`, `service`, `backend`, `budget`, `timeline`, `project_link`, `project_details`). Omits `.select()` during public submission to adhere to public RLS insert policy with `Prefer: return=minimal`.
 - **Automated Date-Based Blog Scheduling**: Public queries in `getBlogPosts()` and `getBlogPost(slug)` strictly filter by `is_published = true AND published_date <= todayStr`. Future-dated articles automatically unlock on their scheduled calendar date without server crons. Authenticated admins bypass this check to preview and manage scheduled content.
 
-### 2. Authentication & Admin Control Panel
+### 2. Authentication, Admin Control Panel & Sales CRM
 - **Auth Provider (`frontend/src/auth/AuthProvider.jsx`)**: Supabase Auth session listener (`onAuthStateChange`), login, and logout.
 - **Route Guard (`frontend/src/components/admin/RequireAuth.jsx`)**: Verifies active Supabase session.
-- **Password Visibility Toggles (`frontend/src/pages/admin/AdminLogin.jsx` & `AccountSettings.jsx`)**: Show/hide eye icon buttons for clear credential visibility and validation.
-- **Scheduling Status Badges (`frontend/src/pages/admin/BlogList.jsx` & `BlogEditor.jsx`)**: Visual state indicators differentiating `Live` (emerald), `Scheduled · YYYY-MM-DD` (neon blue), and `Draft` (amber).
-- **Supabase Auth Configuration**: Site URL configured to `https://jerry-dev-studio.web.app` with `https://jerry-dev-studio.web.app/**` in Redirect URLs for magic link and password recovery flows.
+- **Admin Shell & Navigation (`frontend/src/components/admin/AdminLayout.jsx`)**: Category SVG icons, real-time activity badges (unread quote inquiries & CRM follow-ups due), user identity dropdown, and mobile slide-over drawer.
+- **Command Center Dashboard (`frontend/src/pages/admin/Dashboard.jsx`)**: Clickable KPI cards, pipeline value metrics, quick launchpad (`+ New Post`, `+ Add Project`, `+ Log Deal`), and action-required feeds.
+- **Universal Toast Notifications (`frontend/src/components/admin/ToastContext.jsx` & `toastStore.js`)**: Accessible floating feedback pills (`useToast()`) replacing browser `alert()`.
+- **Reusable Admin Page Header (`frontend/src/components/admin/AdminPageHeader.jsx`)**: Breadcrumb trail, unsaved dirty state badge, and sticky save/cancel controls.
+- **WCAG 2.1 AA Compliance (`Field.jsx`, `formStyles.js`, `SearchInput.jsx`, `ConfirmDialog.jsx`)**: 6.8:1 text contrast ratios, high-visibility keyboard focus rings, accessible clear buttons, and screen-reader alerts.
+- **B2B Sales CRM (`frontend/src/pages/admin/crm/`)**:
+  - `CrmPipeline.jsx`: Interactive Kanban pipeline with stage transitions, deal valuation, follow-up alerts, and compact mobile list toggle.
+  - `CrmProspects.jsx`: LinkedIn Sales Navigator-style directory with CSV export and outreach shortcuts.
+  - `LeadDetailDrawer.jsx`: Salesforce-style deal inspector with 1-click email pitch generator, WhatsApp ping, and activity logs.
+  - `QuoteInbox.jsx`: Inbound quote requests with 1-click **Convert to Deal** pipeline insertion.
 
 ### 3. SEO, Metadata & Syndication
 - **`useDocumentMeta` (`frontend/src/hooks/useDocumentMeta.js`)**: Dynamically sets page titles, meta descriptions, canonical URLs (`https://jerry-dev-studio.web.app/...`), OpenGraph/Twitter cards, and Schema.org JSON-LD structured data (`WebSite`, `Organization`, `Blog`, `BlogPosting`, `BreadcrumbList`).
