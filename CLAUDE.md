@@ -50,6 +50,7 @@ firebase deploy --only hosting   # Deploys frontend/dist to https://jerry-dev-st
 - **B2B Sales CRM (`frontend/src/pages/admin/crm/`)**:
   - `CrmPipeline.jsx`: Interactive Kanban pipeline with stage transitions, deal valuation, follow-up alerts, and compact mobile list toggle.
   - `CrmProspects.jsx`: LinkedIn Sales Navigator-style directory with CSV export and outreach shortcuts.
+  - `ClientRadar.jsx`: Live client discovery engine aggregating hiring posts from Hacker News (with direct founder emails), RemoteOK, Jobicy, and freelance platforms with 1-click CRM ingestion.
   - `LeadDetailDrawer.jsx`: Salesforce-style deal inspector with 1-click email pitch generator, WhatsApp ping, and activity logs.
   - `QuoteInbox.jsx`: Inbound quote requests with 1-click **Convert to Deal** pipeline insertion.
 
