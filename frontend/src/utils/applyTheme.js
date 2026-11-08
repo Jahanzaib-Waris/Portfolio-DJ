@@ -12,6 +12,7 @@ export const SHADOW_VALUE = {
 }
 
 const GOOGLE_FONT_FALLBACKS = {
+  'Plus Jakarta Sans': '-apple-system, "Segoe UI", sans-serif',
   Inter: '-apple-system, "Segoe UI", sans-serif',
   Poppins: 'sans-serif',
   'Space Grotesk': 'sans-serif',
@@ -91,8 +92,8 @@ export default function applyTheme(theme) {
   root.setProperty('--btn-primary-border', btn.border)
   root.setProperty('--btn-primary-hover-bg', '#5B48E8')
 
-  const fontDisplay = (!theme.font_display || theme.font_display === 'Inter') ? 'Manrope' : theme.font_display
-  const fontMono = (!theme.font_mono || theme.font_mono === 'JetBrains Mono') ? 'Fira Code' : theme.font_mono
+  const fontDisplay = (!theme.font_display || theme.font_display === 'Manrope') ? 'Plus Jakarta Sans' : theme.font_display
+  const fontMono = (!theme.font_mono || theme.font_mono === 'Fira Code') ? 'JetBrains Mono' : theme.font_mono
 
   loadGoogleFont(fontDisplay)
   root.setProperty('--font-display', `"${fontDisplay}", ${GOOGLE_FONT_FALLBACKS[fontDisplay] || 'sans-serif'}`)

@@ -23,7 +23,7 @@ const colorFields = [
   ['color_status_red', 'Error'],
 ]
 
-const fontDisplayOptions = ['Inter', 'Poppins', 'Space Grotesk', 'Manrope', 'Sora']
+const fontDisplayOptions = ['Plus Jakarta Sans', 'Inter', 'Poppins', 'Space Grotesk', 'Manrope', 'Sora']
 const fontMonoOptions = ['JetBrains Mono', 'Fira Code', 'IBM Plex Mono', 'Roboto Mono']
 const radiusOptions = [['sharp', 'Sharp'], ['soft', 'Soft'], ['rounded', 'Rounded']]
 const shadowOptions = [['none', 'None'], ['subtle', 'Subtle'], ['elevated', 'Elevated']]

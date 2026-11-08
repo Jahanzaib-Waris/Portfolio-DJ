@@ -227,7 +227,7 @@ export default function CrmPipeline() {
       <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatusPanel className="p-4">
           <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Total Pipeline</p>
-          <p className="text-2xl font-bold text-white mt-1">
+          <p className="text-2xl font-extrabold font-display tracking-tight tabular-nums text-white mt-1">
             ${metrics.totalPipeline.toLocaleString()}
           </p>
           <p className="text-xs text-slate-500 mt-1">Active + Won opportunities</p>
@@ -235,7 +235,7 @@ export default function CrmPipeline() {
 
         <StatusPanel className="p-4">
           <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Active Deals</p>
-          <p className="text-2xl font-bold text-neon-blue mt-1">
+          <p className="text-2xl font-extrabold font-display tracking-tight tabular-nums text-neon-blue mt-1">
             {metrics.activeDealsCount}
           </p>
           <p className="text-xs text-slate-500 mt-1">In discussion or proposal</p>
@@ -243,7 +243,7 @@ export default function CrmPipeline() {
 
         <StatusPanel className="p-4">
           <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Closed Won</p>
-          <p className="text-2xl font-bold text-emerald-400 mt-1">
+          <p className="text-2xl font-extrabold font-display tracking-tight tabular-nums text-emerald-400 mt-1">
             ${metrics.wonValue.toLocaleString()}
           </p>
           <p className="text-xs text-emerald-500/80 mt-1">{metrics.wonCount} deals won</p>
@@ -251,7 +251,7 @@ export default function CrmPipeline() {
 
         <StatusPanel className={`p-4 ${metrics.overdueCount > 0 ? 'border-amber-500/40 bg-amber-500/5' : ''}`}>
           <p className="text-xs uppercase tracking-wider text-slate-400 font-mono">Follow-Ups Due</p>
-          <p className={`text-2xl font-bold mt-1 ${metrics.overdueCount > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+          <p className={`text-2xl font-extrabold font-display tracking-tight tabular-nums mt-1 ${metrics.overdueCount > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
             {metrics.overdueCount}
           </p>
           <p className="text-xs text-slate-500 mt-1">Due today or overdue</p>

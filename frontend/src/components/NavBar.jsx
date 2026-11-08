@@ -14,8 +14,8 @@ export default function NavBar({ profile, onRequestQuote }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const linkClass = ({ isActive }) =>
-    `system-heading text-sm tracking-wide [WebkitTapHighlightColor:transparent] ${
-      isActive ? 'text-white' : 'text-[#A1A7CA] hover:text-white'
+    `text-sm font-medium transition-colors [WebkitTapHighlightColor:transparent] ${
+      isActive ? 'text-white font-semibold' : 'text-slate-300 hover:text-white'
     }`
 
   return (
@@ -23,7 +23,7 @@ export default function NavBar({ profile, onRequestQuote }) {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
         <Link
           to="/"
-          className="system-heading flex items-center gap-2.5 text-lg font-bold text-white"
+          className="flex items-center gap-2.5 text-base font-bold font-display tracking-tight text-white hover:opacity-95 transition-opacity"
           onClick={() => setMenuOpen(false)}
         >
           <img
@@ -41,7 +41,7 @@ export default function NavBar({ profile, onRequestQuote }) {
               <a
                 key={link.to}
                 href={link.to}
-                className="system-heading text-sm tracking-wide text-[#A1A7CA] hover:text-white [WebkitTapHighlightColor:transparent]"
+                className="text-sm font-medium text-slate-300 hover:text-white transition-colors [WebkitTapHighlightColor:transparent]"
               >
                 {link.label}
               </a>

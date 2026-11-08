@@ -136,8 +136,8 @@ export default function Dashboard() {
       {/* Top Banner & Launchpad */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-panel-edge">
         <div>
-          <p className="eyebrow system-heading text-xs text-neon-indigo">// Command Center</p>
-          <h1 className="mt-2 text-2xl text-white font-bold sm:text-3xl">
+          <p className="eyebrow text-xs text-neon-indigo">// Command Center</p>
+          <h1 className="mt-2 text-2xl text-white font-bold font-display tracking-tight sm:text-3xl">
             Welcome back, <span className="text-neon-blue">{usernameDisplay}</span>
           </h1>
           <p className="mt-1 text-sm text-slate-400">
@@ -177,10 +177,10 @@ export default function Dashboard() {
             className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-5 transition-all duration-200 hover:border-neon-blue/60 hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium">
                 {card.badge}
               </span>
-              <span className="text-xs text-slate-500 group-hover:text-neon-blue transition-colors">
+              <span className="text-xs text-slate-500 group-hover:text-neon-blue transition-colors font-medium">
                 Open &rarr;
               </span>
             </div>
@@ -190,7 +190,7 @@ export default function Dashboard() {
             {loadState === 'loading' ? (
               <Skeleton className="mt-2 h-8 w-16" />
             ) : (
-              <p className={`mt-1 text-2xl sm:text-3xl font-bold font-mono ${card.color}`}>
+              <p className={`mt-1 text-2xl sm:text-3xl font-extrabold font-display tracking-tight tabular-nums ${card.color}`}>
                 {card.count}
               </p>
             )}

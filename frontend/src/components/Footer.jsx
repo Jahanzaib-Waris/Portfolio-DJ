@@ -45,9 +45,9 @@ export default function Footer({ profile }) {
                 alt={profile?.name || 'Jerry Dev Studio'}
                 className="h-8 w-8 rounded-lg object-contain"
               />
-              <span className="system-heading text-lg font-bold text-white">{profile?.name || 'Jerry Dev Studio'}</span>
+              <span className="font-display text-base font-bold tracking-tight text-white">{profile?.name || 'Jerry Dev Studio'}</span>
             </div>
-            <p className="mt-4 text-sm text-[#A1A7CA] max-w-sm leading-relaxed">
+            <p className="mt-4 text-sm text-slate-400 max-w-sm leading-relaxed">
               Jerry Dev Studio &mdash; Engineering production FlutterFlow, Flutter, and scalable cross-platform mobile apps.
             </p>
           </div>

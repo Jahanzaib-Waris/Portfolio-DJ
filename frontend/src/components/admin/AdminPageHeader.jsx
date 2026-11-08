@@ -58,7 +58,7 @@ export default function AdminPageHeader({
 
             {/* Title & Status */}
             <div className="flex items-center gap-2.5">
-              <h1 className="text-lg font-bold text-white truncate leading-tight">
+              <h1 className="text-lg font-bold font-display tracking-tight text-white truncate leading-tight">
                 {title}
               </h1>
               {badge && (
