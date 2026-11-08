@@ -69,6 +69,7 @@ const navConfig = [
     children: [
       { to: '/admin/crm', label: 'Pipeline & Deals', end: true, ready: true },
       { to: '/admin/crm/prospects', label: 'Lead Prospector', ready: true },
+      { to: '/admin/crm/radar', label: 'Client Radar 📡', ready: true },
     ],
   },
   {

@@ -160,6 +160,12 @@ export default function Dashboard() {
             <span>💼</span> + Add Project
           </Link>
           <Link
+            to="/admin/crm/radar"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-neon-indigo/15 border border-neon-indigo/40 text-neon-indigo hover:bg-neon-indigo/25 text-xs font-semibold transition-all"
+          >
+            <span>📡</span> Client Radar
+          </Link>
+          <Link
             to="/admin/crm"
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold transition-all"
           >
