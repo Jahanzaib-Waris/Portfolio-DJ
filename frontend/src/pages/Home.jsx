@@ -399,7 +399,7 @@ String timeAgo(DateTime date) {
                 </SystemButton>
                 {profile?.linkedin_url ? (
                   <SystemButton as="a" href={profile.linkedin_url} target="_blank" rel="noreferrer" size="lg" variant="outline">
-                    LinkedIn &nearr;
+                    LinkedIn ↗
                   </SystemButton>
                 ) : (
                   <SystemButton as="a" href="#start" size="lg" variant="outline">

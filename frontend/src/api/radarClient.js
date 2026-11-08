@@ -24,39 +24,95 @@ function setCache(key, data) {
 }
 
 /**
- * Extracts clean plain text from HTML string.
+ * Decodes all HTML entities (including hex entities like &#x2F;, &#x27;)
  */
-function stripHtml(html = '') {
-  return html
+export function decodeHtmlEntities(str = '') {
+  if (!str) return ''
+  let out = str
+
+  // 1. Browser DOMParser for standard named & numeric entities
+  try {
+    const doc = new DOMParser().parseFromString(out, 'text/html')
+    out = doc.body.textContent || ''
+  } catch {
+    // ignore
+  }
+
+  // 2. Comprehensive replacement table for entities common in Hacker News / Algolia
+  return out
+    .replace(/&#x2F;/gi, '/')
+    .replace(/&#47;/gi, '/')
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#39;/gi, "'")
+    .replace(/&#x26;/gi, '&')
+    .replace(/&amp;/gi, '&')
+    .replace(/&quot;/gi, '"')
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&ndash;/gi, '–')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&nearr;/gi, '↗')
+    .replace(/&rarr;/gi, '→')
+    .replace(/&hellip;/gi, '…')
+}
+
+/**
+ * Extracts clean plain text from HTML string with decoded entities and preserved line structure.
+ */
+export function stripHtml(html = '') {
+  if (!html) return ''
+
+  // 1. Convert breaks and paragraphs to clean line breaks
+  let text = html
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<p>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&#x27;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/\s+/g, ' ')
-    .trim()
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '\n• ')
+    .replace(/<[^>]+>/g, '') // remove all other HTML tags
+
+  // 2. Decode entities
+  text = decodeHtmlEntities(text)
+
+  // 3. Clean up spacing per line while preserving meaningful line breaks
+  const lines = text
+    .split('\n')
+    .map((l) => l.replace(/[ \t]+/g, ' ').trim())
+    .filter((l, i, arr) => l.length > 0 || (i > 0 && arr[i - 1].length > 0))
+
+  return lines.join('\n').trim()
 }
 
 /**
  * Extracts the first detected email address from text.
  */
-function extractEmail(text = '') {
+export function extractEmail(text = '') {
   const match = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
   return match ? match[0] : null
 }
 
 /**
- * Extracts company website from text or anchor tags.
+ * Extracts company website from HTML anchors or text.
  */
-function extractWebsite(rawHtml = '') {
-  const match = rawHtml.match(/href="(https?:\/\/[^"'\s]+)"/i)
-  if (!match) return ''
-  const url = match[1]
-  if (url.includes('ycombinator.com') || url.includes('news.ycombinator.com')) return ''
-  return url
+export function extractWebsite(rawHtml = '', cleanText = '') {
+  // A. Check href in raw HTML
+  const match = rawHtml.match(/href="([^"'\s]+)"/i)
+  let url = ''
+  if (match) {
+    url = decodeHtmlEntities(match[1])
+  } else {
+    // B. Check naked URLs in clean text (e.g. https://domain.com)
+    const textMatch = cleanText.match(/https?:\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s),]+)?/i)
+    if (textMatch) {
+      url = textMatch[0]
+    }
+  }
+
+  if (!url || url.includes('ycombinator.com') || url.includes('news.ycombinator.com')) {
+    return ''
+  }
+  return url.replace(/[),]+$/, '')
 }
 
 /**
@@ -96,15 +152,20 @@ export async function fetchHNHiringOpportunities(query = '') {
         const raw = h.comment_text || ''
         const clean = stripHtml(raw)
         const email = extractEmail(clean)
-        const website = extractWebsite(raw)
+        const website = extractWebsite(raw, clean)
 
         // HN comments standard: Company | Role | Location | Remote/Onsite | Salary
-        const lines = clean.split('\n')[0] || ''
-        const pipes = lines.split('|').map((s) => s.trim())
+        const firstLine = clean.split('\n')[0] || ''
+        const pipes = firstLine.split('|').map((s) => decodeHtmlEntities(s.trim()))
 
-        const company = pipes[0] && pipes[0].length < 50 ? pipes[0] : h.author
-        const role = pipes[1] && pipes[1].length < 80 ? pipes[1] : 'Software Engineer / Mobile'
-        const location = pipes[2] || 'Remote'
+        const rawCompany = pipes[0] && pipes[0].length < 60 ? pipes[0] : h.author
+        const company = decodeHtmlEntities(rawCompany).replace(/^[#\s*]+/, '').trim()
+        const role = pipes[1] && pipes[1].length < 100 ? decodeHtmlEntities(pipes[1]) : 'Software Engineer / Mobile'
+        const location = pipes[2] ? decodeHtmlEntities(pipes[2]) : 'Remote'
+
+        // Single-line preview snippet for card display
+        const singleLineClean = clean.replace(/\n+/g, ' ')
+        const description = singleLineClean.slice(0, 320) + (singleLineClean.length > 320 ? '...' : '')
 
         return {
           id: `hn-${h.objectID}`,
@@ -117,7 +178,7 @@ export async function fetchHNHiringOpportunities(query = '') {
           email,
           url: `https://news.ycombinator.com/item?id=${h.objectID}`,
           website,
-          description: clean.slice(0, 320) + (clean.length > 320 ? '...' : ''),
+          description,
           fullText: clean,
           date: h.created_at,
           threadTitle: storyTitle,

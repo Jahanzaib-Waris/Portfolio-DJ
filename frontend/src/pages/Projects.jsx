@@ -150,7 +150,7 @@ export default function Projects() {
                     variant="outline"
                     size="sm"
                   >
-                    Live Demo &nearr;
+                    Live Demo ↗
                   </SystemButton>
                 )}
                 {project.repo_url && (
@@ -251,7 +251,7 @@ export default function Projects() {
               <div className="flex gap-2">
                 {selectedProject.live_url && (
                   <SystemButton as="a" href={selectedProject.live_url} target="_blank" rel="noreferrer" variant="outline" size="sm">
-                    Open App &nearr;
+                    Open App ↗
                   </SystemButton>
                 )}
                 {selectedProject.repo_url && (

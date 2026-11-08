@@ -517,6 +517,9 @@ Jerry Waris`
     ? `mailto:${formData.email}?subject=${encodeURIComponent(pitch.subject)}&body=${encodeURIComponent(pitch.body)}`
     : null
 
+  const postUrlMatch = (formData.notes || '').match(/Post URL:\s*(https?:\/\/[^\s\n]+)/i)
+  const originalPostUrl = postUrlMatch ? postUrlMatch[1] : null
+
   const cleanPhone = (formData.phone || '').replace(/[^0-9+]/g, '')
   const whatsappLink = cleanPhone ? `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(`Hi ${formData.name || ''}, Jerry Waris here from Jerry Dev Studio.`)}` : null
 
@@ -823,6 +826,19 @@ Jerry Waris`
                 >
                   🔍 Find LinkedIn
                 </button>
+              )}
+
+              {/* Source Post Launcher (e.g. Hacker News / Remote Gig) */}
+              {originalPostUrl && (
+                <a
+                  href={originalPostUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FF6600]/15 border border-[#FF6600]/50 text-[#FFA366] hover:bg-[#FF6600]/25 transition-colors"
+                  title="Open the original discussion post on the associated platform to reply directly"
+                >
+                  <span>🟠</span> Source Post ↗
+                </a>
               )}
 
               {/* WhatsApp */}

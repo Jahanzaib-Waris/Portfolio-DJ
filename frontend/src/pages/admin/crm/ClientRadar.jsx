@@ -9,9 +9,10 @@ import {
 } from '../../../api/radarClient'
 import SearchInput from '../../../components/admin/SearchInput'
 import { useToast } from '../../../components/admin/toastStore'
+import { Skeleton } from '../../../components/Skeleton'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
-import { Skeleton } from '../../../components/Skeleton'
+import LeadDetailDrawer from './LeadDetailDrawer'
 
 const TABS = [
   { key: 'hn', label: '🔥 Hacker News Founders', desc: 'Direct startup founder hiring posts with verified contact emails' },
@@ -38,6 +39,9 @@ export default function ClientRadar() {
 
   const [importingId, setImportingId] = useState(null)
   const [importedMap, setConvertedMap] = useState({})
+  const [importedLeads, setImportedLeads] = useState({})
+  const [drawerLead, setDrawerLead] = useState(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   const toast = useToast()
 
@@ -148,18 +152,42 @@ export default function ClientRadar() {
         temperature: item.isFounderDirect || item.decisionMaker ? 'hot' : 'warm',
         source: isHn ? 'cold_outreach' : 'website_inbound',
         deal_value: 0,
+        currency: 'USD',
         notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}${item.decisionMaker ? `\nVerified Executive: ${item.decisionMaker}` : ''}\n\nProject Scope / Overview:\n${item.fullText}`,
         tech_stack: ['Flutter', 'Mobile', 'Supabase'],
       }
 
       const created = await createCrmLead(payload)
       setConvertedMap((prev) => ({ ...prev, [item.id]: created.id }))
-      toast.success(`Imported "${item.company}" directly into CRM Pipeline!`)
+      setImportedLeads((prev) => ({ ...prev, [item.id]: created }))
+      toast.success(`Imported "${item.company}"! Click "Open Pitch ⚡" to review pitch & reach out.`)
     } catch (err) {
       toast.error('Failed to import lead: ' + (err.message || 'Unknown error'))
     } finally {
       setImportingId(null)
     }
+  }
+
+  // Open Lead Drawer directly from Radar card
+  const handleOpenLeadDrawer = (item) => {
+    const lead = importedLeads[item.id] || {
+      id: importedMap[item.id],
+      company: item.company,
+      name: item.decisionMaker ? item.decisionMaker.split(' (')[0] : `${item.company} Hiring Lead`,
+      job_title: item.title,
+      email: item.email || '',
+      notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}${item.decisionMaker ? `\nVerified Executive: ${item.decisionMaker}` : ''}\n\nProject Scope / Overview:\n${item.fullText}`,
+      tech_stack: ['Flutter', 'Mobile', 'Supabase'],
+      company_website: item.website || '',
+      linkedin_url: item.linkedin || '',
+      stage: 'lead',
+      temperature: item.isFounderDirect || item.decisionMaker ? 'hot' : 'warm',
+      source: item.source === 'hacker_news' ? 'cold_outreach' : 'website_inbound',
+      deal_value: 0,
+      currency: 'USD',
+    }
+    setDrawerLead(lead)
+    setDrawerOpen(true)
   }
 
   return (
@@ -351,7 +379,7 @@ export default function ClientRadar() {
                             href={`mailto:${item.email}?subject=Flutter & Mobile App Development Support — Jerry Dev Studio`}
                             className="text-emerald-400 hover:underline font-semibold ml-2 whitespace-nowrap"
                           >
-                            Send Email &rarr;
+                            Send Email →
                           </a>
                         </div>
                       ) : (
@@ -405,19 +433,21 @@ export default function ClientRadar() {
                         rel="noreferrer"
                         className="text-xs font-medium text-slate-400 hover:text-white transition-colors flex items-center gap-1"
                       >
-                        <span>View thread</span>
-                        <span>&nearr;</span>
+                        <span>View thread ↗</span>
                       </a>
 
                       <div>
                         {isImported ? (
-                          <Link
-                            to="/admin/crm"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-semibold hover:bg-emerald-500/30 transition-all"
+                          <button
+                            type="button"
+                            onClick={() => handleOpenLeadDrawer(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-semibold hover:bg-emerald-500/30 transition-all cursor-pointer shadow-sm"
+                            title="Open CRM Pitch & Detail Drawer"
                           >
-                            <span>✓ In Pipeline</span>
-                            <span>&rarr;</span>
-                          </Link>
+                            <span>✓ In CRM</span>
+                            <span>•</span>
+                            <span className="text-neon-blue underline">Open Pitch ⚡</span>
+                          </button>
                         ) : (
                           <SystemButton
                             size="sm"
@@ -574,19 +604,21 @@ export default function ClientRadar() {
                         rel="noreferrer"
                         className="text-xs font-medium text-slate-400 hover:text-white transition-colors flex items-center gap-1"
                       >
-                        <span>Apply / Details</span>
-                        <span>&nearr;</span>
+                        <span>Apply / Details ↗</span>
                       </a>
 
                       <div>
                         {isImported ? (
-                          <Link
-                            to="/admin/crm"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-semibold hover:bg-emerald-500/30 transition-all"
+                          <button
+                            type="button"
+                            onClick={() => handleOpenLeadDrawer(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-semibold hover:bg-emerald-500/30 transition-all cursor-pointer shadow-sm"
+                            title="Open CRM Pitch & Detail Drawer"
                           >
-                            <span>✓ In Pipeline</span>
-                            <span>&rarr;</span>
-                          </Link>
+                            <span>✓ In CRM</span>
+                            <span>•</span>
+                            <span className="text-neon-blue underline">Open Pitch ⚡</span>
+                          </button>
                         ) : (
                           <SystemButton
                             size="sm"
@@ -651,14 +683,30 @@ export default function ClientRadar() {
                     rel="noreferrer"
                     className="flex w-full items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-neon-blue/15 border border-neon-blue/30 text-neon-blue hover:bg-neon-blue/25 text-xs font-semibold transition-all"
                   >
-                    <span>Launch Live Scanner</span>
-                    <span>&nearr;</span>
+                    <span>Launch Live Scanner ↗</span>
                   </a>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
+
+      {/* CRM Lead Detail & AI Pitch Drawer */}
+      {drawerLead && (
+        <LeadDetailDrawer
+          lead={drawerLead}
+          isOpen={drawerOpen}
+          onClose={() => {
+            setDrawerOpen(false)
+            setDrawerLead(null)
+          }}
+          onLeadUpdated={(updated) => setDrawerLead(updated)}
+          onLeadDeleted={() => {
+            setDrawerOpen(false)
+            setDrawerLead(null)
+          }}
+        />
       )}
     </div>
   )
