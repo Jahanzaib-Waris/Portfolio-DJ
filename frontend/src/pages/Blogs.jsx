@@ -327,7 +327,7 @@ export default function Blogs() {
                     </p>
                   )}
 
-                  <div className="pt-2 flex items-center gap-4 text-xs font-semibold text-neon-blue">
+                  <div className="pt-2 flex items-center gap-4 text-sm font-semibold text-neon-blue">
                     <span className="inline-flex items-center gap-1.5 group-hover:translate-x-1.5 transition-transform duration-200">
                       Read Complete Architecture &amp; Code &rarr;
                     </span>
@@ -355,7 +355,7 @@ export default function Blogs() {
                         <span className="ml-2 text-[10px]">architecture_spec.dart</span>
                       </div>
                       <p className="text-neon-blue">// Production Architecture Pattern</p>
-                      <p className="text-slate-400 line-clamp-4">{featuredPost.excerpt}</p>
+                      <p className="text-slate-300 line-clamp-4 leading-relaxed">{featuredPost.excerpt}</p>
                     </div>
                   )}
                 </div>
@@ -385,28 +385,28 @@ export default function Blogs() {
 
                 <div className="flex items-center gap-2.5 text-xs mb-3">
                   {post.category && (
-                    <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue text-[11px] font-semibold">
+                    <span className="fb-chip bg-neon-blue/10 border-neon-blue/30 text-neon-blue text-xs font-semibold px-2.5 py-0.5 rounded-full">
                       {post.category}
                     </span>
                   )}
-                  <span className="font-mono-ui text-[#A1A7CA] text-xs">{post.published_date}</span>
+                  <span className="font-mono-ui text-[#C2C7E4] text-xs">{post.published_date}</span>
                 </div>
 
-                <h2 className="text-base sm:text-lg font-bold text-white group-hover:text-neon-blue transition-colors line-clamp-2 leading-snug">
+                <h2 className="text-lg sm:text-[19px] font-bold text-white group-hover:text-neon-blue transition-colors line-clamp-2 leading-snug">
                   {post.title}
                 </h2>
 
                 {post.excerpt && (
-                  <p className="text-xs sm:text-sm text-[#A1A7CA] mt-2.5 line-clamp-3 leading-relaxed flex-1">
+                  <p className="text-sm sm:text-[15px] text-[#C2C7E4] mt-3 line-clamp-3 leading-relaxed flex-1">
                     {post.excerpt}
                   </p>
                 )}
 
-                <div className="mt-5 pt-4 border-t border-panel-edge/60 flex items-center justify-between text-xs font-semibold text-neon-blue">
+                <div className="mt-5 pt-4 border-t border-panel-edge/60 flex items-center justify-between text-sm font-semibold text-neon-blue">
                   <span className="inline-flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                     Read guide &rarr;
                   </span>
-                  <span className="text-[11px] text-[#A1A7CA] font-mono">Verified</span>
+                  <span className="text-xs text-[#A1A7CA] font-mono">Verified Solution</span>
                 </div>
               </div>
             </Link>

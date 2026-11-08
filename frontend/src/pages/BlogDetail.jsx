@@ -337,70 +337,70 @@ export default function BlogDetail() {
             <main className="lg:col-span-8 min-w-0">
               <article>
                 {/* Header Meta Chips */}
-                <div className="flex flex-wrap items-center gap-2.5 text-xs">
+                <div className="flex flex-wrap items-center gap-3 text-sm">
                   {effectivePost.category && (
-                    <span className="fb-chip border-neon-blue/30 bg-neon-blue/10 text-neon-blue font-semibold px-2.5 py-0.5 rounded-full">
+                    <span className="fb-chip border-neon-blue/30 bg-neon-blue/10 text-neon-blue font-bold px-3 py-1 rounded-full text-xs">
                       {effectivePost.category}
                     </span>
                   )}
-                  <span className="font-mono-ui text-[#A1A7CA] text-xs">
+                  <span className="font-mono-ui text-[#C2C7E4] text-xs">
                     {effectivePost.published_date}
                   </span>
                   {mins && (
                     <>
-                      <span className="text-slate-600">&middot;</span>
-                      <span className="text-[#A1A7CA] font-medium">{mins} min read</span>
+                      <span className="text-slate-500">&middot;</span>
+                      <span className="text-[#C2C7E4] font-medium text-xs">{mins} min read</span>
                     </>
                   )}
-                  <span className="text-slate-600">&middot;</span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  <span className="text-slate-500">&middot;</span>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-full">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     Verified Solution
                   </span>
                 </div>
 
                 {/* Display Title */}
-                <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-[2.75rem] leading-[1.18]">
+                <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-[2.85rem] leading-[1.18]">
                   {effectivePost.title}
                 </h1>
 
                 {/* Lead Excerpt */}
                 {effectivePost.excerpt && (
-                  <p className="mt-4 text-lg text-slate-300 leading-relaxed font-normal">
+                  <p className="mt-5 text-lg sm:text-xl text-slate-200 leading-relaxed font-normal">
                     {effectivePost.excerpt}
                   </p>
                 )}
 
                 {/* Author & Action Bar */}
-                <div className="mt-6 pt-5 pb-6 border-y border-panel-edge flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-tr from-neon-blue to-neon-indigo p-[1.5px] shrink-0">
+                <div className="mt-8 pt-5 pb-6 border-y border-panel-edge flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-neon-blue to-neon-indigo p-[2px] shrink-0">
                       <div className="h-full w-full rounded-full bg-void flex items-center justify-center text-xs font-bold text-white">
                         JD
                       </div>
                     </div>
                     <div>
-                      <div className="text-xs font-bold text-white">Jerry Dev Studio</div>
-                      <div className="text-[11px] text-[#A1A7CA]">Senior Mobile &amp; Backend Engineering</div>
+                      <div className="text-sm font-bold text-white">Jerry Dev Studio</div>
+                      <div className="text-xs text-[#A1A7CA]">Senior Mobile &amp; Backend Engineering</div>
                     </div>
                   </div>
 
                   {/* Share buttons */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <button
                       type="button"
                       onClick={handleCopyLink}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-panel-edge bg-abyss/80 px-2.5 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:border-neon-blue/40 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-panel-edge bg-abyss/90 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-200 hover:text-white hover:border-neon-blue/50 transition-colors cursor-pointer"
                       title="Copy article link"
                     >
                       {copied ? <CheckIcon /> : <CopyIcon />}
-                      <span>{copied ? 'Copied!' : 'Copy'}</span>
+                      <span>{copied ? 'Copied Link!' : 'Copy Link'}</span>
                     </button>
                     <a
                       href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-panel-edge bg-abyss/80 text-slate-300 hover:text-white hover:border-neon-blue/40 transition-colors"
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-panel-edge bg-abyss/90 text-slate-300 hover:text-white hover:border-neon-blue/50 transition-colors"
                       aria-label="Share on X (Twitter)"
                     >
                       <XIcon />
@@ -409,7 +409,7 @@ export default function BlogDetail() {
                       href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-lg border border-panel-edge bg-abyss/80 text-slate-300 hover:text-white hover:border-neon-blue/40 transition-colors"
+                      className="inline-flex items-center justify-center h-9 w-9 rounded-lg border border-panel-edge bg-abyss/90 text-slate-300 hover:text-white hover:border-neon-blue/50 transition-colors"
                       aria-label="Share on LinkedIn"
                     >
                       <LinkedInIcon />
@@ -430,34 +430,37 @@ export default function BlogDetail() {
 
                 {/* Mobile Collapsible Table of Contents (screens < lg) */}
                 {toc.length > 0 && (
-                  <div className="mt-8 lg:hidden rounded-xl border border-panel-edge bg-abyss/70 p-4">
+                  <div className="mt-8 lg:hidden rounded-2xl border border-panel-edge bg-abyss/85 p-4 sm:p-5 shadow-lg">
                     <button
                       type="button"
                       onClick={() => setMobileTocOpen(!mobileTocOpen)}
-                      className="w-full flex items-center justify-between text-left text-xs font-bold text-white cursor-pointer"
+                      className="w-full flex items-center justify-between text-left text-sm font-bold text-white cursor-pointer"
                     >
-                      <span className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-neon-blue" />
-                        Table of Contents ({toc.length} sections)
+                      <span className="flex items-center gap-2.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-neon-blue">
+                          <path d="M4 6h16M4 12h16M4 18h7" />
+                        </svg>
+                        <span>Table of Contents ({toc.length} sections)</span>
                       </span>
-                      <span className="text-neon-blue text-xs font-mono">
-                        {mobileTocOpen ? 'Hide ▲' : 'Show ▼'}
+                      <span className="text-neon-blue text-xs font-semibold px-2.5 py-1 rounded-md bg-neon-blue/10 border border-neon-blue/30">
+                        {mobileTocOpen ? 'Hide ▲' : 'Tap to Jump ▼'}
                       </span>
                     </button>
 
                     {mobileTocOpen && (
-                      <nav className="mt-4 pt-3 border-t border-panel-edge/60 space-y-2">
-                        {toc.map((item) => (
+                      <nav className="mt-4 pt-4 border-t border-panel-edge/70 space-y-2">
+                        {toc.map((item, idx) => (
                           <a
                             key={item.id}
                             href={`#${item.id}`}
                             onClick={(e) => scrollToHeading(e, item.id)}
-                            className={`block text-xs transition-colors py-1 ${
-                              item.level === 3 ? 'pl-4 text-slate-400' : 'font-medium text-slate-200'
+                            className={`block text-sm transition-colors py-2 px-2.5 rounded-lg ${
+                              item.level === 3 ? 'pl-6 text-slate-400' : 'font-medium text-slate-200'
                             } ${
-                              activeHeading === item.id ? 'text-neon-blue font-bold' : 'hover:text-neon-blue'
+                              activeHeading === item.id ? 'text-neon-blue font-bold bg-neon-blue/15 border-l-2 border-neon-blue' : 'hover:text-neon-blue hover:bg-white/5'
                             }`}
                           >
+                            <span className="text-slate-500 font-mono text-xs mr-2">{idx + 1}.</span>
                             {item.title}
                           </a>
                         ))}
@@ -587,34 +590,44 @@ export default function BlogDetail() {
             <aside className="hidden lg:block lg:col-span-4 min-w-0 sticky top-24 space-y-6">
               {/* Interactive Table of Contents */}
               {toc.length > 0 && (
-                <div className="rounded-2xl border border-panel-edge bg-abyss/60 p-5 backdrop-blur-md">
-                  <div className="flex items-center justify-between pb-3 border-b border-panel-edge/60">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-white flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-neon-blue" />
-                      On This Page
-                    </span>
-                    <span className="text-[10px] font-mono text-[#A1A7CA]">
-                      {toc.length} sections
-                    </span>
+                <div className="rounded-2xl border border-panel-edge bg-abyss/70 p-5 backdrop-blur-md shadow-lg">
+                  <div className="pb-3 border-b border-panel-edge/60">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-white flex items-center gap-2">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-neon-blue">
+                          <path d="M4 6h16M4 12h16M4 18h7" />
+                        </svg>
+                        Table of Contents
+                      </span>
+                      <span className="text-xs text-[#A1A7CA] font-medium">
+                        {toc.length} sections
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Click any heading to jump to that section
+                    </p>
                   </div>
 
-                  <nav className="mt-3.5 space-y-1 max-h-[380px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
-                    {toc.map((item) => {
+                  <nav className="mt-3.5 space-y-1.5 max-h-[380px] overflow-y-auto pr-1" style={{ scrollbarWidth: 'thin' }}>
+                    {toc.map((item, idx) => {
                       const isActive = activeHeading === item.id
                       return (
                         <a
                           key={item.id}
                           href={`#${item.id}`}
                           onClick={(e) => scrollToHeading(e, item.id)}
-                          className={`block py-1 text-xs transition-colors rounded ${
-                            item.level === 3 ? 'pl-4 text-slate-400' : 'pl-2 text-slate-300 font-medium'
+                          className={`block py-1.5 px-2.5 text-sm transition-colors rounded-lg ${
+                            item.level === 3 ? 'pl-5 text-slate-400 text-[13px]' : 'text-slate-200 font-medium'
                           } ${
                             isActive
-                              ? 'text-neon-blue font-bold bg-neon-blue/10 border-l-2 border-neon-blue'
-                              : 'hover:text-white hover:bg-white/5'
+                              ? 'text-neon-blue font-bold bg-neon-blue/15 border-l-2 border-neon-blue'
+                              : 'hover:text-neon-blue hover:bg-white/5'
                           }`}
                         >
-                          <span className="line-clamp-1">{item.title}</span>
+                          <span className="line-clamp-2">
+                            <span className="text-slate-500 font-mono text-xs mr-1.5">{idx + 1}.</span>
+                            {item.title}
+                          </span>
                         </a>
                       )
                     })}
@@ -622,48 +635,55 @@ export default function BlogDetail() {
                 </div>
               )}
 
-              {/* Article Intelligence / Specs Card */}
-              <div className="rounded-2xl border border-panel-edge bg-abyss/60 p-5 backdrop-blur-md">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#A1A7CA] block mb-3.5">
-                  Article Intelligence
-                </span>
-                <div className="space-y-3 text-xs">
+              {/* Guide Overview Card (replacing vague 'Article Intelligence') */}
+              <div className="rounded-2xl border border-panel-edge bg-abyss/70 p-5 backdrop-blur-md shadow-lg">
+                <div className="pb-3 border-b border-panel-edge/60">
+                  <span className="text-sm font-bold text-white flex items-center gap-2">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 text-neon-indigo">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    Guide Overview
+                  </span>
+                </div>
+                <div className="mt-3.5 space-y-3 text-sm">
                   <div className="flex items-center justify-between py-1 border-b border-panel-edge/40">
-                    <span className="text-slate-400">Author</span>
-                    <span className="text-white font-medium">Jerry Dev Studio</span>
+                    <span className="text-slate-300">Written By</span>
+                    <span className="text-white font-semibold">Jerry Dev Studio</span>
                   </div>
                   <div className="flex items-center justify-between py-1 border-b border-panel-edge/40">
-                    <span className="text-slate-400">Category</span>
-                    <span className="text-neon-blue font-medium">{effectivePost.category || 'Engineering'}</span>
+                    <span className="text-slate-300">Category</span>
+                    <span className="text-neon-blue font-semibold">{effectivePost.category || 'Mobile Engineering'}</span>
                   </div>
                   <div className="flex items-center justify-between py-1 border-b border-panel-edge/40">
-                    <span className="text-slate-400">Read Time</span>
-                    <span className="text-white font-medium">{mins} min</span>
+                    <span className="text-slate-300">Estimated Reading</span>
+                    <span className="text-white font-semibold">{mins} min</span>
                   </div>
                   <div className="flex items-center justify-between py-1 border-b border-panel-edge/40">
-                    <span className="text-slate-400">Level</span>
-                    <span className="text-white font-medium">Production Architecture</span>
+                    <span className="text-slate-300">Audience</span>
+                    <span className="text-white font-semibold">Developers &amp; Founders</span>
                   </div>
                   <div className="flex items-center justify-between py-1">
-                    <span className="text-slate-400">Verified Stack</span>
-                    <span className="text-emerald-400 font-mono text-[11px]">Flutter 3 · Dart · Supabase</span>
+                    <span className="text-slate-300">Tech Stack</span>
+                    <span className="text-emerald-400 font-mono text-xs font-semibold">Flutter &middot; Dart &middot; Supabase</span>
                   </div>
                 </div>
               </div>
 
               {/* Sticky Studio Consultation CTA */}
-              <div className="rounded-2xl border border-neon-blue/30 bg-gradient-to-b from-neon-blue/10 via-panel/90 to-neon-indigo/10 p-5 text-center shadow-lg">
-                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neon-blue/15 text-neon-blue mb-3 border border-neon-blue/30">
+              <div className="rounded-2xl border border-neon-blue/30 bg-gradient-to-b from-neon-blue/10 via-panel/90 to-neon-indigo/10 p-6 text-center shadow-lg">
+                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-neon-blue/15 text-neon-blue mb-3.5 border border-neon-blue/30">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                   </svg>
                 </div>
-                <h4 className="text-sm font-bold text-white">Need This Implemented?</h4>
-                <p className="mt-2 text-xs text-slate-300 leading-relaxed">
-                  Jerry Dev Studio audits codebases, optimizes FlutterFlow performance, and delivers production apps.
+                <h4 className="text-base font-bold text-white">Need Help With This?</h4>
+                <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                  Stuck on this bug or building a FlutterFlow application? Jerry Dev Studio audits codebases, builds custom Dart actions, and engineers complete Supabase backends.
                 </p>
-                <div className="mt-4">
-                  <SystemButton variant="primary" className="w-full text-xs" onClick={onRequestQuote}>
+                <div className="mt-5">
+                  <SystemButton variant="primary" className="w-full text-sm font-semibold py-2.5" onClick={onRequestQuote}>
                     Request Consultation
                   </SystemButton>
                 </div>
