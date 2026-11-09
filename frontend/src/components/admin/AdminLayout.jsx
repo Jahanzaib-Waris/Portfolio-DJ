@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 import { getBranding, getCrmLeads, getQuoteRequests } from '../../api/client'
 import { useAuth } from '../../auth/authContext'
 import { ToastProvider } from './ToastContext'
+import { localDateStr } from '../../utils/dates'
 
 // Nav items with icons and hierarchy
 const navConfig = [
@@ -133,7 +134,7 @@ export default function AdminLayout() {
     getCrmLeads()
       .then((res) => {
         if (!cancelled && Array.isArray(res?.items)) {
-          const today = new Date().toISOString().slice(0, 10)
+          const today = localDateStr()
           const due = res.items.filter(
             (l) =>
               l.next_follow_up &&

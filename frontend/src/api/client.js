@@ -806,18 +806,24 @@ export const deleteCrmActivity = async (activityId) => {
   return { success: true }
 }
 
+// Estimated deal value (USD) for each budget option offered by the public quote
+// form. Lower-middle of each range, so the pipeline total stays conservative.
+const BUDGET_DEAL_VALUES = {
+  'Under $500': 400,
+  '$500 – $2,000': 1250,
+  '$2,000 – $5,000': 3500,
+  '$5,000+': 5000,
+}
+
+export const budgetToDealValue = (budget) => BUDGET_DEAL_VALUES[budget] ?? 0
+
 export const convertQuoteToLead = async (quote) => {
-  // Parse budget estimate into numeric deal value if available
-  let dealValue = 0
-  if (quote.budget) {
-    const num = quote.budget.replace(/[^0-9]/g, '')
-    if (num) dealValue = parseFloat(num)
-  }
+  const dealValue = budgetToDealValue(quote.budget)
 
   const payload = {
     name: quote.name,
     email: quote.email,
-    company: quote.company || '',
+    company: '',
     job_title: 'Inbound Lead',
     phone: '',
     linkedin_url: '',

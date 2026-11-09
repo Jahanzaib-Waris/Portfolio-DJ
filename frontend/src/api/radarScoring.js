@@ -184,3 +184,23 @@ export function computeOpportunityScore(item) {
     breakdown,
   }
 }
+
+const TECH_PATTERNS = [
+  ['FlutterFlow', /flutterflow/i],
+  ['Flutter', /\bflutter\b/i],
+  ['Dart', /\bdart\b/i],
+  ['React Native', /react[\s-]?native/i],
+  ['iOS', /\bios\b|swift(ui)?\b/i],
+  ['Android', /\bandroid\b|kotlin/i],
+  ['Supabase', /supabase/i],
+  ['Firebase', /firebase/i],
+  ['Node.js', /node\.?js/i],
+  ['Python', /\bpython\b|django|fastapi/i],
+  ['React', /\breact\b(?![\s-]?native)/i],
+]
+
+/** Tech tags that actually appear in a radar item's text (empty when none match). */
+export function detectTechStack(item) {
+  const text = `${item.title || ''} ${item.description || ''} ${item.fullText || ''}`
+  return TECH_PATTERNS.filter(([, rx]) => rx.test(text)).map(([name]) => name)
+}

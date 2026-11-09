@@ -6,6 +6,7 @@ import SystemButton from '../../../components/SystemButton'
 import { useToast } from '../../../components/admin/toastStore'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 import LeadDetailDrawer from './LeadDetailDrawer'
+import { localDateStr } from '../../../utils/dates'
 
 export default function CrmProspects() {
   const toast = useToast()
@@ -169,7 +170,7 @@ export default function CrmProspects() {
     toast.info('Exported filtered prospects to CSV.')
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = localDateStr()
 
   return (
     <div className="mx-auto max-w-7xl">

@@ -7,6 +7,7 @@ import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 import LeadDetailDrawer from './LeadDetailDrawer'
+import { localDateStr } from '../../../utils/dates'
 
 export default function CrmPipeline() {
   const [leads, setLeads] = useState([])
@@ -84,7 +85,7 @@ export default function CrmPipeline() {
 
   // Summary Metrics
   const metrics = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDateStr()
     let totalPipeline = 0
     let activeDealsCount = 0
     let wonValue = 0
@@ -133,7 +134,7 @@ export default function CrmPipeline() {
         setActiveLead(updated)
       }
     } catch (err) {
-      alert('Failed to move stage: ' + err.message)
+      toast.error('Failed to move stage: ' + err.message)
     }
   }
 
@@ -182,16 +183,16 @@ export default function CrmPipeline() {
         currency: 'USD',
         notes: '',
       })
+      toast.success('New deal created!')
       handleOpenLead(created)
     } catch (err) {
-      alert('Failed to create deal: ' + err.message)
+      toast.error('Failed to create deal: ' + err.message)
     } finally {
       setCreatingDeal(false)
-      toast.success('New deal created!')
     }
   }
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = localDateStr()
 
   return (
     <div className="mx-auto max-w-7xl">

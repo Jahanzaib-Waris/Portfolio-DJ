@@ -17,6 +17,8 @@ export const SOURCES = [
   { key: 'linkedin', label: 'LinkedIn' },
   { key: 'website_inbound', label: 'Website Inbound' },
   { key: 'cold_outreach', label: 'Cold Outreach' },
+  { key: 'hacker_news', label: 'Hacker News' },
+  { key: 'job_board', label: 'Job Board' },
   { key: 'referral', label: 'Referral' },
   { key: 'upwork', label: 'Upwork / Contract' },
   { key: 'other', label: 'Other' },

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { enrichCompanyDecisionMaker } from '../../../api/apolloClient'
-import { createCrmLead } from '../../../api/client'
+import { createCrmLead, getCrmLeads } from '../../../api/client'
 import {
   fetchHNHiringOpportunities,
   fetchRemoteJobs,
@@ -9,6 +9,7 @@ import {
 } from '../../../api/radarClient'
 import {
   computeOpportunityScore,
+  detectTechStack,
   matchesFreshnessWindow,
 } from '../../../api/radarScoring'
 import SearchInput from '../../../components/admin/SearchInput'
@@ -47,6 +48,33 @@ const SORT_OPTIONS = [
   { id: 'alpha', label: 'Company Name (A-Z)' },
 ]
 
+const POST_URL_RE = /Post URL: (\S+)/
+
+const radarSource = (item) =>
+  item.source === 'hacker_news' ? 'hacker_news' : 'job_board'
+
+// The contact's real name is unknown unless Apollo found a person.
+const radarContactName = (item) => {
+  if (item.decisionMaker) return item.decisionMaker.split(' (')[0]
+  return `${item.company} (hiring contact)`
+}
+
+const buildRadarLeadPayload = (item) => ({
+  name: radarContactName(item),
+  company: item.company,
+  job_title: item.title,
+  email: item.email || '',
+  linkedin_url: item.linkedin || '',
+  company_website: item.website || '',
+  stage: 'lead',
+  temperature: item.isFounderDirect || item.decisionMaker ? 'hot' : 'warm',
+  source: radarSource(item),
+  deal_value: 0,
+  currency: 'USD',
+  notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}${item.decisionMaker ? `\nVerified Executive: ${item.decisionMaker}` : ''}\n\nProject Scope / Overview:\n${item.fullText}`,
+  tech_stack: detectTechStack(item),
+})
+
 export default function ClientRadar() {
   const [activeTab, setActiveTab] = useState('hn')
   const [search, setSearch] = useState('')
@@ -62,6 +90,7 @@ export default function ClientRadar() {
   const [importingId, setImportingId] = useState(null)
   const [importedMap, setConvertedMap] = useState({})
   const [importedLeads, setImportedLeads] = useState({})
+  const [existingByUrl, setExistingByUrl] = useState({})
   const [drawerLead, setDrawerLead] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -70,6 +99,46 @@ export default function ClientRadar() {
   useEffect(() => {
     document.title = 'Client Radar (Sales Leads) — Control Panel'
   }, [])
+
+  // Remember which radar posts are already in the CRM (matched by the post URL
+  // saved in the lead's notes), so a reload can't import the same post twice.
+  useEffect(() => {
+    let cancelled = false
+    getCrmLeads()
+      .then(({ items }) => {
+        if (cancelled) return
+        const byUrl = {}
+        items.forEach((lead) => {
+          const match = POST_URL_RE.exec(lead.notes || '')
+          if (match) byUrl[match[1]] = lead
+        })
+        setExistingByUrl(byUrl)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    const all = [...hnItems, ...remoteItems]
+    const newlyMatched = all.filter((item) => item.url && existingByUrl[item.url])
+    if (newlyMatched.length === 0) return
+    setConvertedMap((prev) => {
+      const next = { ...prev }
+      newlyMatched.forEach((item) => {
+        if (!next[item.id]) next[item.id] = existingByUrl[item.url].id
+      })
+      return next
+    })
+    setImportedLeads((prev) => {
+      const next = { ...prev }
+      newlyMatched.forEach((item) => {
+        if (!next[item.id]) next[item.id] = existingByUrl[item.url]
+      })
+      return next
+    })
+  }, [hnItems, remoteItems, existingByUrl])
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -223,33 +292,17 @@ export default function ClientRadar() {
 
   // 1-Click Import to CRM Pipeline
   const handleImportToCrm = async (item) => {
+    if (item.url && existingByUrl[item.url]) {
+      toast.info(`"${item.company}" is already in your CRM.`)
+      return
+    }
     setImportingId(item.id)
     try {
-      const isHn = item.source === 'hacker_news'
-      const contactName = item.decisionMaker
-        ? item.decisionMaker.split(' (')[0]
-        : `${item.company} Hiring Lead`
-
-      const payload = {
-        name: contactName,
-        company: item.company,
-        job_title: item.title,
-        email: item.email || '',
-        linkedin_url: item.linkedin || '',
-        company_website: item.website || '',
-        stage: 'lead',
-        temperature: item.isFounderDirect || item.decisionMaker ? 'hot' : 'warm',
-        source: isHn ? 'cold_outreach' : 'website_inbound',
-        deal_value: 0,
-        currency: 'USD',
-        notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}${item.decisionMaker ? `\nVerified Executive: ${item.decisionMaker}` : ''}\n\nProject Scope / Overview:\n${item.fullText}`,
-        tech_stack: ['Flutter', 'Mobile', 'Supabase'],
-      }
-
-      const created = await createCrmLead(payload)
+      const created = await createCrmLead(buildRadarLeadPayload(item))
       setConvertedMap((prev) => ({ ...prev, [item.id]: created.id }))
       setImportedLeads((prev) => ({ ...prev, [item.id]: created }))
-      toast.success(`Imported "${item.company}"! Click "Open Pitch " to review pitch & reach out.`)
+      if (item.url) setExistingByUrl((prev) => ({ ...prev, [item.url]: created }))
+      toast.success(`Imported "${item.company}". Click "Open Pitch" to review the pitch and reach out.`)
     } catch (err) {
       toast.error('Failed to import lead: ' + (err.message || 'Unknown error'))
     } finally {
@@ -261,19 +314,7 @@ export default function ClientRadar() {
   const handleOpenLeadDrawer = (item) => {
     const lead = importedLeads[item.id] || {
       id: importedMap[item.id],
-      company: item.company,
-      name: item.decisionMaker ? item.decisionMaker.split(' (')[0] : `${item.company} Hiring Lead`,
-      job_title: item.title,
-      email: item.email || '',
-      notes: `[Radar Ingestion: ${item.sourceLabel}]\nPost URL: ${item.url}\nLocation: ${item.location}\nType: ${item.type}${item.decisionMaker ? `\nVerified Executive: ${item.decisionMaker}` : ''}\n\nProject Scope / Overview:\n${item.fullText}`,
-      tech_stack: ['Flutter', 'Mobile', 'Supabase'],
-      company_website: item.website || '',
-      linkedin_url: item.linkedin || '',
-      stage: 'lead',
-      temperature: item.isFounderDirect || item.decisionMaker ? 'hot' : 'warm',
-      source: item.source === 'hacker_news' ? 'cold_outreach' : 'website_inbound',
-      deal_value: 0,
-      currency: 'USD',
+      ...buildRadarLeadPayload(item),
     }
     setDrawerLead(lead)
     setDrawerOpen(true)

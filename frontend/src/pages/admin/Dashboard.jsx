@@ -13,6 +13,7 @@ import { useAuth } from '../../auth/authContext'
 import AnalyticsChart from '../../components/admin/AnalyticsChart'
 import StatusPanel from '../../components/StatusPanel'
 import { Skeleton } from '../../components/Skeleton'
+import { localDateStr } from '../../utils/dates'
 
 export default function Dashboard() {
   const { user } = useAuth()
@@ -46,7 +47,7 @@ export default function Dashboard() {
       // Calculate CRM metrics
       let totalPipeline = 0
       let activeDeals = 0
-      const today = new Date().toISOString().slice(0, 10)
+      const today = localDateStr()
       const dueLeads = []
 
       crmItems.forEach((l) => {
