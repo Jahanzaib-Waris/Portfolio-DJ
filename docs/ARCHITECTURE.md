@@ -103,6 +103,7 @@ All tables have RLS enabled. "Admin" below means any `authenticated` Supabase us
 | `site_theme` | Singleton (id = 1), runtime theme | 8 colour tokens, `font_display`, `font_mono`, `radius_scale`, `shadow_intensity`, `button_style`, `card_style` | read | all |
 | `page_views` | Analytics events | `path`, `referrer`, `is_blog_post`, `slug`, `session_key` | insert only | read |
 | `crm_leads` | Sales pipeline | `name`, `company`, `job_title`, `email`, `linkedin_url`, `stage`, `temperature`, `source`, `deal_value`, `tech_stack[]`, `next_follow_up`, `quote_request_id` | none | all |
+| `visitor_links` | Which browser IDs belong to which lead (optional; `supabase/visitors.sql`) | `visitor_id`, `lead_id`, `source` (`quote`/`link`) | none | all |
 | `radar_items` | Stored Client Radar posts (optional; `supabase/radar.sql`) | `source_url` (unique), `company`, `title`, `posted_at`, `score`, `fit`, `status` (`new`/`dismissed`/`imported`), `lead_id`, `first_seen_at`, `last_seen_at`, `notified_at` | none | all |
 | `crm_activities` | Per-lead timeline | `lead_id` (cascade), `type`, `content` | none | all |
 
@@ -191,6 +192,10 @@ Reopening a post runs `parseHTMLToBlocks()` (in `utils/blogBlocks.js`) to rebuil
 
 ---
 
+### Visitor linking (optional)
+
+`page_views.session_key` is a random per-browser ID (`utils/visitor.js`, `localStorage` key `__pv_session`). It is linked to a person only when they submit the quote form (the ID is saved in `quote_requests.visitor_id`; `quote-notify` and "Convert to deal" copy it into `visitor_links`) or open a tracked link from a pitch (`/projects?ref=<16-hex token>`, where the token is `crm_leads.track_token`; the browser calls the `link_visitor` RPC once and the `ref` parameter is removed from the address bar). Admin screens show the history through `VisitHistory`, which reads `page_views` for the linked IDs. Tracking is off for visitors who opt out on `/privacy` or send Do Not Track. There is no fingerprinting or IP lookup. Retention: unlinked views 90 days, linked 365 days (weekly `pg_cron` job). **The `/privacy` notice describes this behaviour; keep it accurate when tracking changes.**
+
 ## 7. Public site
 
 | Path | Page |
@@ -199,6 +204,7 @@ Reopening a post runs `parseHTMLToBlocks()` (in `utils/blogBlocks.js`) to rebuil
 | `/solutions` | `Solutions` — FlutterFlow fix/guide library: category-filtered post cards backed by `getBlogPosts`, with built-in fallback posts |
 | `/blogs`, `/blogs/:slug` | `Blogs` (category filter, Load more) / `BlogDetail` (sticky TOC with scroll-spy, reading-progress bar) |
 | `/projects` | `Projects` — cards + deep-dive modal |
+| `/privacy` | `Privacy` — what is recorded, retention, and a per-browser tracking opt-out |
 | `*` | `NotFound` |
 
 `PublicLayout` fetches profile and branding once, drives dynamic branding (nav name/avatar, favicon), fires `trackPageView` on each route change, and hosts the global quote modal. Admin routes don't use this layout, so admin traffic is never counted.

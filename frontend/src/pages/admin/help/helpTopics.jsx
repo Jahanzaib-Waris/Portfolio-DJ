@@ -301,6 +301,7 @@ export const helpTopics = [
         body: (
           <Ul>
             <li>Mention one specific thing from their post or app. Generic messages get ignored.</li>
+            <li>Pitches for leads already in the CRM use that lead&rsquo;s tracked link, so you can see if they opened your work (see <Go to="/admin/help/visitors">Knowing who visited</Go>).</li>
             <li>Keep it short, offer one clear next step (a 15-minute call), and make it easy to say no.</li>
             <li>Email one person at a time. Rules differ by country (US, EU/UK, Canada), so honour any request to stop and note it on the lead.</li>
           </Ul>
@@ -412,6 +413,7 @@ export const helpTopics = [
             <li><Ui>Reply</Ui> opens your mail app addressed to them.</li>
             <li>The <Ui>⋯</Ui> menu has <Ui>View in CRM pipeline</Ui> (or <Ui>Convert to deal</Ui> if the automatic step didn&rsquo;t run) and <Ui>Delete</Ui>. Converting twice never creates a duplicate.</li>
             <li>The search box filters by name, email and message.</li>
+            <li>Under <Ui>Before they contacted you</Ui> you see the pages that sender viewed (see <Go to="/admin/help/visitors">Knowing who visited</Go>).</li>
           </Ul>
         ),
       },
@@ -579,8 +581,89 @@ export const helpTopics = [
             <li><B>Cost:</B> everything running today is on free plans.</li>
             <li><B>Apollo:</B> about 100 credits a month on the free plan.</li>
             <li><B>Supabase free tier:</B> a project left idle for about a week can pause. If the site shows errors after a quiet spell, restore the project from the Supabase dashboard.</li>
+            <li><B>Visitor data:</B> unlinked page views are deleted after 90 days, linked ones after 12 months (a weekly job).</li>
             <li><B>Not built yet:</B> outcome reports (reply, call, won), a do-not-contact list, weighted pipeline forecasts, and email alerts.</li>
           </Ul>
+        ),
+      },
+    ],
+  },
+
+  /* ---------------------------------------------------------------- 7b */
+  {
+    slug: 'visitors',
+    title: 'Knowing who visited',
+    summary: 'How a visit becomes linked to a contact, where to see it, tracked links, and the privacy limits.',
+    keywords: ['visitor', 'visit', 'tracking', 'tracked link', 'ref', 'privacy', 'opt out', 'do not track', 'identify', 'history', 'browser', 'pages viewed'],
+    sections: [
+      {
+        id: 'how-it-works',
+        heading: 'How a visitor becomes a known contact',
+        body: (
+          <>
+            <P>
+              Every browser that visits the public site gets a <B>random ID</B> (not a name or email), stored in that browser. Page views are saved with it.
+              That ID is linked to a person in only two ways, both of which the person triggers:
+            </P>
+            <Ol>
+              <li><B>They send the quote form.</B> The ID goes with the request, so you can see the pages they read before contacting you.</li>
+              <li><B>They open a tracked link</B> from one of your emails. The link carries a private code for that lead, and opening it links their browser to the lead.</li>
+            </Ol>
+            <P>After that, later visits from the same browser are shown on the lead too.</P>
+          </>
+        ),
+      },
+      {
+        id: 'where-to-look',
+        heading: 'Where to see it',
+        body: (
+          <Ul>
+            <li><B>Lead drawer → Website visits:</B> number of visits, page views, first and last seen, and the pages viewed with their sources.</li>
+            <li><B>Quote requests → open a request → Before they contacted you:</B> the same, for the browser that sent the form.</li>
+            <li>The Discord alert for a new quote also lists how many pages the sender viewed and which.</li>
+          </Ul>
+        ),
+      },
+      {
+        id: 'tracked-links',
+        heading: 'Tracked links in your pitches',
+        body: (
+          <>
+            <P>
+              Every lead has its own tracked link (shown in the lead drawer with a <Ui>Copy</Ui> button). Pitches written for a lead already use it for the portfolio link, so
+              you can see whether someone opened your work after your email.
+            </P>
+            <Note kind="info">
+              A lead that is not yet in the CRM has no tracked link. Add it to the CRM first (<Ui>Add to CRM</Ui>), then use <Ui>Open Pitch</Ui>. Send the tracked link only to the person it belongs to; do not post it publicly.
+            </Note>
+          </>
+        ),
+      },
+      {
+        id: 'limits',
+        heading: 'What it can and cannot tell you',
+        body: (
+          <Ul>
+            <li>It recognises the <B>same browser on the same device</B>. A private window, cleared site data, or another device looks like a new visitor.</li>
+            <li>It does not know who anonymous visitors are, and it will not: there is no fingerprinting, no IP or company lookup, and no social profile matching.</li>
+            <li>People who turn tracking off on the privacy page, or whose browser sends Do Not Track, are not recorded or linked at all.</li>
+            <li>Opening a link in an email app that pre-loads pages can show a visit the person never made. Treat a single visit as a hint, not proof.</li>
+          </Ul>
+        ),
+      },
+      {
+        id: 'privacy-notice',
+        heading: 'The privacy notice',
+        body: (
+          <>
+            <P>
+              The public <B>/privacy</B> page (linked in the site footer and under the quote form) tells visitors what is recorded, why, how long it is kept, and lets
+              them switch tracking off. It also states the retention periods: unlinked page views up to 90 days, linked ones up to 12 months. A weekly job deletes older records.
+            </P>
+            <Note kind="warn">
+              Keep the notice accurate. If you add a new tracking tool, change retention, or share visitor data with anyone, update the privacy page first. Privacy law differs by country; if you serve clients in the EU or UK, have the notice reviewed.
+            </Note>
+          </>
         ),
       },
     ],
@@ -658,6 +741,7 @@ export const quickAnswers = [
   { question: 'How do follow-ups work?', slug: 'outreach', anchor: 'cadence' },
   { question: 'A quote came in. What now?', slug: 'quotes', anchor: 'what-happens' },
   { question: 'How do I schedule a blog post?', slug: 'content', anchor: 'scheduling' },
+  { question: 'Who visited after my email?', slug: 'visitors', anchor: 'tracked-links' },
   { question: 'What runs without me?', slug: 'automation', anchor: 'jobs' },
   { question: 'Something looks wrong', slug: 'troubleshooting', anchor: 'radar-live' },
 ]

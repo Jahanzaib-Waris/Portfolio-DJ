@@ -113,6 +113,15 @@ By default Client Radar fetches posts live in your browser. This step makes the 
 
 Until step 1 is done, Client Radar keeps working in live mode, so the order above is safe. The digest includes only posts that are new, not full-time-only, and scoring at least `DIGEST_MIN_SCORE`, and each post is emailed once. Posts you never act on are deleted after 45 days without being seen again; dismissed and imported posts are kept.
 
+## 9. Visitor linking and privacy (optional)
+
+Lets you see what a known contact did on the site: pages they read before sending the quote form, and visits after they open a tracked link in one of your pitches. See `docs/ARCHITECTURE.md` (Visitor linking) and the public `/privacy` page.
+
+1. **Apply the database changes:** run `supabase/visitors.sql` (idempotent). It adds `quote_requests.visitor_id`, `crm_leads.track_token` (every existing lead gets one), the admin-only `visitor_links` table, the `link_visitor` function used by tracked links, an updated `cleanup_old_page_views` (linked visitors keep 365 days), and a weekly `pg_cron` job (Sundays 03:30 UTC) that runs it.
+2. **Redeploy the quote function** so the Discord alert includes browsing history and the visitor is linked: `supabase functions deploy quote-notify --project-ref <project-ref> --use-api`.
+3. **Deploy the frontend** (`firebase deploy --only hosting`). The app works before step 1 (it falls back to sending the quote without a visitor ID and shows "Visit tracking isn't set up yet"), but the privacy page states a 90-day / 12-month retention, so apply step 1 **before** the frontend goes live.
+4. Re-read `/privacy` and adjust it to your situation. Privacy law differs by country, and the notice is a plain-language draft, not legal advice.
+
 ## Current production state (2026-11-09)
 
 - Project `fbeegpzrbocqgyxeqqtc`: `radar.sql`, `quote_notify.sql` and `radar_cron.sql` are applied; `radar-ingest` and `quote-notify` are deployed; Vault holds `project_url`, `radar_cron_secret`, `quote_webhook_secret`.

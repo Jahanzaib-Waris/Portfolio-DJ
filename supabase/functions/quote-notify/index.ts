@@ -33,6 +33,7 @@ const json = (body: unknown, status = 200) =>
 const oneLine = (v: unknown, max = 120) =>
   String(v ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, max);
 
+const VISITOR_ID_RE = /^s_[a-z0-9]{6,32}$/;
 const EMAIL_RE = /^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/;
 
 async function sendEmail(
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
   const results: Record<string, string> = {};
 
   // 1. CRM lead (idempotent)
+  let leadId: number | null = null;
   try {
     const { data: existing } = await supabase
       .from("crm_leads")
@@ -76,9 +78,10 @@ Deno.serve(async (req) => {
       .eq("quote_request_id", quote.id)
       .limit(1);
     if (existing && existing.length > 0) {
+      leadId = existing[0].id;
       results.lead = "exists";
     } else {
-      const { error } = await supabase.from("crm_leads").insert({
+      const { data: created, error } = await supabase.from("crm_leads").insert({
         name,
         email,
         company: "",
@@ -93,17 +96,47 @@ Deno.serve(async (req) => {
         notes: `Website Quote Submission:\n\nService: ${quote.service}\nBackend: ${quote.backend}\nBudget: ${quote.budget}\nTimeline: ${quote.timeline}\n\nProject Details:\n${quote.project_details}`,
         quote_request_id: quote.id,
         next_follow_up: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
-      });
+      }).select("id").single();
+      leadId = created?.id ?? null;
       results.lead = error ? `error: ${error.message}` : "created";
     }
   } catch (err) {
     results.lead = `error: ${(err as Error).message}`;
   }
 
+  // 1b. Link the visitor's browser to the lead and summarise what they looked at first.
+  //     The ID only exists when the visitor allowed tracking (see /privacy).
+  const visitorId = typeof quote.visitor_id === "string" && VISITOR_ID_RE.test(quote.visitor_id) ? quote.visitor_id : "";
+  let browsing = "";
+  if (visitorId) {
+    try {
+      if (leadId) {
+        const { error } = await supabase
+          .from("visitor_links")
+          .upsert({ visitor_id: visitorId, lead_id: leadId, source: "quote" }, { ignoreDuplicates: true });
+        results.visitorLink = error ? `error: ${error.message}` : "linked";
+      }
+      const { data: views } = await supabase
+        .from("page_views")
+        .select("path, created_at")
+        .eq("session_key", visitorId)
+        .order("created_at", { ascending: true })
+        .limit(200);
+      if (views && views.length > 0) {
+        const paths = [...new Set(views.map((v: { path: string }) => v.path))].slice(0, 6);
+        browsing =
+          `\nBefore contacting you: ${views.length} page view${views.length === 1 ? "" : "s"} since ` +
+          `${String(views[0].created_at).slice(0, 10)} (${paths.join(", ")})`;
+      }
+    } catch (err) {
+      results.visitorLink = `error: ${(err as Error).message}`;
+    }
+  }
+
   const summary =
     `New quote request from ${name} <${email}>\n` +
     `Service: ${oneLine(quote.service)} | Backend: ${oneLine(quote.backend)}\n` +
-    `Budget: ${oneLine(quote.budget)} | Timeline: ${oneLine(quote.timeline)}\n\n` +
+    `Budget: ${oneLine(quote.budget)} | Timeline: ${oneLine(quote.timeline)}${browsing}\n\n` +
     `${String(quote.project_details ?? "").slice(0, 1500)}`;
 
   // 2. Owner alerts

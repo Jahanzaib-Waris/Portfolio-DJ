@@ -11,6 +11,10 @@
 export const PORTFOLIO_URL = 'https://jerry-dev-studio.web.app/projects'
 export const SITE_URL = 'https://jerry-dev-studio.web.app'
 
+/** Portfolio link; with a lead's track token it becomes a tracked link (see /privacy). */
+export const portfolioUrlFor = (trackToken) =>
+  trackToken && /^[a-f0-9]{16}$/.test(trackToken) ? `${PORTFOLIO_URL}?ref=${trackToken}` : PORTFOLIO_URL
+
 const ANGLE_COPY = {
   rescue: {
     topic: 'getting unstuck on FlutterFlow / Flutter issues',
@@ -81,7 +85,8 @@ ${SITE_URL}`
  *   tone      – 'senior' | 'consultant' | 'punchy'
  *   techStack – free-text stack the lead uses (defaults to Flutter & Supabase)
  */
-export function buildPitch({ lead = {}, angle = 'rescue', tone = 'senior', techStack = '' }) {
+export function buildPitch({ lead = {}, angle = 'rescue', tone = 'senior', techStack = '', trackToken = '' }) {
+  const portfolioUrl = portfolioUrlFor(trackToken)
   const copy = ANGLE_COPY[angle] || ANGLE_COPY.rescue
   const angleKey = ANGLE_COPY[angle] ? angle : 'rescue'
   const first = firstNameOf(lead.name)
@@ -90,7 +95,7 @@ export function buildPitch({ lead = {}, angle = 'rescue', tone = 'senior', techS
   const opener = buildOpener(lead, angleKey)
 
   const subject = copy.subject(company)
-  const inmail = `Hi ${first}, ${opener} I work on ${stack} projects as an independent engineer. Examples: ${PORTFOLIO_URL}`.slice(0, 300)
+  const inmail = `Hi ${first}, ${opener} I work on ${stack} projects as an independent engineer. Examples: ${portfolioUrl}`.slice(0, 300)
 
   let body
   if (tone === 'punchy') {
@@ -102,7 +107,7 @@ ${copy.paragraph}
 
 ${ENGAGEMENT_LINE}
 
-Examples of my work: ${PORTFOLIO_URL}
+Examples of my work: ${portfolioUrl}
 
 Open to a quick call this week?
 
@@ -118,7 +123,7 @@ For ${company}, I'd start with a short call to understand the current state of t
 
 ${ENGAGEMENT_LINE}
 
-Examples of my work: ${PORTFOLIO_URL}
+Examples of my work: ${portfolioUrl}
 
 Would 15 minutes this week be useful? If the timing isn't right, no problem at all.
 
@@ -132,7 +137,7 @@ I'm Jerry Waris, a senior mobile and full-stack engineer working with ${stack}. 
 
 ${ENGAGEMENT_LINE}
 
-Examples of my work: ${PORTFOLIO_URL}
+Examples of my work: ${portfolioUrl}
 
 Would a 15-minute call this week make sense? If now isn't the right time, no problem.
 

@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound'
 // Split out on its own: it's the only public page that needs the Markdown
 // renderer, which is a large dependency most visitors never reach.
 const BlogDetail = lazy(() => import('./pages/BlogDetail'))
+const Privacy = lazy(() => import('./pages/Privacy'))
 
 // The panel is only ever used by one person, but it's most of the bundle. Lazy
 // loading keeps it out of the download for the visitors who will never see it;
@@ -71,6 +72,7 @@ function App() {
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Route>
 

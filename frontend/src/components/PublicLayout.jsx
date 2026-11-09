@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 
-import { getBranding, getProfile, trackPageView } from '../api/client'
+import { getBranding, getProfile, linkVisitorByToken, trackPageView } from '../api/client'
+import { captureTrackedRef } from '../utils/visitor'
 import Footer from './Footer'
 import NavBar from './NavBar'
 import RequestQuoteModal from './RequestQuoteModal'
@@ -57,6 +58,11 @@ export default function PublicLayout() {
     return () => {
       cancelled = true
     }
+  }, [])
+
+  // A tracked link from one of my emails (?ref=...) links this browser to that contact once.
+  useEffect(() => {
+    captureTrackedRef(linkVisitorByToken)
   }, [])
 
   // One beacon per route change. This layout only wraps public routes, so

@@ -4,6 +4,7 @@ import { convertQuoteToLead, deleteQuoteRequest, getCrmLeads, getQuoteRequests }
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import RowActionsMenu from '../../components/admin/RowActionsMenu'
 import SearchInput from '../../components/admin/SearchInput'
+import VisitHistory from '../../components/admin/VisitHistory'
 import { editButtonClass, rowClass, tableWrapClass, tdClass, thClass } from '../../components/admin/formStyles'
 import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
@@ -252,6 +253,18 @@ export default function QuoteInbox() {
                             <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
                               {quote.project_details}
                             </p>
+                            <div className="border-t border-panel-edge/60 pt-3">
+                              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                Before they contacted you
+                              </p>
+                              {quote.visitor_id ? (
+                                <VisitHistory visitorIds={[quote.visitor_id]} />
+                              ) : (
+                                <p className="text-xs text-slate-400">
+                                  No browser ID was sent with this request (tracking was off, or it was submitted before visit tracking existed).
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </td>
                       </tr>

@@ -1,4 +1,5 @@
 import { supabase, isSupabaseConfigured, uploadMedia } from './supabase'
+import { getVisitorId, isTrackingAllowed } from '../utils/visitor'
 
 /**
  * Session expired handler callback registered by AuthProvider.
@@ -226,12 +227,10 @@ export const trackPageView = async (path, referrer = '') => {
     const isBlog = path.startsWith('/blogs/')
     const slug = isBlog ? path.replace(/^\/blogs\//, '').replace(/\/$/, '') : ''
 
-    // Hash or generate session key for visitor deduplication
-    let sessionKey = localStorage.getItem('__pv_session')
-    if (!sessionKey) {
-      sessionKey = 's_' + Math.random().toString(36).substring(2, 12)
-      localStorage.setItem('__pv_session', sessionKey)
-    }
+    // Random per-browser visitor ID (null when the visitor opted out or sends Do Not Track)
+    if (!isTrackingAllowed()) return
+    const sessionKey = getVisitorId()
+    if (!sessionKey) return
 
     await supabase.from('page_views').insert({
       path,
@@ -387,12 +386,25 @@ export const submitQuoteRequest = async (payload) => {
   }
 
   // Do not chain .select() because unauthenticated public visitors do not have SELECT permissions on quote_requests
-  const { error } = await supabase
+  // The visitor ID lets me see which pages the sender viewed before contacting me (see /privacy).
+  const visitorId = getVisitorId()
+  let result = await supabase
     .from('quote_requests')
-    .insert([cleanPayload])
+    .insert([visitorId ? { ...cleanPayload, visitor_id: visitorId } : cleanPayload])
 
-  if (error) throw error
+  // Database not yet migrated (supabase/visitors.sql): send the quote without the ID.
+  if (result.error && visitorId && /visitor_id/i.test(result.error.message || '')) {
+    result = await supabase.from('quote_requests').insert([cleanPayload])
+  }
+
+  if (result.error) throw result.error
   return { success: true }
+}
+
+/** Links this browser to the lead behind a tracked link (?ref=token). Best effort. */
+export const linkVisitorByToken = async (token, visitorId) => {
+  if (!isSupabaseConfigured) return
+  await supabase.rpc('link_visitor', { p_token: token, p_visitor: visitorId })
 }
 
 export const resumeDownloadUrl = '#'
@@ -817,6 +829,14 @@ const BUDGET_DEAL_VALUES = {
 
 export const budgetToDealValue = (budget) => BUDGET_DEAL_VALUES[budget] ?? 0
 
+const linkQuoteVisitor = async (quote, lead) => {
+  if (!quote.visitor_id || !lead?.id) return
+  // Best effort: needs supabase/visitors.sql; ignored if the table doesn't exist yet.
+  await supabase
+    .from('visitor_links')
+    .upsert([{ visitor_id: quote.visitor_id, lead_id: lead.id, source: 'quote' }], { ignoreDuplicates: true })
+}
+
 export const convertQuoteToLead = async (quote) => {
   // Idempotent: the quote-notify function may already have created this lead.
   const { data: existing } = await supabase
@@ -824,7 +844,10 @@ export const convertQuoteToLead = async (quote) => {
     .select('*')
     .eq('quote_request_id', quote.id)
     .limit(1)
-  if (existing && existing.length > 0) return existing[0]
+  if (existing && existing.length > 0) {
+    await linkQuoteVisitor(quote, existing[0])
+    return existing[0]
+  }
 
   const dealValue = budgetToDealValue(quote.budget)
 
@@ -846,7 +869,9 @@ export const convertQuoteToLead = async (quote) => {
     quote_request_id: quote.id,
   }
 
-  return createCrmLead(payload)
+  const created = await createCrmLead(payload)
+  await linkQuoteVisitor(quote, created)
+  return created
 }
 
 
@@ -902,4 +927,49 @@ export const runRadarIngest = async () => {
   const { data, error } = await supabase.functions.invoke('radar-ingest', { body: {} })
   if (error) throw error
   return data
+}
+
+/* ----------------------------------------------------------------- visit history */
+
+/** Browser IDs linked to a lead (needs supabase/visitors.sql). */
+export const getLeadVisitorIds = async (leadId) => {
+  const { data, error } = await supabase.from('visitor_links').select('visitor_id').eq('lead_id', leadId)
+  if (error) throw error
+  return (data || []).map((row) => row.visitor_id)
+}
+
+const VISIT_GAP_MS = 30 * 60 * 1000
+
+/**
+ * Page views for the given visitor IDs, newest first, plus a summary.
+ * A "visit" is a run of page views with no gap longer than 30 minutes.
+ */
+export const getVisitHistory = async (visitorIds) => {
+  const ids = [...new Set((visitorIds || []).filter(Boolean))]
+  if (ids.length === 0) return { views: [], visits: 0, firstSeen: null, lastSeen: null }
+
+  const { data, error } = await supabase
+    .from('page_views')
+    .select('path, referrer, created_at')
+    .in('session_key', ids)
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (error) throw error
+
+  const views = data || []
+  let visits = 0
+  let previous = null
+  // Walk oldest to newest to count sessions.
+  for (let i = views.length - 1; i >= 0; i -= 1) {
+    const t = new Date(views[i].created_at).getTime()
+    if (previous === null || t - previous > VISIT_GAP_MS) visits += 1
+    previous = t
+  }
+
+  return {
+    views,
+    visits,
+    firstSeen: views.length ? views[views.length - 1].created_at : null,
+    lastSeen: views.length ? views[0].created_at : null,
+  }
 }

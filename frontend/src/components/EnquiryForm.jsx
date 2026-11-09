@@ -305,6 +305,11 @@ export default function EnquiryForm({ onSuccess, isModal = false }) {
 
       {globalError && <p className="fb-error mb-4">{globalError}</p>}
 
+      <p className="mb-3 text-xs text-[#A1A7CA]">
+        I keep what you send, plus a random browser ID so I can see which pages you viewed before contacting me and reply with
+        that context. See the <a href="/privacy" className="underline hover:text-white">privacy notice</a> (you can turn this off there).
+      </p>
+
       <button
         className="system-button system-button-primary w-full py-3.5 text-base font-bold text-center cursor-pointer transition-all"
         type="submit"

@@ -65,6 +65,12 @@ No email is sent to the visitor yet (auto-reply is off, because it needs a paid 
 
 ---
 
+## 4b. Knowing who visited
+
+A visitor's browser has a random ID. It is tied to a person only when they send the quote form (you then see the pages they read before contacting you) or open the **tracked link** in a pitch you sent them (shown in the lead drawer; pitches for leads already in the CRM use it automatically). History appears in the lead drawer (**Website visits**) and under each quote request. It only recognises the same browser on the same device, never tracks people who opt out or send Do Not Track, and keeps linked visits 12 months (others 90 days). The public `/privacy` page explains this; keep it accurate. Details: Help & Guide → *Knowing who visited*.
+
+---
+
 ## 5. Content
 
 - **Blog:** *Blog → Add new*. Build with containers and blocks (text, image, table, list, video, code, callout, quote, button). Posts save as HTML plus the block layout, so they reopen exactly as you left them. Set **publish date + Published** to schedule: the post stays hidden from the public until that date. Use the preview before publishing.

@@ -139,6 +139,10 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 - [ ] App Rescue Scanner: search "expense tracker" returns apps; flagged ones show reasons (low rating, months since update); "Add to CRM" creates a lead whose notes include the App Store URL, and the card then shows "In CRM"
 - [ ] Search Links tab includes Reddit r/forhire, r/FlutterFlow and the FlutterFlow job-postings forum
 - [ ] Help & Guide: the sidebar entry opens `/admin/help`; the search box filters topics; each quick answer jumps to the right section; topic pages show "On this page", the side topic list (a scrolling row on phones) and working Previous/Next links; an unknown topic URL shows a friendly message
+- [ ] Privacy: `/privacy` loads from the footer link and the note under the quote form; "Turn tracking off" stops page-view recording and removes the stored `__pv_session`; with Do Not Track on, the page says tracking is off
+- [ ] Visitor linking (after `supabase/visitors.sql`): browse a few public pages, submit a quote, then open it in Quote requests: "Before they contacted you" lists those pages, the lead drawer shows the same under Website visits, and the Discord alert mentions the pages
+- [ ] Tracked link: copy a lead's tracked link from the drawer, open it in a private window, then reload the drawer: the visit appears. A made-up `?ref=` code links nothing, and the `ref` parameter disappears from the address bar
+- [ ] A lead's pitch uses its tracked link; a lead not yet in the CRM uses the plain link
 - [ ] Submit a test quote: the lead appears in the CRM Pipeline (when `quote-notify` is deployed), you get the alert, and "Convert to deal" in the inbox shows it as already in CRM instead of creating a duplicate
 - [ ] Submit the same email twice within a day: only the first gets an auto-reply
 - [ ] "Add to CRM" inserts a lead and opens the pitch drawer

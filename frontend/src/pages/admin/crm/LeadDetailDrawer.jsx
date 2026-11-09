@@ -15,7 +15,8 @@ import {
 } from '../../../api/client'
 import ConfirmDialog from '../../../components/admin/ConfirmDialog'
 import { useToast } from '../../../components/admin/toastStore'
-import { buildPitch } from '../../../utils/pitch'
+import VisitHistory from '../../../components/admin/VisitHistory'
+import { buildPitch, portfolioUrlFor, SITE_URL } from '../../../utils/pitch'
 import { planAfterActivity, OUTREACH_TYPES } from './crmCadence'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 
@@ -298,7 +299,13 @@ export default function LeadDetailDrawer({
 
   // Post-aware algorithmic pitch (see utils/pitch.js)
   const getPitchContent = () =>
-    buildPitch({ lead: formData, angle: pitchAngle, tone: pitchTone, techStack: techStackInput })
+    buildPitch({
+      lead: formData,
+      angle: pitchAngle,
+      tone: pitchTone,
+      techStack: techStackInput,
+      trackToken: lead?.track_token,
+    })
 
   // Handle Log Pitch Sent to CRM timeline
   const handleLogPitchActivity = async () => {
@@ -339,6 +346,7 @@ export default function LeadDetailDrawer({
         angle: pitchAngle,
         tone: pitchTone,
         techStack: techStackInput,
+        portfolioUrl: portfolioUrlFor(lead?.track_token),
       })
       if (generated) {
         setCustomAiPitch(generated)
@@ -924,6 +932,36 @@ export default function LeadDetailDrawer({
               placeholder="Background notes, project scope, budget details, pain points..."
             />
           </div>
+
+          {/* Website visits by this contact (quote form or tracked link) */}
+          {lead?.id && (
+            <div className="pt-4 border-t border-panel-edge">
+              <h3 className="text-sm font-semibold text-white mb-3">Website visits</h3>
+              <VisitHistory leadId={lead.id} />
+              {lead.track_token && (
+                <div className="mt-3 rounded-lg border border-panel-edge bg-abyss/40 p-3">
+                  <p className="text-xs text-slate-400">
+                    Tracked link for this contact. The pitches above already use it; when they open it, their visits show here.
+                  </p>
+                  <div className="mt-2 flex items-center gap-2">
+                    <code className="min-w-0 flex-1 truncate rounded bg-abyss px-2 py-1 text-xs text-slate-200">
+                      {portfolioUrlFor(lead.track_token)}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(portfolioUrlFor(lead.track_token), 'tracked-link')}
+                      className="shrink-0 rounded-md border border-panel-edge px-2.5 py-1 text-xs text-slate-200 hover:border-slate-400"
+                    >
+                      {copiedKey === 'tracked-link' ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Only use it in emails you send to this person, and keep the privacy notice ({SITE_URL.replace('https://', '')}/privacy) accurate.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Chronological Activity Timeline (Salesforce Style) */}
           <div className="pt-4 border-t border-panel-edge">

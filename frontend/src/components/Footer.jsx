@@ -127,6 +127,8 @@ export default function Footer({ profile }) {
             &copy; {new Date().getFullYear()} {profile?.name || 'Jerry Dev Studio'}. All rights reserved.
           </p>
           <p className="mt-2 md:mt-0">
+            <a href="/privacy" className="hover:text-white transition-colors">Privacy</a>
+            <span aria-hidden="true"> &middot; </span>
             Not affiliated with FlutterFlow or Google.
           </p>
         </div>
