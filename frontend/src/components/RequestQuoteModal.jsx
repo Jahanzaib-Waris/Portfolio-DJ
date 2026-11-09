@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import EnquiryForm from './EnquiryForm'
 
-export default function RequestQuoteModal({ open, onClose }) {
+export default function RequestQuoteModal({ open, onClose, prefill = null }) {
   useEffect(() => {
     if (!open) return
 
@@ -46,7 +46,7 @@ export default function RequestQuoteModal({ open, onClose }) {
           </button>
         </div>
 
-        <EnquiryForm isModal={true} />
+        <EnquiryForm isModal={true} prefill={prefill} />
       </div>
     </div>
   )

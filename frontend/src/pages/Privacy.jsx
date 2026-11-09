@@ -57,6 +57,12 @@ export default function Privacy() {
             </li>
           </ul>
           <p className="mt-3">
+            <strong className="text-white">Interactive prototypes.</strong> The demos under Prototypes run in your browser with made-up data. What you do in
+            them (swipes, chat messages, survey answers) is not sent to or stored by this site. The voice demo uses your browser&rsquo;s own speech
+            recognition, which some browsers (for example Chrome) send to their provider to turn speech into text; it only starts when you press the
+            microphone button.
+          </p>
+          <p className="mt-3">
             The services that host this site (Firebase Hosting and Supabase) also keep standard technical logs, which can include
             your IP address, under their own policies. This site does not use those logs to identify you.
           </p>

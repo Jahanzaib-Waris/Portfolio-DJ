@@ -13,8 +13,8 @@ const initialForm = {
   company_website: '',
 }
 
-export default function EnquiryForm({ onSuccess, isModal = false }) {
-  const [form, setForm] = useState(initialForm)
+export default function EnquiryForm({ onSuccess, isModal = false, prefill = null }) {
+  const [form, setForm] = useState(() => ({ ...initialForm, details: prefill?.details || '' }))
   const [errors, setErrors] = useState({})
   const [status, setStatus] = useState('idle')
   const [globalError, setGlobalError] = useState(null)

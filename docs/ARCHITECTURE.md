@@ -204,6 +204,7 @@ Reopening a post runs `parseHTMLToBlocks()` (in `utils/blogBlocks.js`) to rebuil
 | `/solutions` | `Solutions` — FlutterFlow fix/guide library: category-filtered post cards backed by `getBlogPosts`, with built-in fallback posts |
 | `/blogs`, `/blogs/:slug` | `Blogs` (category filter, Load more) / `BlogDetail` (sticky TOC with scroll-spy, reading-progress bar) |
 | `/projects` | `Projects` — cards + deep-dive modal |
+| `/prototypes`, `/prototypes/:slug` | `Prototypes`, `PrototypeDetail` — Feature Lab: interactive demos (swipe cards, AI chat, voice chat, map with custom pins, survey matching) driven by `src/prototypes/registry.js`; see `docs/PROTOTYPES.md` |
 | `/privacy` | `Privacy` — what is recorded, retention, and a per-browser tracking opt-out |
 | `*` | `NotFound` |
 

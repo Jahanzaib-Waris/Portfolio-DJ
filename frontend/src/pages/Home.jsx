@@ -4,6 +4,8 @@ import { getProjects, getSkills } from '../api/client'
 import useDocumentMeta from '../hooks/useDocumentMeta'
 import SystemButton from '../components/SystemButton'
 import EnquiryForm from '../components/EnquiryForm'
+import { prototypes } from '../prototypes/registry'
+import { ProtoIcon } from '../prototypes/ui'
 
 const fallbackServices = [
   {
@@ -372,6 +374,34 @@ String timeAgo(DateTime date) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Interactive prototypes teaser */}
+      <section className="fb-section">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="fb-section__head max-w-2xl">
+            <p className="fb-kicker">Feature Lab</p>
+            <h2 className="fb-section__title">Try the feature before you build it.</h2>
+            <p className="fb-lead">
+              Working prototypes of the things clients ask about most. Swipe cards, AI and voice chat, maps with custom pins, and
+              survey-based recommendations, all with made-up data.
+            </p>
+          </div>
+          <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {prototypes.map((p) => (
+              <li key={p.slug}>
+                <Link to={`/prototypes/${p.slug}`} className="fb-card group transition-transform hover:-translate-y-1">
+                  <span className="fb-icon" aria-hidden="true">
+                    <ProtoIcon slug={p.slug} />
+                  </span>
+                  <h3>{p.title}</h3>
+                  <p>{p.tagline}</p>
+                  <span className="mt-auto pt-2 text-sm font-semibold text-neon-blue group-hover:underline">Try it &rarr;</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

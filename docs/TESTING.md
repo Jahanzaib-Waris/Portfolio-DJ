@@ -143,6 +143,13 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 - [ ] Visitor linking (after `supabase/visitors.sql`): browse a few public pages, submit a quote, then open it in Quote requests: "Before they contacted you" lists those pages, the lead drawer shows the same under Website visits, and the Discord alert mentions the pages
 - [ ] Tracked link: copy a lead's tracked link from the drawer, open it in a private window, then reload the drawer: the visit appears. A made-up `?ref=` code links nothing, and the `ref` parameter disappears from the address bar
 - [ ] A lead's pitch uses its tracked link; a lead not yet in the CRM uses the plain link
+- [ ] Feature Lab: `/prototypes` lists five demos and the category chips filter them; the Home page shows a Feature Lab strip; the nav has Prototypes
+- [ ] Swipe cards: dragging left saves to Favourites, dragging right skips, the buttons and arrow keys do the same, Undo restores the last card, finishing the deck shows "Start over"
+- [ ] AI chat: switching persona changes the rules shown and the style of answers; "How much does it cost?" never quotes a price and offers "Connect me to a person"; the weather question is politely declined; "Compare" shows all three answers
+- [ ] Voice chat: typing a question gets a spoken and written reply; "Stop speaking" works; with no microphone permission or no speech support you get a clear message and can type instead
+- [ ] Map: type and category chips filter pins; the radius slider dims out-of-range pins and changes the list; clicking a pin or list item opens its card; zoom buttons and drag-to-pan work; pins are at least ~22px on a phone
+- [ ] Survey: you cannot advance without an interest, a connection style and a goal; results show a ranked list with reasons; "Why?" shows the breakdown; filters and sort change the list
+- [ ] "Ask about this feature" opens the quote form with the prototype named in the message; no horizontal scrolling on any prototype page at 320px
 - [ ] Submit a test quote: the lead appears in the CRM Pipeline (when `quote-notify` is deployed), you get the alert, and "Convert to deal" in the inbox shows it as already in CRM instead of creating a duplicate
 - [ ] Submit the same email twice within a day: only the first gets an auto-reply
 - [ ] "Add to CRM" inserts a lead and opens the pitch drawer

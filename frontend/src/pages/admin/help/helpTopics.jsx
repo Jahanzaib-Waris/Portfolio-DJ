@@ -507,6 +507,24 @@ export const helpTopics = [
         ),
       },
       {
+        id: 'prototypes',
+        heading: 'Feature Lab prototypes',
+        body: (
+          <>
+            <P>
+              The public <B>/prototypes</B> section shows five interactive demos that visitors can try: swipe cards, AI chat, voice chat, a map with custom pins, and
+              survey-based matching. Each page ends with <Ui>Ask about this feature</Ui>, which opens the quote form with the demo already named in the message, so
+              you know exactly what they tried.
+            </P>
+            <Ul>
+              <li>All data is made up and nothing visitors do in a demo is stored.</li>
+              <li>Prototypes are part of the website&rsquo;s code, not edited in this panel. Adding or changing one is a development task (see <B>docs/PROTOTYPES.md</B> in the repository).</li>
+              <li>See which demos get used in <Go to="/admin/analytics">Analytics</Go>: look for pages starting with /prototypes. A quote that mentions a prototype tells you which feature the client has in mind.</li>
+            </Ul>
+          </>
+        ),
+      },
+      {
         id: 'seo-files',
         heading: 'Sitemap and feed',
         body: (

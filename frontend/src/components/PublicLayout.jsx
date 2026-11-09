@@ -29,6 +29,7 @@ function applyFavicon(url) {
 export default function PublicLayout() {
   const location = useLocation()
   const [quoteModalOpen, setQuoteModalOpen] = useState(false)
+  const [quotePrefill, setQuotePrefill] = useState(null)
   const [profile, setProfile] = useState(null)
   const [profileState, setProfileState] = useState('loading')
 
@@ -71,19 +72,27 @@ export default function PublicLayout() {
     trackPageView(location.pathname, document.referrer)
   }, [location.pathname])
 
-  const openQuoteModal = useCallback(() => setQuoteModalOpen(true), [])
+  const openQuoteModal = useCallback(() => {
+    setQuotePrefill(null)
+    setQuoteModalOpen(true)
+  }, [])
+  // Opens the form with some text already filled in (used by the prototype pages).
+  const openQuoteModalWith = useCallback((prefill) => {
+    setQuotePrefill(prefill || null)
+    setQuoteModalOpen(true)
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col">
       <NavBar profile={profile} onRequestQuote={openQuoteModal} />
 
       <main className="flex-1">
-        <Outlet context={{ profile, profileState, onRequestQuote: openQuoteModal }} />
+        <Outlet context={{ profile, profileState, onRequestQuote: openQuoteModal, onRequestQuoteWith: openQuoteModalWith }} />
       </main>
 
       <Footer profile={profile} />
 
-      <RequestQuoteModal open={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} />
+      <RequestQuoteModal open={quoteModalOpen} onClose={() => setQuoteModalOpen(false)} prefill={quotePrefill} />
     </div>
   )
 }

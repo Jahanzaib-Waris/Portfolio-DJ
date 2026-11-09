@@ -15,6 +15,8 @@ import NotFound from './pages/NotFound'
 // renderer, which is a large dependency most visitors never reach.
 const BlogDetail = lazy(() => import('./pages/BlogDetail'))
 const Privacy = lazy(() => import('./pages/Privacy'))
+const Prototypes = lazy(() => import('./pages/Prototypes'))
+const PrototypeDetail = lazy(() => import('./pages/PrototypeDetail'))
 
 // The panel is only ever used by one person, but it's most of the bundle. Lazy
 // loading keeps it out of the download for the visitors who will never see it;
@@ -72,6 +74,8 @@ function App() {
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:slug" element={<BlogDetail />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/prototypes" element={<Prototypes />} />
+            <Route path="/prototypes/:slug" element={<PrototypeDetail />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<NotFound />} />
           </Route>

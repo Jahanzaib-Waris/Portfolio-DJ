@@ -4,6 +4,7 @@ import SystemButton from './SystemButton'
 
 const navLinks = [
   { to: '/solutions', label: 'Solutions' },
+  { to: '/prototypes', label: 'Prototypes' },
   { to: '/blogs', label: 'Blog' },
   { to: '/#services', label: 'Services', isAnchor: true },
   { to: '/#about', label: 'About', isAnchor: true },
