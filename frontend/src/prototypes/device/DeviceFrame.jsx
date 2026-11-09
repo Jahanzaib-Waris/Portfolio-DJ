@@ -3,6 +3,7 @@ import { DEVICES, DeviceContext } from './deviceContext'
 
 const BEZEL = { mobile: 13, tablet: 20, web: 0 }
 const WEB_CHROME = 46
+const MIN_HEIGHT_SCALE = 0.5
 
 // Small decorative status-bar icons (static; this is a mockup).
 function StatusIcons({ dark }) {
@@ -54,10 +55,10 @@ function Screen({ device, url, children }) {
 /**
  * Draws the demo inside a phone, tablet or browser-window mockup. The frame keeps its natural
  * pixel size (so the app inside lays out as it would on that device) and is scaled down with a
- * transform when the page is narrower. On real phones (narrow viewports) it drops the mockup
+ * transform when the page is narrower or shorter than the device. On real phones (narrow viewports) it drops the mockup
  * and the demo simply fills a rounded screen.
  */
-export default function DeviceFrame({ device, url = 'app.example.com', children }) {
+export default function DeviceFrame({ device, url = 'app.example.com', maxHeight = Infinity, children }) {
   const wrapRef = useRef(null)
   const [avail, setAvail] = useState(900)
   const [phone, setPhone] = useState(false)
@@ -94,7 +95,9 @@ export default function DeviceFrame({ device, url = 'app.example.com', children 
   const bezel = BEZEL[device]
   const outerW = width + bezel * 2
   const outerH = (device === 'web' ? height + WEB_CHROME : height) + bezel * 2
-  const scale = Math.min(1, (avail - 8) / outerW)
+  // Fit the page's width first, then shrink further (down to half size) so the whole device
+  // is on screen at once; below that the page simply scrolls.
+  const scale = Math.min(1, (avail - 8) / outerW, Math.max(maxHeight / outerH, MIN_HEIGHT_SCALE))
 
   return (
     <div ref={wrapRef} className="w-full">

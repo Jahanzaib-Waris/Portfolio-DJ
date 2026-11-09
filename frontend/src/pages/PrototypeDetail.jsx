@@ -52,27 +52,26 @@ export default function PrototypeDetail() {
     })
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
-      <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-xs font-medium text-[#A1A7CA]">
-        <Link to="/prototypes" className="hover:text-white">
-          Prototypes
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-slate-200">{prototype.title}</span>
-      </nav>
-
-      <header className="max-w-3xl">
+    <div className="mx-auto max-w-7xl px-4 pb-16 pt-5 sm:px-6 sm:pt-6">
+      <div className="grid gap-8 lg:grid-cols-[19rem_minmax(0,1fr)] lg:gap-x-10 lg:gap-y-6">
+      <header className="lg:col-start-1 lg:row-start-1">
+        <nav aria-label="Breadcrumb" className="mb-3 flex items-center gap-2 text-xs font-medium text-[#A1A7CA]">
+          <Link to="/prototypes" className="hover:text-white">
+            Prototypes
+          </Link>
+          <span aria-hidden="true">/</span>
+          <span className="text-slate-200">{prototype.title}</span>
+        </nav>
         <div className="flex items-center gap-3">
           <span className="fb-icon" aria-hidden="true" style={{ color: prototype.colour, background: `${prototype.colour}26`, borderColor: `${prototype.colour}66` }}>
             <ProtoIcon slug={prototype.slug} />
           </span>
           <span className="text-sm font-medium text-[#A1A7CA]">{prototype.category}</span>
         </div>
-        <h1 className="system-heading mt-3 text-3xl text-white sm:text-4xl">{prototype.title}</h1>
+        <h1 className="system-heading mt-3 text-3xl text-white">{prototype.title}</h1>
         <p className="fb-lead mt-3 text-sm text-[#A1A7CA] sm:text-base">{prototype.summary}</p>
       </header>
-
-      <div className="mt-8">
+      <div className="min-w-0 lg:sticky lg:top-[68px] lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-start">
         <DemoBoundary key={slug}>
           <DemoStage url={prototype.url}>
             <Suspense fallback={<div className="flex h-full items-center justify-center text-sm font-bold text-kw-muted">Loading the demo...</div>}>
@@ -83,7 +82,7 @@ export default function PrototypeDetail() {
         <p className="mt-4 text-center text-xs text-[#A1A7CA]">A working demo with made-up data. Nothing you do here is stored.</p>
       </div>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-3 lg:col-start-1 lg:row-start-2 lg:grid-cols-1">
         <div className="rounded-2xl border border-panel-edge bg-panel/70 p-5">
           <h2 className="text-sm font-bold text-white">What this demo shows</h2>
           <ul className="mt-3 space-y-2 text-sm text-[#C9CEEA]">
@@ -122,6 +121,8 @@ export default function PrototypeDetail() {
             ))}
           </div>
         </div>
+      </div>
+
       </div>
 
       <nav aria-label="More prototypes" className="mt-12 grid gap-3 border-t border-panel-edge pt-6 sm:grid-cols-2">

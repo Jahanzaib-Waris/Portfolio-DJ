@@ -11,7 +11,7 @@ export const useDevice = () => useContext(DeviceContext)
 
 // Screen sizes in CSS pixels (the area the app draws in, inside the bezel).
 export const DEVICES = {
-  mobile: { label: 'Mobile', width: 390, height: 760 },
-  tablet: { label: 'Tablet', width: 768, height: 940 },
-  web: { label: 'Web', width: 1120, height: 660 },
+  mobile: { label: 'Mobile', width: 390, height: 700 },
+  tablet: { label: 'Tablet', width: 768, height: 900 },
+  web: { label: 'Web', width: 1120, height: 640 },
 }

@@ -145,6 +145,7 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 - [ ] A lead's pitch uses its tracked link; a lead not yet in the CRM uses the plain link
 - [ ] Feature Lab: `/prototypes` lists five demos and the category chips filter them; the Home page shows a Feature Lab strip; the nav has Prototypes
 - [ ] Device frames: each prototype opens in a phone frame; Tablet and Web switch the frame and reflow the app (side panels appear on wider screens); Reset demo restores the starting state; on a real phone (or a 360px window) the frame and switcher disappear and the demo fills the screen with no sideways scroll
+- [ ] The whole device is visible without scrolling in all three views at 1280x720 and at a short 1366x650 window; the device stays pinned while the left column scrolls (1024px and wider); on a portrait tablet the page stacks with no sideways scroll
 - [ ] The nav has no Projects link; there is no "Dummy data" chip above the demos
 - [ ] Swipe cards: dragging left saves to Favourites, dragging right skips, the buttons and arrow keys do the same, Undo restores the last card, finishing the deck shows "Start over"
 - [ ] AI chat: switching persona changes the rules shown and the style of answers; "How much does it cost?" never quotes a price and offers "Connect me to a person"; the weather question is politely declined; "Compare" shows all three answers

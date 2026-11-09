@@ -16,6 +16,13 @@ export default function DemoStage({ url, children }) {
   const [device, setDevice] = useState(lastDevice)
   const [resetKey, setResetKey] = useState(0)
   const [phone, setPhone] = useState(false)
+  const [vh, setVh] = useState(() => (typeof window === 'undefined' ? 800 : window.innerHeight))
+
+  useEffect(() => {
+    const onResize = () => setVh(window.innerHeight)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     const mq = window.matchMedia ? window.matchMedia('(max-width: 640px)') : null
@@ -32,11 +39,11 @@ export default function DemoStage({ url, children }) {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         {phone ? (
           <p className="text-xs text-[#A1A7CA]">Shown at your screen size. Open on a laptop to compare tablet and web layouts.</p>
         ) : (
-          <div role="radiogroup" aria-label="Preview on a device" className="inline-flex rounded-xl border border-panel-edge bg-abyss/70 p-1">
+          <div role="radiogroup" aria-label="Preview on a device" className="inline-flex rounded-xl border border-panel-edge bg-abyss/70 p-0.5">
             {Object.entries(DEVICES).map(([id, d]) => (
               <button
                 key={id}
@@ -44,7 +51,7 @@ export default function DemoStage({ url, children }) {
                 role="radio"
                 aria-checked={device === id}
                 onClick={() => choose(id)}
-                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-lg px-3 py-1 text-[13px] font-medium transition-colors ${
                   device === id ? 'bg-neon-deep text-white shadow' : 'text-[#A1A7CA] hover:text-white'
                 }`}
               >
@@ -59,13 +66,14 @@ export default function DemoStage({ url, children }) {
         <button
           type="button"
           onClick={() => setResetKey((k) => k + 1)}
-          className="rounded-lg border border-panel-edge px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:border-neon-indigo hover:text-white"
+          className="rounded-lg border border-panel-edge px-3 py-1 text-xs font-medium text-slate-200 transition-colors hover:border-neon-indigo hover:text-white"
         >
           Reset demo
         </button>
       </div>
 
-      <DeviceFrame device={device} url={url}>
+      {/* The frame may use the screen height minus the site header, this toolbar and a little air. */}
+      <DeviceFrame device={device} url={url} maxHeight={Math.max(320, vh - 140)}>
         <Fragment key={resetKey}>{children}</Fragment>
       </DeviceFrame>
     </div>
