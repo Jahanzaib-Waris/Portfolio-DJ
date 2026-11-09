@@ -1,7 +1,7 @@
 # Software Requirements Specification (SRS)
 ## Portfolio-DJ & FlowBase Content Management System
 
-**Document Version:** 2.0.0  
+**Document Version:** 2.1.0  
 **Status:** Approved / Living Specification  
 **Date:** November 2026 (architecture migrated from Django/Vercel to Supabase/Firebase; see `docs/ARCHITECTURE.md`)  
 **System Author & Lead Architect:** Jahanzaib Waris  
@@ -18,8 +18,9 @@ This Software Requirements Specification (SRS) document provides a complete desc
 This document covers:
 1. **Public Presentation Layer:** High-performance single-page application (SPA) featuring personal branding, project showcases, interactive case studies, skills matrix, service quote requests, traffic analytics beacon, and the public blog reader.
 2. **Administrative Control Panel Layer:** Secure, Supabase-Auth-protected management dashboard managing profile attributes, project portfolios, incoming quote submissions, runtime visual theme customization, traffic analytics reporting, the **FlowBase Block Builder Engine**, and a B2B sales CRM (pipeline, prospects, Client Radar, AI cold-pitch engine, Apollo.io enrichment).
-3. **FlowBase Visual Block Builder Engine:** A modular, auto-layout content builder allowing the composition of rich blog articles using Flexbox containers (Rows and Stacks) and atomic elements (text, images, headings, comparison tables, checklists, code cards, callouts, pull quotes, and video embeds) with lossless compilation into standards-compliant HTML.
-4. **Backend Layer:** Supabase — PostgreSQL 17 with Row Level Security as the authorization layer, Supabase Auth, Supabase Storage (`media` bucket), and two Deno Edge Functions (`ai-proxy`, `apollo-proxy`). The frontend queries Supabase directly; there is no custom application server. (The legacy Django API in `backend/` is retired and not part of the system.)
+3. **Feature Lab (interactive prototypes):** public demos of common app features (swipe cards, scripted AI chat, voice chat, map with custom pins, survey-based matching) with dummy data, shown in phone / tablet / browser frames, each leading to a pre-filled quote form (`docs/PROTOTYPES.md`). Visitor linking, tracked links and the privacy notice are described in `docs/ARCHITECTURE.md`.
+4. **FlowBase Visual Block Builder Engine:** A modular, auto-layout content builder allowing the composition of rich blog articles using Flexbox containers (Rows and Stacks) and atomic elements (text, images, headings, comparison tables, checklists, code cards, callouts, pull quotes, and video embeds) with lossless compilation into standards-compliant HTML.
+5. **Backend Layer:** Supabase — PostgreSQL 17 with Row Level Security as the authorization layer, Supabase Auth, Supabase Storage (`media` bucket), and four Deno Edge Functions (`ai-proxy`, `apollo-proxy`, `quote-notify`, `radar-ingest`). The frontend queries Supabase directly; there is no custom application server. (The legacy Django API in `backend/` is retired and not part of the system.)
 
 ### 1.3 Definitions, Acronyms, and Abbreviations
 - **API:** Application Programming Interface

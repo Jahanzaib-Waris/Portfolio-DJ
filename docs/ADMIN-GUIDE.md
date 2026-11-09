@@ -75,6 +75,7 @@ A visitor's browser has a random ID. It is tied to a person only when they send 
 
 - **Blog:** *Blog → Add new*. Build with containers and blocks (text, image, table, list, video, code, callout, quote, button). Posts save as HTML plus the block layout, so they reopen exactly as you left them. Set **publish date + Published** to schedule: the post stays hidden from the public until that date. Use the preview before publishing.
 - **Projects / Skills / Profile:** edit and reorder; *Featured* projects appear on the home page.
+- **Feature Lab (public `/prototypes`):** five interactive demos visitors can try; each ends in the quote form pre-filled with the feature they tried, so a quote that mentions a prototype tells you what they want. They are part of the site's code (not edited here); see `docs/PROTOTYPES.md`. Page views of `/prototypes/*` show in Analytics.
 - **Theme and Branding:** change colours, fonts and logo; the public site updates without a redeploy.
 - `sitemap.xml` and `feed.xml` are **not automatic**: add new posts to them by hand (or ask for the generator).
 

@@ -126,10 +126,13 @@ Lets you see what a known contact did on the site: pages they read before sendin
 
 - Project `fbeegpzrbocqgyxeqqtc`: `radar.sql`, `quote_notify.sql` and `radar_cron.sql` are applied; `radar-ingest` and `quote-notify` are deployed; Vault holds `project_url`, `radar_cron_secret`, `quote_webhook_secret`.
 - Function secrets set: `RADAR_CRON_SECRET`, `QUOTE_WEBHOOK_SECRET`, `SITE_URL`, `NOTIFY_WEBHOOK_URL` (Discord). No email provider (no `RESEND_API_KEY`), so email alerts and the visitor auto-reply are off.
+- `visitors.sql` is applied (2026-11-09): `quote_requests.visitor_id`, `crm_leads.track_token`, `visitor_links`, the `link_visitor` function and an updated `cleanup_old_page_views`; the `quote-notify` function was redeployed to link visitors. A second scheduled job, `page-views-retention-weekly` (Sundays 03:30 UTC), deletes unlinked page views older than 90 days (linked visitors: 365 days).
 - The daily job `radar-ingest-daily` runs at 03:00 UTC. The legacy Django tables (and their 267 rows, including 84 old page views) were dropped, and the temporary local backup was deleted on 2026-11-09, so that data no longer exists anywhere.
 - The live `site_theme` row still stores the old `Manrope` / `Fira Code` defaults (rendered as Plus Jakarta Sans / JetBrains Mono through an alias in `applyTheme.js`); to replace them, pick Plus Jakarta Sans and JetBrains Mono in Settings → Theme and Save (saving without changing the dropdowns keeps the old values), or update the row with SQL.
 
 ## Notes
+
+- **Hosting cache.** HTML is served with `cache-control: max-age=3600` (Firebase default), so a fresh deploy can take up to an hour to reach returning visitors, and a cached old page may reference replaced scripts. To fix, add a `no-cache` header for `**/*.html` in `firebase.json`; hashed assets keep their one-year `immutable` header. Always verify a deploy with a cache-busted request.
 
 - **Schema changes** are applied by running SQL in the Supabase SQL Editor; update `supabase/schema.sql` in the same commit so it stays the source of truth. `schema.sql` is for fresh setups: `INSERT ... ON CONFLICT DO NOTHING` seed rows never overwrite an existing row, so changed defaults (e.g. the theme fonts) do not alter a live database — change those through the admin UI.
 - **Free-tier pausing.** Supabase pauses idle free projects after about a week. A paused project can stop resolving in DNS, which looks like the project was deleted (`ENOTFOUND`). Check the dashboard for "Paused" and restore it before debugging anything else.

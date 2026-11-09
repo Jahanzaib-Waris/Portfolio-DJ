@@ -203,7 +203,7 @@ Reopening a post runs `parseHTMLToBlocks()` (in `utils/blogBlocks.js`) to rebuil
 | `/` | `Home` — hero, tech stack, featured work (`is_featured`, falling back to the first two by `display_order`), CTA |
 | `/solutions` | `Solutions` — FlutterFlow fix/guide library: category-filtered post cards backed by `getBlogPosts`, with built-in fallback posts |
 | `/blogs`, `/blogs/:slug` | `Blogs` (category filter, Load more) / `BlogDetail` (sticky TOC with scroll-spy, reading-progress bar) |
-| `/projects` | `Projects` — cards + deep-dive modal |
+| `/projects` | `Projects` — cards + deep-dive modal (no longer linked from the navbar; the prototypes replace it; still linked from Home and the footer) |
 | `/prototypes`, `/prototypes/:slug` | `Prototypes`, `PrototypeDetail` — Feature Lab: interactive demos (swipe cards, AI chat, voice chat, map with custom pins, survey matching) driven by `src/prototypes/registry.js`; see `docs/PROTOTYPES.md`. Demos render inside phone / tablet / browser frames (`prototypes/device/`) with a pastel "kawaii" app theme (`prototypes/kawaii.jsx`) |
 | `/privacy` | `Privacy` — what is recorded, retention, and a per-browser tracking opt-out |
 | `*` | `NotFound` |

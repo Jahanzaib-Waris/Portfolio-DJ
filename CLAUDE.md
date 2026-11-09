@@ -32,7 +32,7 @@ npx -y firebase-tools deploy --only hosting
 
 ### Supabase Database, Functions & Migrations
 
-- `supabase/schema.sql`: Full database schema, indexes, RLS policies, and analytics RPCs. Optional/extra SQL, each idempotent: `radar.sql` (stored Client Radar posts + `crm_leads.source_url`), `quote_notify.sql` (quote trigger), `radar_cron.sql` (daily schedule), `fixes/` (one-time data repairs, already applied).
+- `supabase/schema.sql`: Full database schema, indexes, RLS policies, and analytics RPCs. Optional/extra SQL, each idempotent: `radar.sql` (stored Client Radar posts + `crm_leads.source_url`), `quote_notify.sql` (quote trigger), `radar_cron.sql` (daily schedule), `visitors.sql` (visitor linking, tracked-link tokens, weekly page-view cleanup), `fixes/` (one-time data repairs, already applied).
 - `supabase/functions/`: Deno Edge Functions: `ai-proxy`, `apollo-proxy` (JWT required), `quote-notify`, `radar-ingest` (secret-authenticated, `verify_jwt = false` in `config.toml`). Shared radar parsing/scoring/fetching lives in `supabase/functions/_shared/radar/` and is imported by both the functions and the frontend.
 - The Supabase CLI is logged in on the dev machine and the folder is linked to the portfolio project (`fbeegpzrbocqgyxeqqtc`; the account also holds unrelated projects, never touch those). Useful commands:
 
@@ -102,3 +102,10 @@ supabase secrets set KEY=value --project-ref fbeegpzrbocqgyxeqqtc   # `secrets l
 - **Form Grids**: Forms with multiple columns must stack on mobile using `grid-cols-1 sm:grid-cols-2` or `grid-cols-1 sm:grid-cols-3`.
 - **Modals & Drawers**: Modals must specify `max-h-[92vh] sm:max-h-[85vh] overflow-y-auto` and `p-2.5 sm:p-4`. Slide-over drawers must use viewport-aware widths (`w-[84vw] max-w-xs` or `w-full sm:max-w-xl`).
 
+### 6. Public site map & working notes
+- **Public routes:** `/` (Home, with a Feature Lab strip), `/solutions`, `/blogs`, `/blogs/:slug`, `/prototypes`, `/prototypes/:slug`, `/privacy`, `/projects`, 404. The navbar no longer links to **Projects** (the prototypes replace it); the `/projects` route, Home "Recent builds" and the footer still link to it.
+- **Hosting cache quirk:** Firebase serves HTML with `cache-control: max-age=3600`, so returning visitors can see the previous deploy for up to an hour, and a cached old page can reference scripts that a new deploy has replaced. Fix not applied yet: add a `no-cache` header for HTML in `firebase.json` (keep the one-year `immutable` header for hashed assets). After deploying, verify with a cache-busted request (`curl "https://jerry-dev-studio.web.app/?cb=$RANDOM"`).
+- **Known visual quirk:** the Home hero stats row overflows horizontally by ~27px at ~1000px window width (pre-existing, not in the prototypes).
+- **Testing in the browser:** public pages need no login. Create a temporary `.claude/launch.json` (`npm --prefix frontend run dev -- --port 5173 --strictPort`), start it with the preview tool, and **delete it before committing**; it is untracked, so `git add -A` would include it. Admin screens need a signed-in session, so verify their data queries by SQL/API and ask the user to look at the UI.
+- **Pure-logic checks:** logic kept in plain `.js` modules (scoring, cadence, pitch, swipe/map/survey/assistant logic, visitor utils) can be checked with short `node --input-type=module -e` scripts, with browser globals stubbed. Edge Functions type-check with `deno check --config deno.json index.ts`.
+- **Production writes:** the permission system once blocked a CLI SQL write to production until the user explicitly asked for it. If that happens, do not look for a way around it: finish the other work, then give the user the exact commands or ask them to allow it.
