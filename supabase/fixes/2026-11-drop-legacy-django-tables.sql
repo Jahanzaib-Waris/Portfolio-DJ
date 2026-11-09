@@ -2,8 +2,9 @@
 -- One-time cleanup (2026-11-09): remove the tables left behind by the retired Django
 -- backend (backend/). The app only uses the Supabase tables from schema.sql.
 --
--- Before running: all 267 rows were exported to a local JSON backup. Legacy page views
--- (84 rows, Sept 2026) were NOT copied into page_views; they exist only in that backup.
+-- Before running, all 267 rows were exported to a temporary local JSON backup. Legacy page
+-- views (84 rows, Sept 2026) were NOT copied into page_views. By decision, that backup was
+-- deleted afterwards (2026-11-09), so this data is permanently gone.
 --
 -- Two old storage policies referenced public.auth_user (Django staff check). They were
 -- redundant with "Admin delete storage media" and "Public read storage media", and
