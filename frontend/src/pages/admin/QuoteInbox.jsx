@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 
 import { convertQuoteToLead, deleteQuoteRequest, getQuoteRequests } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import RowActionsMenu from '../../components/admin/RowActionsMenu'
 import SearchInput from '../../components/admin/SearchInput'
+import { editButtonClass, rowClass, tableWrapClass, tdClass, thClass } from '../../components/admin/formStyles'
 import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
@@ -88,7 +89,7 @@ export default function QuoteInbox() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
       <h1 className="mt-3 text-2xl text-white sm:text-3xl">Quote requests</h1>
       <p className="mt-2 text-sm text-slate-400">
         Submissions from the site&rsquo;s Request a Quote form, newest first.
@@ -114,116 +115,136 @@ export default function QuoteInbox() {
         <p className="mt-6 text-sm text-slate-400">No requests match &ldquo;{query}&rdquo;.</p>
       )}
 
-      <div className="mt-4 space-y-3">
-        {loadState === 'loading' &&
-          [1, 2, 3].map((i) => (
-            <StatusPanel key={i} glow={false} className="p-4">
-              <Skeleton className="h-5 w-40" />
-              <Skeleton className="mt-2 h-3 w-56" />
-            </StatusPanel>
-          ))}
+      {(loadState === 'loading' || filteredQuotes.length > 0) && (
+        <div className={tableWrapClass}>
+          <table className="w-full text-sm">
+            <thead className="border-b border-panel-edge">
+              <tr>
+                <th scope="col" className={thClass}>From</th>
+                <th scope="col" className={`${thClass} hidden md:table-cell`}>Message</th>
+                <th scope="col" className={`${thClass} hidden sm:table-cell`}>Received</th>
+                <th scope="col" className={`${thClass} text-right`}><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-panel-edge/70">
+              {loadState === 'loading' &&
+                [1, 2, 3].map((i) => (
+                  <tr key={i}>
+                    <td className={tdClass}><Skeleton className="h-4 w-40 max-w-full" /></td>
+                    <td className={`${tdClass} hidden md:table-cell`}><Skeleton className="h-4 w-56" /></td>
+                    <td className={`${tdClass} hidden sm:table-cell`}><Skeleton className="h-4 w-24" /></td>
+                    <td className={tdClass}></td>
+                  </tr>
+                ))}
 
-        {filteredQuotes.map((quote) => {
-          const isOpen = expanded === quote.id
-          return (
-            <StatusPanel key={quote.id} className="p-3.5 sm:p-4">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-                <button
-                  onClick={() => setExpanded(isOpen ? null : quote.id)}
-                  className="min-w-0 flex-1 text-left"
-                  aria-expanded={isOpen}
-                >
-                  <h2 className="truncate text-sm font-semibold text-white">{quote.name}</h2>
-                  <p className="mt-1 truncate text-xs text-slate-400">
-                    {quote.email} &middot; {formatDate(quote.submitted_at)}
-                  </p>
-                  {!isOpen && (
-                    <p className="mt-2 truncate text-xs text-slate-400">{quote.project_details}</p>
-                  )}
-                </button>
-
-                <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto sm:shrink-0 justify-start sm:justify-end">
-                  {convertedMap[quote.id] ? (
-                    <Link
-                      to="/admin/crm"
-                      className="rounded-md border border-emerald-500/50 bg-emerald-500/10 px-2.5 py-1.5 text-emerald-400 font-semibold transition-colors hover:bg-emerald-500/20"
-                    >
-                      ✓ In CRM Pipeline →
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={convertingId === quote.id}
-                      onClick={() => handleConvertToDeal(quote)}
-                      className="rounded-md border border-neon-indigo/50 bg-neon-indigo/10 px-2.5 py-1.5 text-white font-medium transition-colors hover:bg-neon-indigo/20 disabled:opacity-50"
-                      title="Convert this quote request into a tracked CRM Deal"
-                    >
-                      {convertingId === quote.id ? 'Converting...' : ' Convert to Deal'}
-                    </button>
-                  )}
-                  <a
-                    href={`mailto:${quote.email}?subject=${encodeURIComponent('Re: your project enquiry')}`}
-                    className="rounded-md border border-neon-blue/50 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10"
-                  >
-                    Reply
-                  </a>
-                  <button
-                    onClick={() => setPendingDelete(quote)}
-                    className="rounded-md border border-panel-edge px-3 py-1.5 text-slate-400 transition-colors hover:border-status-red/60 hover:text-status-red"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              {isOpen && (
-                <div className="mt-4 border-t border-panel-edge/60 pt-4 space-y-3">
-                  {(quote.service || quote.backend || quote.budget || quote.timeline) && (
-                    <div className="flex flex-wrap gap-2 text-xs">
-                      {quote.service && (
-                        <span className="fb-chip bg-neon-indigo/15 border-neon-indigo/40 text-white font-medium">
-                          {quote.service}
-                        </span>
-                      )}
-                      {quote.backend && (
-                        <span className="fb-chip bg-abyss border-panel-edge text-slate-300">
-                          Backend: {quote.backend}
-                        </span>
-                      )}
-                      {quote.budget && (
-                        <span className="fb-chip bg-abyss border-panel-edge text-slate-300">
-                          Budget: {quote.budget}
-                        </span>
-                      )}
-                      {quote.timeline && (
-                        <span className="fb-chip bg-abyss border-panel-edge text-slate-300">
-                          Timeline: {quote.timeline}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {quote.project_link && (
-                    <p className="text-xs text-slate-400 break-all">
-                      Link:{' '}
-                      <a
-                        href={quote.project_link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-neon-blue hover:underline break-all"
-                      >
-                        {quote.project_link}
-                      </a>
-                    </p>
-                  )}
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
-                    {quote.project_details}
-                  </p>
-                </div>
-              )}
-            </StatusPanel>
-          )
-        })}
-      </div>
+              {filteredQuotes.map((quote) => {
+                const isOpen = expanded === quote.id
+                return (
+                  <Fragment key={quote.id}>
+                    <tr className={rowClass}>
+                      <td className={`${tdClass} max-w-0 w-full sm:w-auto sm:max-w-[16rem]`}>
+                        <button
+                          type="button"
+                          onClick={() => setExpanded(isOpen ? null : quote.id)}
+                          aria-expanded={isOpen}
+                          className="block w-full text-left"
+                        >
+                          <span className="block truncate font-medium text-white">{quote.name}</span>
+                          <span className="mt-0.5 block truncate text-xs text-slate-400">
+                            {quote.email}
+                            <span className="sm:hidden"> &middot; {formatDate(quote.submitted_at)}</span>
+                          </span>
+                        </button>
+                      </td>
+                      <td className={`${tdClass} hidden max-w-xs md:table-cell`}>
+                        <p className="truncate text-xs text-slate-300">{quote.project_details}</p>
+                      </td>
+                      <td className={`${tdClass} hidden whitespace-nowrap text-xs text-slate-400 sm:table-cell`}>
+                        {formatDate(quote.submitted_at)}
+                      </td>
+                      <td className={tdClass}>
+                        <div className="flex items-center justify-end gap-2">
+                          <a
+                            href={`mailto:${quote.email}?subject=${encodeURIComponent('Re: your project enquiry')}`}
+                            className={`${editButtonClass} hidden sm:inline-block`}
+                          >
+                            Reply
+                          </a>
+                          <RowActionsMenu
+                            label={`Actions for ${quote.name}`}
+                            items={[
+                              {
+                                label: 'Reply by email',
+                                href: `mailto:${quote.email}?subject=${encodeURIComponent('Re: your project enquiry')}`,
+                              },
+                              convertedMap[quote.id]
+                                ? { label: 'View in CRM pipeline', to: '/admin/crm' }
+                                : {
+                                    label: convertingId === quote.id ? 'Converting...' : 'Convert to deal',
+                                    disabled: convertingId === quote.id,
+                                    onSelect: () => handleConvertToDeal(quote),
+                                  },
+                              { label: 'Delete', danger: true, onSelect: () => setPendingDelete(quote) },
+                            ]}
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                    {isOpen && (
+                      <tr className="bg-abyss/40">
+                        <td colSpan={4} className="px-3 py-4 sm:px-4">
+                          <div className="space-y-3">
+                            {(quote.service || quote.backend || quote.budget || quote.timeline) && (
+                              <div className="flex flex-wrap gap-2 text-xs">
+                                {quote.service && (
+                                  <span className="fb-chip border-neon-indigo/40 bg-neon-indigo/15 font-medium text-white">
+                                    {quote.service}
+                                  </span>
+                                )}
+                                {quote.backend && (
+                                  <span className="fb-chip border-panel-edge bg-abyss text-slate-300">
+                                    Backend: {quote.backend}
+                                  </span>
+                                )}
+                                {quote.budget && (
+                                  <span className="fb-chip border-panel-edge bg-abyss text-slate-300">
+                                    Budget: {quote.budget}
+                                  </span>
+                                )}
+                                {quote.timeline && (
+                                  <span className="fb-chip border-panel-edge bg-abyss text-slate-300">
+                                    Timeline: {quote.timeline}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {quote.project_link && (
+                              <p className="break-all text-xs text-slate-400">
+                                Link:{' '}
+                                <a
+                                  href={quote.project_link}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="break-all text-neon-blue hover:underline"
+                                >
+                                  {quote.project_link}
+                                </a>
+                              </p>
+                            )}
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
+                              {quote.project_details}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {hasMore && (
         <div className="mt-8 flex flex-col items-center gap-3">

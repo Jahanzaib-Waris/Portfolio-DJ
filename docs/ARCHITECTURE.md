@@ -105,7 +105,7 @@ Functions (RPCs):
 
 Storage: public-read `media` bucket; only authenticated users may upload/update/delete. `uploadMedia(file, folder)` in `api/supabase.js` returns the public URL, which is what gets stored in the `photo`, `thumbnail`, `cover_image`, `logo`, `favicon` columns.
 
-CRM stage values: `lead`, `contacted`, `proposal`, `negotiation`, `won`, `lost`. Temperatures: `cold`, `warm`, `hot`.
+CRM stage values: `lead`, `contacted`, `proposal`, `negotiation`, `closed_won`, `closed_lost`. Temperatures: `cold`, `warm`, `hot`.
 
 ---
 

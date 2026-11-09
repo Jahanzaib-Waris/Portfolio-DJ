@@ -468,7 +468,7 @@ CREATE TABLE IF NOT EXISTS public.crm_leads (
     phone TEXT DEFAULT '',
     linkedin_url TEXT DEFAULT '',
     company_website TEXT DEFAULT '',
-    stage TEXT NOT NULL DEFAULT 'lead',       -- 'lead', 'contacted', 'proposal', 'negotiation', 'won', 'lost'
+    stage TEXT NOT NULL DEFAULT 'lead',       -- 'lead', 'contacted', 'proposal', 'negotiation', 'closed_won', 'closed_lost'
     temperature TEXT NOT NULL DEFAULT 'warm', -- 'cold', 'warm', 'hot'
     source TEXT NOT NULL DEFAULT 'linkedin',  -- 'linkedin', 'website_inbound', 'referral', 'upwork', 'cold_outreach', 'other'
     deal_value NUMERIC(10,2) DEFAULT 0,

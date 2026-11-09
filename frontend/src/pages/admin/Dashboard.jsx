@@ -173,38 +173,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Interactive Metric Cards (Clickable) */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card, i) => (
-          <Link
-            key={i}
-            to={card.to}
-            className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-4 sm:p-5 transition-all duration-200 hover:border-neon-blue/60"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-medium">
-                {card.badge}
-              </span>
-              <span className="text-xs text-slate-400 group-hover:text-neon-blue transition-colors font-medium">
-                Open &rarr;
-              </span>
-            </div>
-
-            <p className="mt-2 text-xs font-medium text-slate-300">{card.title}</p>
-
-            {loadState === 'loading' ? (
-              <Skeleton className="mt-2 h-8 w-16" />
-            ) : (
-              <p className={`mt-1 text-2xl sm:text-3xl font-extrabold font-display tracking-tight tabular-nums ${card.color}`}>
-                {card.count}
-              </p>
-            )}
-
-            <p className="mt-1 text-xs text-slate-400">{card.sub}</p>
-          </Link>
-        ))}
-      </div>
-
       {/* Action Required Widget Row */}
       {(crmDueLeads.length > 0 || recentQuotes.length > 0) && (
         <div className="grid gap-6 md:grid-cols-2">
@@ -278,6 +246,41 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {crmDueLeads.length === 0 && recentQuotes.length === 0 && loadState === 'ready' && (
+        <p className="rounded-lg border border-panel-edge bg-panel/60 px-4 py-3 text-sm text-slate-300">
+          Nothing needs attention: no follow-ups due and no new quote requests.
+        </p>
+      )}
+
+      {/* Interactive Metric Cards (Clickable) */}
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((card, i) => (
+          <Link
+            key={i}
+            to={card.to}
+            className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-4 sm:p-5 transition-all duration-200 hover:border-neon-blue/60"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-medium">
+                {card.badge}
+              </span>
+            </div>
+
+            <p className="mt-2 text-xs font-medium text-slate-300">{card.title}</p>
+
+            {loadState === 'loading' ? (
+              <Skeleton className="mt-2 h-8 w-16" />
+            ) : (
+              <p className={`mt-1 text-2xl sm:text-3xl font-extrabold font-display tracking-tight tabular-nums ${card.color}`}>
+                {card.count}
+              </p>
+            )}
+
+            <p className="mt-1 text-xs text-slate-400">{card.sub}</p>
+          </Link>
+        ))}
+      </div>
 
       {/* Traffic Chart Panel */}
       <StatusPanel glow={false} className="p-6">

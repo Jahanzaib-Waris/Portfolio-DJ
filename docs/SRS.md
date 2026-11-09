@@ -106,7 +106,7 @@ Supabase Auth, email + password. There is no separate user table in the app sche
 - **RPC `cleanup_old_page_views(retention_days)`:** authenticated-only retention sweep.
 
 ### 3.8 CRM
-- **`crm_leads`:** contact and company fields, `stage` (`lead`, `contacted`, `proposal`, `negotiation`, `won`, `lost`), `temperature` (`cold`, `warm`, `hot`), `source`, `deal_value`, `currency`, `tech_stack[]`, `notes`, `next_follow_up`, optional `quote_request_id`.
+- **`crm_leads`:** contact and company fields, `stage` (`lead`, `contacted`, `proposal`, `negotiation`, `closed_won`, `closed_lost`), `temperature` (`cold`, `warm`, `hot`), `source`, `deal_value`, `currency`, `tech_stack[]`, `notes`, `next_follow_up`, optional `quote_request_id`.
 - **`crm_activities`:** `lead_id` (cascades on delete), `type` (`note`, `linkedin_message`, `email`, `call`, `meeting`, `proposal_sent`), `content`.
 - Admin-only; no public access.
 

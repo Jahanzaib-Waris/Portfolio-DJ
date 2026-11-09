@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 
 import { deleteProject, getProjects } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import RowActionsMenu from '../../components/admin/RowActionsMenu'
 import SearchInput from '../../components/admin/SearchInput'
+import { editButtonClass, rowClass, tableWrapClass, tdClass, thClass } from '../../components/admin/formStyles'
 import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
@@ -92,67 +94,87 @@ export default function ProjectList() {
         <p className="mt-6 text-sm text-slate-400">No projects match &ldquo;{query}&rdquo;.</p>
       )}
 
-      <div className="mt-4 space-y-3">
-        {loadState === 'loading' &&
-          [1, 2, 3].map((i) => (
-            <StatusPanel key={i} glow={false} className="p-4">
-              <Skeleton className="h-5 w-1/3" />
-              <Skeleton className="mt-2 h-3 w-24" />
-            </StatusPanel>
-          ))}
+      {(loadState === 'loading' || filteredProjects.length > 0) && (
+        <div className={tableWrapClass}>
+          <table className="w-full text-sm">
+            <thead className="border-b border-panel-edge">
+              <tr>
+                <th scope="col" className={thClass}>Project</th>
+                <th scope="col" className={`${thClass} hidden sm:table-cell`}>Order</th>
+                <th scope="col" className={`${thClass} text-right`}><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-panel-edge/70">
+              {loadState === 'loading' &&
+                [1, 2, 3].map((i) => (
+                  <tr key={i}>
+                    <td className={tdClass}><Skeleton className="h-8 w-56 max-w-full" /></td>
+                    <td className={`${tdClass} hidden sm:table-cell`}><Skeleton className="h-4 w-8" /></td>
+                    <td className={tdClass}></td>
+                  </tr>
+                ))}
 
-        {filteredProjects.map((project) => (
-          <StatusPanel key={project.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              {project.thumbnail ? (
-                <img
-                  src={project.thumbnail}
-                  alt=""
-                  className="h-12 w-16 shrink-0 rounded border border-panel-edge object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-16 shrink-0 items-center justify-center rounded border border-dashed border-panel-edge text-xs font-mono text-slate-400 bg-abyss/40">
-                  no img
-                </div>
-              )}
-
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate text-sm font-semibold text-white">{project.title}</h2>
-                  <span className="rounded-full bg-abyss border border-panel-edge px-2 py-0.5 text-xs font-mono text-slate-300">
+              {filteredProjects.map((project) => (
+                <tr key={project.id} className={rowClass}>
+                  <td className={`${tdClass} max-w-0 w-full sm:w-auto sm:max-w-md`}>
+                    <div className="flex items-center gap-3">
+                      {project.thumbnail ? (
+                        <img
+                          src={project.thumbnail}
+                          alt=""
+                          loading="lazy"
+                          className="h-8 w-12 shrink-0 rounded border border-panel-edge object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-8 w-12 shrink-0 items-center justify-center rounded border border-dashed border-panel-edge bg-abyss/40 text-xs text-slate-400">
+                          &mdash;
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/admin/projects/${project.id}/edit`}
+                            className="truncate font-medium text-white hover:text-neon-blue"
+                          >
+                            {project.title}
+                          </Link>
+                          {project.is_featured && (
+                            <span className="shrink-0 rounded-full border border-neon-blue/30 bg-neon-blue/15 px-2 py-0.5 text-xs font-medium text-neon-blue">
+                              Featured
+                            </span>
+                          )}
+                        </div>
+                        {project.tech_stack_list?.length > 0 && (
+                          <p className="mt-0.5 truncate text-xs text-slate-400">
+                            {project.tech_stack_list.join(' · ')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </td>
+                  <td className={`${tdClass} hidden whitespace-nowrap text-xs text-slate-400 sm:table-cell`}>
                     #{project.display_order}
-                  </span>
-                  {project.is_featured && (
-                    <span className="rounded-full bg-neon-blue/15 border border-neon-blue/30 px-2 py-0.5 text-xs font-mono font-medium text-neon-blue">
-                      Featured
-                    </span>
-                  )}
-                </div>
-                {project.tech_stack_list?.length > 0 && (
-                  <p className="mt-1 truncate text-xs text-slate-400">
-                    {project.tech_stack_list.join(' · ')}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto justify-end">
-              <Link
-                to={`/admin/projects/${project.id}/edit`}
-                className="rounded-md border border-neon-blue/50 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => setPendingDelete(project)}
-                className="rounded-md border border-panel-edge px-3 py-1.5 text-slate-400 transition-colors hover:border-status-red/60 hover:text-status-red"
-              >
-                Delete
-              </button>
-            </div>
-          </StatusPanel>
-        ))}
-      </div>
+                  </td>
+                  <td className={tdClass}>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link to={`/admin/projects/${project.id}/edit`} className={`${editButtonClass} hidden sm:inline-block`}>
+                        Edit
+                      </Link>
+                      <RowActionsMenu
+                        label={`Actions for ${project.title}`}
+                        items={[
+                          { label: 'Edit', to: `/admin/projects/${project.id}/edit` },
+                          { label: 'Delete', danger: true, onSelect: () => setPendingDelete(project) },
+                        ]}
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {hasMore && (
         <div className="mt-8 flex flex-col items-center gap-3">

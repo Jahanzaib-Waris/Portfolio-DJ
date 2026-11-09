@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom'
 
 import { deleteBlogPost, getBlogPosts } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import RowActionsMenu from '../../components/admin/RowActionsMenu'
 import SearchInput from '../../components/admin/SearchInput'
+import { editButtonClass, rowClass, tableWrapClass, tdClass, thClass } from '../../components/admin/formStyles'
 import { useToast } from '../../components/admin/toastStore'
 import StatusPanel from '../../components/StatusPanel'
 import SystemButton from '../../components/SystemButton'
@@ -88,69 +90,85 @@ export default function BlogList() {
         <p className="mt-6 text-sm text-slate-400">No posts match &ldquo;{query}&rdquo;.</p>
       )}
 
-      <div className="mt-4 space-y-3">
-        {loadState === 'loading' &&
-          [1, 2, 3].map((i) => (
-            <StatusPanel key={i} glow={false} className="p-4">
-              <Skeleton className="h-5 w-1/3" />
-              <Skeleton className="mt-2 h-3 w-24" />
-            </StatusPanel>
-          ))}
+      {(loadState === 'loading' || filteredPosts.length > 0) && (
+        <div className={tableWrapClass}>
+          <table className="w-full text-sm">
+            <thead className="border-b border-panel-edge">
+              <tr>
+                <th scope="col" className={thClass}>Title</th>
+                <th scope="col" className={thClass}>Status</th>
+                <th scope="col" className={`${thClass} hidden sm:table-cell`}>Date</th>
+                <th scope="col" className={`${thClass} text-right`}><span className="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-panel-edge/70">
+              {loadState === 'loading' &&
+                [1, 2, 3].map((i) => (
+                  <tr key={i}>
+                    <td className={tdClass}><Skeleton className="h-4 w-48 max-w-full" /></td>
+                    <td className={tdClass}><Skeleton className="h-4 w-14" /></td>
+                    <td className={`${tdClass} hidden sm:table-cell`}><Skeleton className="h-4 w-20" /></td>
+                    <td className={tdClass}></td>
+                  </tr>
+                ))}
 
-        {filteredPosts.map((post) => {
-          const todayStr = new Date().toISOString().slice(0, 10)
-          const isScheduled = post.is_published && post.published_date && post.published_date > todayStr
+              {filteredPosts.map((post) => {
+                const todayStr = new Date().toISOString().slice(0, 10)
+                const isScheduled = post.is_published && post.published_date && post.published_date > todayStr
 
-          return (
-            <StatusPanel key={post.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate text-sm font-semibold text-white">{post.title}</h2>
-                  {isScheduled ? (
-                    <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2.5 py-0.5 text-xs font-mono font-medium tracking-wide text-neon-blue">
-                      Scheduled &middot; {post.published_date}
-                    </span>
-                  ) : post.is_published ? (
-                    <span className="rounded-full bg-status-green/15 border border-status-green/30 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wide text-status-green">
-                      Live
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-accent/15 border border-accent/30 px-2.5 py-0.5 text-xs font-mono font-medium uppercase tracking-wide text-accent">
-                      Draft
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 truncate text-xs text-slate-400">
-                  {post.published_date} &middot; /{post.slug}
-                </p>
-              </div>
-
-            <div className="flex flex-wrap items-center gap-2 text-xs w-full sm:w-auto justify-end">
-              {post.is_published && (
-                <Link
-                  to={`/blogs/${post.slug}`}
-                  className="rounded-md border border-panel-edge px-3 py-1.5 text-slate-300 transition-colors hover:border-neon-blue/60 hover:text-neon-blue"
-                >
-                  View
-                </Link>
-              )}
-              <Link
-                to={`/admin/blog/${post.slug}/edit`}
-                className="rounded-md border border-neon-blue/50 px-3 py-1.5 text-neon-blue transition-colors hover:bg-neon-blue/10"
-              >
-                Edit
-              </Link>
-              <button
-                onClick={() => setPendingDelete(post)}
-                className="rounded-md border border-panel-edge px-3 py-1.5 text-slate-400 transition-colors hover:border-status-red/60 hover:text-status-red"
-              >
-                Delete
-              </button>
-            </div>
-          </StatusPanel>
-          )
-        })}
-      </div>
+                return (
+                  <tr key={post.id} className={rowClass}>
+                    <td className={`${tdClass} max-w-0 w-full sm:w-auto sm:max-w-sm`}>
+                      <Link
+                        to={`/admin/blog/${post.slug}/edit`}
+                        className="block truncate font-medium text-white hover:text-neon-blue"
+                      >
+                        {post.title}
+                      </Link>
+                      <p className="mt-0.5 truncate text-xs text-slate-400">
+                        <span className="sm:hidden">{post.published_date} &middot; </span>/{post.slug}
+                      </p>
+                    </td>
+                    <td className={`${tdClass} whitespace-nowrap`}>
+                      {isScheduled ? (
+                        <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-xs font-medium text-neon-blue">
+                          Scheduled
+                        </span>
+                      ) : post.is_published ? (
+                        <span className="rounded-full border border-status-green/30 bg-status-green/15 px-2 py-0.5 text-xs font-medium text-status-green">
+                          Live
+                        </span>
+                      ) : (
+                        <span className="rounded-full border border-panel-edge bg-abyss px-2 py-0.5 text-xs font-medium text-slate-300">
+                          Draft
+                        </span>
+                      )}
+                    </td>
+                    <td className={`${tdClass} hidden whitespace-nowrap text-xs text-slate-400 sm:table-cell`}>
+                      {post.published_date}
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-center justify-end gap-2">
+                        <Link to={`/admin/blog/${post.slug}/edit`} className={`${editButtonClass} hidden sm:inline-block`}>
+                          Edit
+                        </Link>
+                        <RowActionsMenu
+                          label={`Actions for ${post.title}`}
+                          items={[
+                            { label: 'Edit', to: `/admin/blog/${post.slug}/edit` },
+                            { label: 'View on site', to: `/blogs/${post.slug}`, hidden: !post.is_published },
+                            { label: 'Delete', danger: true, onSelect: () => setPendingDelete(post) },
+                          ]}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {hasMore && (
         <div className="mt-8 flex flex-col items-center gap-3">
