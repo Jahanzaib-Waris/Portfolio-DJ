@@ -27,3 +27,11 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/quote-notify/deno.json"
 entrypoint = "./functions/quote-notify/index.ts"
+
+[functions.radar-ingest]
+enabled = true
+# Called by pg_cron with an x-cron-secret header, or by the admin UI with a user JWT;
+# both are checked inside the function.
+verify_jwt = false
+import_map = "./functions/radar-ingest/deno.json"
+entrypoint = "./functions/radar-ingest/index.ts"

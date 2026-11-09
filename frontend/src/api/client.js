@@ -849,3 +849,57 @@ export const convertQuoteToLead = async (quote) => {
   return createCrmLead(payload)
 }
 
+
+/* ------------------------------------------------------------- Client Radar store */
+
+// Maps a radar_items row (see supabase/radar.sql) to the item shape Client Radar renders.
+const rowToRadarItem = (row) => ({
+  id: row.external_id || `db-${row.id}`,
+  dbId: row.id,
+  status: row.status,
+  leadId: row.lead_id,
+  source: row.source,
+  sourceLabel: row.source_label,
+  company: row.company,
+  title: row.title,
+  location: row.location,
+  type: row.type_label,
+  employmentType: row.employment_type,
+  salary: row.salary || null,
+  email: row.email || null,
+  website: row.website || '',
+  description: row.description,
+  fullText: row.full_text,
+  url: row.source_url,
+  applyUrl: row.extra?.apply_url || row.source_url,
+  tags: row.extra?.tags || [],
+  threadTitle: row.extra?.thread_title || '',
+  highlight: Boolean(row.extra?.highlight),
+  isFounderDirect: Boolean(row.extra?.founder_direct),
+  date: row.posted_at,
+  firstSeenAt: row.first_seen_at,
+  lastSeenAt: row.last_seen_at,
+})
+
+/** Radar posts stored by the radar-ingest function. Throws if radar_items doesn't exist yet. */
+export const getRadarItems = async () => {
+  const { data, error } = await supabase
+    .from('radar_items')
+    .select('*')
+    .order('posted_at', { ascending: false, nullsFirst: false })
+    .limit(600)
+  if (error) throw error
+  return (data || []).map(rowToRadarItem)
+}
+
+export const updateRadarItem = async (dbId, patch) => {
+  const { error } = await supabase.from('radar_items').update(patch).eq('id', dbId)
+  if (error) throw error
+}
+
+/** Runs the radar-ingest Edge Function now (admin "Refresh Feeds"). */
+export const runRadarIngest = async () => {
+  const { data, error } = await supabase.functions.invoke('radar-ingest', { body: {} })
+  if (error) throw error
+  return data
+}

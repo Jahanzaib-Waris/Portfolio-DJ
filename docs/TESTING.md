@@ -128,6 +128,12 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 - [ ] Each card shows a fit badge (Contract fit / Engagement unclear / Full-time role); "Hide full-time / employment roles" is on by default and hides the full-time ones
 - [ ] "Dismiss" hides a post, survives a reload, and "Show dismissed" brings it back with a Restore link
 - [ ] A post already imported shows "In CRM" after a reload, and cannot be imported twice
+- [ ] After `radar.sql` and `radar-ingest` are set up: Refresh Feeds shows a "Fetched N posts (M new)" toast, the header says "Stored results, last fetched …", and results are the same after a reload
+- [ ] Dismiss a post in one browser: it stays dismissed in another browser (shared status). Import a post: it shows "In CRM" everywhere
+- [ ] Stack pills (Flutter, Mobile, Supabase, Contract) filter stored results instantly without a reload
+- [ ] With the table missing or empty, the radar still loads live results (header says "Live results fetched in your browser")
+- [ ] Run Refresh Feeds twice: no duplicate posts, and previously dismissed posts stay dismissed
+- [ ] After the daily schedule runs: a digest arrives listing only new, non-full-time posts, and the same post is not emailed again the next day
 - [ ] Submit a test quote: the lead appears in the CRM Pipeline (when `quote-notify` is deployed), you get the alert, and "Convert to deal" in the inbox shows it as already in CRM instead of creating a duplicate
 - [ ] Submit the same email twice within a day: only the first gets an auto-reply
 - [ ] "Add to CRM" inserts a lead and opens the pitch drawer

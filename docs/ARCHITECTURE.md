@@ -21,11 +21,16 @@ Portfolio-DJ/
 │   ├── schema.sql           tables, indexes, RLS policies, storage bucket, RPCs, seed rows (idempotent)
 │   ├── seed_scheduled_blogs.sql   editorial-calendar blog seed
 │   ├── quote_notify.sql     trigger that calls quote-notify (run after deploying it; needs Vault secrets)
+│   ├── radar.sql            radar_items table + crm_leads.source_url (run once; app falls back to live fetching without it)
+│   ├── radar_cron.sql       pg_cron schedule for radar-ingest (needs Vault secrets)
+│   ├── fixes/               one-time data repair scripts
 │   ├── config.toml          edge function config (verify_jwt = true for both)
 │   └── functions/
 │       ├── ai-proxy/        LLM calls (Ollama Cloud, Groq, OpenAI) — keeps provider CORS/keys off the browser path
 │       ├── apollo-proxy/    Apollo.io contact enrichment
-│       └── quote-notify/    Quote alerts, optional auto-reply, auto-created CRM lead (called by a DB trigger)
+│       ├── quote-notify/    Quote alerts, optional auto-reply, auto-created CRM lead (called by a DB trigger)
+│       ├── radar-ingest/    Daily server-side radar fetch → radar_items, plus digest email (pg_cron or admin button)
+│       └── _shared/radar/   text.js, scoring.js, sources.js: parsing, scoring and fetching shared by the browser and the functions
 │
 ├── frontend/                React 19 + Vite SPA
 │   ├── public/              favicons, manifest.json, robots.txt, sitemap.xml, feed.xml,
@@ -98,6 +103,7 @@ All tables have RLS enabled. "Admin" below means any `authenticated` Supabase us
 | `site_theme` | Singleton (id = 1), runtime theme | 8 colour tokens, `font_display`, `font_mono`, `radius_scale`, `shadow_intensity`, `button_style`, `card_style` | read | all |
 | `page_views` | Analytics events | `path`, `referrer`, `is_blog_post`, `slug`, `session_key` | insert only | read |
 | `crm_leads` | Sales pipeline | `name`, `company`, `job_title`, `email`, `linkedin_url`, `stage`, `temperature`, `source`, `deal_value`, `tech_stack[]`, `next_follow_up`, `quote_request_id` | none | all |
+| `radar_items` | Stored Client Radar posts (optional; `supabase/radar.sql`) | `source_url` (unique), `company`, `title`, `posted_at`, `score`, `fit`, `status` (`new`/`dismissed`/`imported`), `lead_id`, `first_seen_at`, `last_seen_at`, `notified_at` | none | all |
 | `crm_activities` | Per-lead timeline | `lead_id` (cascade), `type`, `content` | none | all |
 
 Functions (RPCs):
@@ -173,7 +179,8 @@ Reopening a post runs `parseHTMLToBlocks()` (in `utils/blogBlocks.js`) to rebuil
 
 - **Client Radar** (`radarClient.js`) pulls Hacker News (the latest "Who is hiring?" thread, found via the `whoishiring` author tag; top-level posts only; several stack queries merged), RemoteOK, and Jobicy, and lists freelance-marketplace scanners. The monthly "Freelancer? Seeking freelancer?" thread was last posted in October 2025; the fetcher uses it only if a post from the last 45 days exists. Obfuscated emails (`name [at] domain [dot] com`) are recognised.
 - **Opportunity Score** (`radarScoring.js`) is a deterministic 0–100 rule set, not an LLM call: freshness decay (30), reachability (15), tech-stack match (25), and **engagement fit** (30). `classifyEngagement` labels each post `fit` (contract / freelance / part-time / project / retainer wording), `unclear`, or `not_fit` (exclusive full-time, W-2, contract-to-hire, benefits, fixed 40-hour weeks), because the studio serves several clients and does not take exclusive employment. The radar hides `not_fit` posts by default (toggle), and shows a fit badge on every card.
-- **Dismissed posts** are remembered per browser in `localStorage` (`radar_dismissed_v1`); imported posts are recognised by the `Post URL:` line saved in the lead's notes. A dedicated `radar_items` table (server-side ingestion, history, shared dismissal) is the planned next step.
+- **Two modes.** With `radar_items` present and filled, Client Radar shows *stored* posts that the `radar-ingest` function fetched server-side (daily via `pg_cron`, or on demand with the Refresh Feeds button): the shared parsing/scoring code runs in Deno, new posts are upserted by `source_url` (existing rows keep their status), never-actioned posts unseen for 45 days are pruned, and a digest of new contract-fit posts scoring at least `DIGEST_MIN_SCORE` is emailed once each. Scores shown in the UI are recomputed in the browser, because freshness decays with time. Without the table, the radar fetches live in the browser as before.
+- **Dismissed and imported posts** are stored in `radar_items.status` (shared across devices) in stored mode, and in `localStorage` (`radar_dismissed_v1`) in live mode. Imported posts are also recognised by `crm_leads.source_url` (or, for older leads, the `Post URL:` line in the lead's notes).
 - **Apollo enrichment** (`apolloClient.js` → `apollo-proxy`): "Find Decision-Maker & Verified Email" from `LeadDetailDrawer` and `ClientRadar`.
 - **AI Cold Pitch Engine** (`aiClient.js`): providers are Ollama Cloud, Ollama Local (direct to the daemon or a tunnel — this path is browser → daemon, not through the Edge Function), Groq (Llama 3.3 70B), OpenAI/custom, or the zero-API algorithmic templates (default). Output is 3 angles (Rescue & Refactor, Rapid MVP Delivery, Architecture Advisory) × 3 tones (Senior Engineer, Pragmatic Partner, Direct & Punchy).
 

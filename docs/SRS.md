@@ -110,7 +110,10 @@ Supabase Auth, email + password. There is no separate user table in the app sche
 - **`crm_activities`:** `lead_id` (cascades on delete), `type` (`note`, `linkedin_message`, `email`, `call`, `meeting`, `proposal_sent`), `content`.
 - Admin-only; no public access.
 
-### 3.9 Lead Tooling (non-database)
+### 3.9 Client Radar Store
+- **`radar_items`** (optional, `supabase/radar.sql`): posts fetched server-side by the `radar-ingest` Edge Function, unique on `source_url`, with `fit`, ingestion-time `score`, and a shared `status` (`new`, `dismissed`, `imported`). Admin-only. `crm_leads.source_url` records the post a lead came from.
+
+### 3.10 Lead Tooling (non-database)
 - **Client Radar:** aggregates Hacker News hiring posts, RemoteOK and Jobicy; ranks each item with a rule-based 0–100 Opportunity Score (freshness decay, reachability, tech-stack match, deal-intent signals).
 - **AI Cold Pitch Engine:** Ollama Cloud, Ollama Local, Groq, OpenAI/custom, or built-in algorithmic templates; 3 angles × 3 tones.
 - **Apollo.io enrichment:** decision-maker and verified-email lookup via `apollo-proxy`.

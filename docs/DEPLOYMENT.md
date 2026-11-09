@@ -94,6 +94,25 @@ The `quote-notify` Edge Function emails you (and/or posts to a chat webhook) whe
 
 Abuse note: the quote form is public, so the auto-reply is limited to one per email address per 24 hours and 20 per hour overall, and never repeats what the submitter typed. If you see misuse, set `AUTO_REPLY` off.
 
+## 8. Server-side Client Radar (optional, recommended)
+
+By default Client Radar fetches posts live in your browser. This step makes the server fetch them daily, store them (with history and a dismissed/imported status shared across devices), and email you a digest of new contract-fit posts.
+
+1. **Create the tables.** Run `supabase/radar.sql` in the SQL Editor. It adds the `radar_items` table and a `source_url` column on `crm_leads`. Idempotent.
+2. **Set secrets** for the function (the email ones are only needed for the digest, and are the same as in §7):
+   ```bash
+   supabase secrets set --project-ref <project-ref> \
+     RADAR_CRON_SECRET=<long random string> \
+     RESEND_API_KEY=<key> NOTIFY_EMAIL=<where the digest goes> \
+     FROM_EMAIL="Jerry Dev Studio <hello@yourdomain.com>"
+   # optional: NOTIFY_WEBHOOK_URL=<Slack/Discord webhook>  DIGEST_MIN_SCORE=65
+   ```
+3. **Deploy:** `supabase functions deploy radar-ingest --project-ref <project-ref>`. The function imports shared code from `supabase/functions/_shared/radar/`, which the CLI bundles automatically.
+4. **Run it once** from Client Radar → "Refresh Feeds" (signed in as admin). The page header changes from "Live results fetched in your browser" to "Stored results, last fetched …". Check the function logs if it doesn't.
+5. **Schedule it.** Create the Vault secrets named in `supabase/radar_cron.sql` (`project_url`, and `radar_cron_secret` equal to `RADAR_CRON_SECRET`), then run that file. It schedules a daily run at 03:00 UTC (08:00 in Pakistan); edit the cron expression to change it. List jobs with `select * from cron.job;` and their results with `select * from cron.job_run_details order by start_time desc limit 5;`.
+
+Until step 1 is done, Client Radar keeps working in live mode, so the order above is safe. The digest includes only posts that are new, not full-time-only, and scoring at least `DIGEST_MIN_SCORE`, and each post is emailed once. Posts you never act on are deleted after 45 days without being seen again; dismissed and imported posts are kept.
+
 ## Notes
 
 - **Schema changes** are applied by running SQL in the Supabase SQL Editor; update `supabase/schema.sql` in the same commit so it stays the source of truth. `schema.sql` is for fresh setups: `INSERT ... ON CONFLICT DO NOTHING` seed rows never overwrite an existing row, so changed defaults (e.g. the theme fonts) do not alter a live database — change those through the admin UI.

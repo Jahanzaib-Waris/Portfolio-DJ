@@ -1,7 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { enrichCompanyDecisionMaker } from '../../../api/apolloClient'
-import { createCrmLead, getCrmLeads } from '../../../api/client'
+import {
+  createCrmLead,
+  getCrmLeads,
+  getRadarItems,
+  runRadarIngest,
+  updateRadarItem,
+} from '../../../api/client'
 import {
   fetchHNHiringOpportunities,
   fetchRemoteJobs,
@@ -10,6 +16,7 @@ import {
 import {
   computeOpportunityScore,
   detectTechStack,
+  formatTimeAgo,
   matchesFreshnessWindow,
 } from '../../../api/radarScoring'
 import SearchInput from '../../../components/admin/SearchInput'
@@ -62,6 +69,32 @@ const loadDismissed = () => {
 
 const itemKey = (item) => item.url || item.id
 
+// Stack pills are applied client-side when results come from the stored radar_items table.
+const PILL_PATTERNS = {
+  flutter: /flutter/i,
+  mobile: /mobile|\bios\b|android|react[\s-]?native/i,
+  supabase: /supabase|firebase|backend/i,
+}
+
+const matchesPill = (item, pill) => {
+  if (pill === 'all') return true
+  if (pill === 'contract') return item.opportunity.engagement.fit === 'fit'
+  const rx = PILL_PATTERNS[pill]
+  if (!rx) return true
+  return rx.test(`${item.title} ${item.description} ${item.fullText}`)
+}
+
+// source_url may not exist yet on crm_leads (supabase/radar.sql not run); retry without it.
+const createRadarLead = async (item) => {
+  const payload = buildRadarLeadPayload(item)
+  try {
+    return await createCrmLead({ ...payload, source_url: item.url })
+  } catch (err) {
+    if (/source_url/i.test(err?.message || '')) return createCrmLead(payload)
+    throw err
+  }
+}
+
 const FIT_STYLES = {
   fit: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
   unclear: 'bg-slate-500/15 border-slate-500/30 text-slate-300',
@@ -104,6 +137,12 @@ export default function ClientRadar() {
   const [hnItems, setHnItems] = useState([])
   const [remoteItems, setRemoteItems] = useState([])
   const [loading, setLoading] = useState(true)
+  // 'db' = results come from the radar_items table filled by the radar-ingest function;
+  // 'live' = fetched in the browser (fallback until that table / function is set up).
+  const [storeMode, setStoreMode] = useState('live')
+  const [storedItems, setStoredItems] = useState([])
+  const storeModeRef = useRef('unknown')
+  const filterPillRef = useRef('all')
 
   const [importingId, setImportingId] = useState(null)
   const [importedMap, setConvertedMap] = useState({})
@@ -116,6 +155,10 @@ export default function ClientRadar() {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   const toast = useToast()
+
+  useEffect(() => {
+    filterPillRef.current = filterPill
+  }, [filterPill])
 
   useEffect(() => {
     document.title = 'Client Radar (Sales Leads) — Control Panel'
@@ -132,6 +175,7 @@ export default function ClientRadar() {
         items.forEach((lead) => {
           const match = POST_URL_RE.exec(lead.notes || '')
           if (match) byUrl[match[1]] = lead
+          if (lead.source_url) byUrl[lead.source_url] = lead
         })
         setExistingByUrl(byUrl)
       })
@@ -141,8 +185,17 @@ export default function ClientRadar() {
     }
   }, [])
 
+  const hnList = useMemo(
+    () => (storeMode === 'db' ? storedItems.filter((i) => i.source === 'hacker_news') : hnItems),
+    [storeMode, storedItems, hnItems],
+  )
+  const remoteList = useMemo(
+    () => (storeMode === 'db' ? storedItems.filter((i) => i.source !== 'hacker_news') : remoteItems),
+    [storeMode, storedItems, remoteItems],
+  )
+
   useEffect(() => {
-    const all = [...hnItems, ...remoteItems]
+    const all = [...hnList, ...remoteList]
     const newlyMatched = all.filter((item) => item.url && existingByUrl[item.url])
     if (newlyMatched.length === 0) return
     setConvertedMap((prev) => {
@@ -159,32 +212,80 @@ export default function ClientRadar() {
       })
       return next
     })
-  }, [hnItems, remoteItems, existingByUrl])
+  }, [hnList, remoteList, existingByUrl])
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
-    try {
-      if (activeTab === 'hn') {
-        const query = filterPill === 'all' ? 'mobile' : filterPill
-        const data = await fetchHNHiringOpportunities(query)
-        setHnItems(data)
-      } else if (activeTab === 'remote') {
-        const tag = filterPill === 'all' ? 'mobile' : filterPill
-        const data = await fetchRemoteJobs(tag)
-        setRemoteItems(data)
-      }
-    } catch {
-      toast.error('Failed to load opportunities. Try refreshing.')
-    } finally {
-      setLoading(false)
+  const loadLive = useCallback(async () => {
+    const pill = filterPillRef.current
+    if (activeTab === 'hn') {
+      const data = await fetchHNHiringOpportunities(pill === 'all' ? 'mobile' : pill)
+      setHnItems(data)
+    } else if (activeTab === 'remote') {
+      const data = await fetchRemoteJobs(pill === 'all' ? 'mobile' : pill)
+      setRemoteItems(data)
     }
-  }, [activeTab, filterPill, toast])
+  }, [activeTab])
+
+  // Loads from the stored radar_items table when it exists and has rows (optionally
+  // running the ingest function first); otherwise falls back to fetching live.
+  const loadData = useCallback(
+    async ({ ingest = false } = {}) => {
+      setLoading(true)
+      try {
+        if (ingest && storeModeRef.current === 'db') {
+          try {
+            const result = await runRadarIngest()
+            toast.success(`Fetched ${result?.fetched ?? 0} posts (${result?.new ?? 0} new).`)
+          } catch (err) {
+            toast.error(`Server refresh failed (${err.message || 'unknown error'}); showing stored posts.`)
+          }
+        }
+
+        if (storeModeRef.current !== 'live') {
+          try {
+            const rows = await getRadarItems()
+            if (rows.length > 0) {
+              setStoredItems(rows)
+              storeModeRef.current = 'db'
+              setStoreMode('db')
+              return
+            }
+          } catch {
+            // radar_items not created yet; use live fetching
+          }
+          storeModeRef.current = 'live'
+          setStoreMode('live')
+        }
+
+        if (activeTab !== 'scanners') await loadLive()
+      } catch {
+        toast.error('Failed to load opportunities. Try refreshing.')
+      } finally {
+        setLoading(false)
+      }
+    },
+    [activeTab, loadLive, toast],
+  )
 
   useEffect(() => {
     if (activeTab !== 'scanners') {
       loadData()
     }
   }, [activeTab, loadData])
+
+  // Stack pills re-query the live sources; stored results are filtered locally instead.
+  const pillMounted = useRef(false)
+  useEffect(() => {
+    if (!pillMounted.current) {
+      pillMounted.current = true
+      return
+    }
+    if (storeModeRef.current === 'live' && activeTab !== 'scanners') {
+      setLoading(true)
+      loadLive()
+        .catch(() => toast.error('Failed to load opportunities. Try refreshing.'))
+        .finally(() => setLoading(false))
+    }
+  }, [filterPill, activeTab, loadLive, toast])
 
   const setDismissedPersist = (updater) => {
     setDismissed((prev) => {
@@ -197,31 +298,69 @@ export default function ClientRadar() {
       return next
     })
   }
-  const dismissItem = (item) => setDismissedPersist((set) => set.add(itemKey(item)))
-  const restoreItem = (item) =>
+  const isDismissed = useCallback(
+    (item) => item.status === 'dismissed' || dismissed.has(itemKey(item)),
+    [dismissed],
+  )
+
+  const setStatus = async (item, status) => {
+    if (item.dbId) {
+      setStoredItems((prev) => prev.map((i) => (i.dbId === item.dbId ? { ...i, status } : i)))
+      try {
+        await updateRadarItem(item.dbId, { status })
+      } catch {
+        setStoredItems((prev) => prev.map((i) => (i.dbId === item.dbId ? { ...i, status: item.status } : i)))
+        toast.error('Could not update that post. Try again.')
+      }
+      return
+    }
     setDismissedPersist((set) => {
-      set.delete(itemKey(item))
+      if (status === 'dismissed') set.add(itemKey(item))
+      else set.delete(itemKey(item))
       return set
     })
+  }
+  const dismissItem = (item) => setStatus(item, 'dismissed')
+  const restoreItem = (item) => {
+    // A locally dismissed copy of a stored item also lives in the browser set; clear both.
+    if (dismissed.has(itemKey(item))) {
+      setDismissedPersist((set) => {
+        set.delete(itemKey(item))
+        return set
+      })
+    }
+    if (item.dbId) return setStatus(item, 'new')
+    return undefined
+  }
+
+  const dismissedCount = useMemo(
+    () => [...hnList, ...remoteList].filter(isDismissed).length,
+    [hnList, remoteList, isDismissed],
+  )
+  const lastUpdated = useMemo(() => {
+    if (storeMode !== 'db' || storedItems.length === 0) return null
+    return storedItems.reduce((max, i) => (i.lastSeenAt > max ? i.lastSeenAt : max), '')
+  }, [storeMode, storedItems])
 
   // Applies the engagement-fit and dismissed visibility rules to a scored list.
   const applyVisibility = useCallback(
     (list) =>
       list.filter((item) => {
-        if (!showDismissed && dismissed.has(itemKey(item))) return false
+        if (!showDismissed && isDismissed(item)) return false
         if (hideNotFit && item.opportunity.engagement.fit === 'not_fit') return false
+        if (storeMode === 'db' && !matchesPill(item, filterPill)) return false
         return true
       }),
-    [hideNotFit, showDismissed, dismissed],
+    [hideNotFit, showDismissed, isDismissed, storeMode, filterPill],
   )
 
   // Score and filter HN leads
   const scoredHn = useMemo(() => {
-    return hnItems.map((item) => ({
+    return hnList.map((item) => ({
       ...item,
       opportunity: computeOpportunityScore(item),
     }))
-  }, [hnItems])
+  }, [hnList])
 
   const filteredHn = useMemo(() => {
     let list = applyVisibility(scoredHn)
@@ -262,11 +401,11 @@ export default function ClientRadar() {
 
   // Score and filter Remote leads
   const scoredRemote = useMemo(() => {
-    return remoteItems.map((item) => ({
+    return remoteList.map((item) => ({
       ...item,
       opportunity: computeOpportunityScore(item),
     }))
-  }, [remoteItems])
+  }, [remoteList])
 
   const filteredRemote = useMemo(() => {
     let list = applyVisibility(scoredRemote)
@@ -329,6 +468,7 @@ export default function ClientRadar() {
 
       setHnItems(updateList)
       setRemoteItems(updateList)
+      setStoredItems(updateList)
 
       toast.success(
         `Found ${contact.name} (${contact.job_title}) ${contact.email ? `• ${contact.email}` : ''}!`
@@ -348,10 +488,16 @@ export default function ClientRadar() {
     }
     setImportingId(item.id)
     try {
-      const created = await createCrmLead(buildRadarLeadPayload(item))
+      const created = await createRadarLead(item)
       setConvertedMap((prev) => ({ ...prev, [item.id]: created.id }))
       setImportedLeads((prev) => ({ ...prev, [item.id]: created }))
       if (item.url) setExistingByUrl((prev) => ({ ...prev, [item.url]: created }))
+      if (item.dbId) {
+        setStoredItems((prev) =>
+          prev.map((i) => (i.dbId === item.dbId ? { ...i, status: 'imported', leadId: created.id } : i)),
+        )
+        updateRadarItem(item.dbId, { status: 'imported', lead_id: created.id }).catch(() => {})
+      }
       toast.success(`Imported "${item.company}". Click "Open Pitch" to review the pitch and reach out.`)
     } catch (err) {
       toast.error('Failed to import lead: ' + (err.message || 'Unknown error'))
@@ -390,7 +536,12 @@ export default function ClientRadar() {
             </h1>
           </div>
           <p className="mt-1 text-sm text-slate-400">
-            Real-time client leads &amp; mobile hiring opportunities aggregated from Hacker News, RemoteOK, and freelance platforms.
+            Client leads &amp; mobile hiring opportunities aggregated from Hacker News, Jobicy, RemoteOK, and freelance platforms.
+            {lastUpdated ? (
+              <span className="ml-1 text-slate-300">Stored results, last fetched {formatTimeAgo(lastUpdated)}.</span>
+            ) : (
+              <span className="ml-1 text-slate-300">Live results fetched in your browser.</span>
+            )}
           </p>
         </div>
 
@@ -403,7 +554,7 @@ export default function ClientRadar() {
           </Link>
           <button
             type="button"
-            onClick={loadData}
+            onClick={() => loadData({ ingest: true })}
             disabled={loading}
             className="px-3.5 py-1.5 rounded-lg bg-neon-blue/15 border border-neon-blue/40 text-neon-blue hover:bg-neon-blue/25 text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
@@ -528,7 +679,7 @@ export default function ClientRadar() {
                 onChange={(e) => setShowDismissed(e.target.checked)}
                 className="h-3.5 w-3.5 accent-[#6D5AF6]"
               />
-              Show dismissed ({dismissed.size})
+              Show dismissed ({dismissedCount})
             </label>
           </div>
         </div>
@@ -631,7 +782,7 @@ export default function ClientRadar() {
                           >
                             {opp.engagement?.label}
                           </span>
-                          {dismissed.has(itemKey(item)) ? (
+                          {isDismissed(item) ? (
                             <button
                               type="button"
                               onClick={() => restoreItem(item)}
@@ -894,7 +1045,7 @@ export default function ClientRadar() {
                           >
                             {opp.engagement?.label}
                           </span>
-                          {dismissed.has(itemKey(item)) ? (
+                          {isDismissed(item) ? (
                             <button
                               type="button"
                               onClick={() => restoreItem(item)}
