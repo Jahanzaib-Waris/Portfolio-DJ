@@ -2,9 +2,9 @@ import { Component, Suspense, lazy } from 'react'
 import { Link, useOutletContext, useParams } from 'react-router-dom'
 import useDocumentMeta from '../hooks/useDocumentMeta'
 import { getPrototype, prototypes } from '../prototypes/registry'
+import DemoStage from '../prototypes/device/DemoStage'
 import { Chip, ProtoIcon } from '../prototypes/ui'
 import SystemButton from '../components/SystemButton'
-import { Skeleton } from '../components/Skeleton'
 import NotFound from './NotFound'
 
 // One lazy component per prototype, created once so re-renders don't reload it.
@@ -63,7 +63,7 @@ export default function PrototypeDetail() {
 
       <header className="max-w-3xl">
         <div className="flex items-center gap-3">
-          <span className="fb-icon" aria-hidden="true">
+          <span className="fb-icon" aria-hidden="true" style={{ color: prototype.colour, background: `${prototype.colour}26`, borderColor: `${prototype.colour}66` }}>
             <ProtoIcon slug={prototype.slug} />
           </span>
           <span className="text-sm font-medium text-[#A1A7CA]">{prototype.category}</span>
@@ -72,56 +72,56 @@ export default function PrototypeDetail() {
         <p className="fb-lead mt-3 text-sm text-[#A1A7CA] sm:text-base">{prototype.summary}</p>
       </header>
 
-      <div className="mt-8 grid gap-8 xl:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="min-w-0">
-          <DemoBoundary key={slug}>
-            <Suspense fallback={<Skeleton className="h-[30rem] w-full" />}>
+      <div className="mt-8">
+        <DemoBoundary key={slug}>
+          <DemoStage url={prototype.url}>
+            <Suspense fallback={<div className="flex h-full items-center justify-center text-sm font-bold text-kw-muted">Loading the demo...</div>}>
               <Demo />
             </Suspense>
-          </DemoBoundary>
-          <p className="mt-3 text-xs text-[#A1A7CA]">A working demo with made-up data. Nothing you do here is stored.</p>
+          </DemoStage>
+        </DemoBoundary>
+        <p className="mt-4 text-center text-xs text-[#A1A7CA]">A working demo with made-up data. Nothing you do here is stored.</p>
+      </div>
+
+      <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl border border-panel-edge bg-panel/70 p-5">
+          <h2 className="text-sm font-bold text-white">What this demo shows</h2>
+          <ul className="mt-3 space-y-2 text-sm text-[#C9CEEA]">
+            {prototype.shows.map((s) => (
+              <li key={s} className="flex gap-2">
+                <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12l4 4 10-10" />
+                </svg>
+                {s}
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <aside className="space-y-4">
-          <div className="rounded-2xl border border-panel-edge bg-panel/70 p-5">
-            <h2 className="text-sm font-bold text-white">What this demo shows</h2>
-            <ul className="mt-3 space-y-2 text-sm text-[#C9CEEA]">
-              {prototype.shows.map((s) => (
-                <li key={s} className="flex gap-2">
-                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M5 12l4 4 10-10" />
-                  </svg>
-                  {s}
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="rounded-2xl border border-panel-edge bg-panel/70 p-5">
+          <h2 className="text-sm font-bold text-white">What a real build adds</h2>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#C9CEEA] marker:text-[#6D5AF6]">
+            {prototype.production.map((s) => (
+              <li key={s}>{s}</li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs text-[#A1A7CA]">
+            Typical stack: <span className="text-slate-200">{prototype.stack}</span>
+          </p>
+        </div>
 
-          <div className="rounded-2xl border border-panel-edge bg-panel/70 p-5">
-            <h2 className="text-sm font-bold text-white">What a real build adds</h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-[#C9CEEA] marker:text-[#6D5AF6]">
-              {prototype.production.map((s) => (
-                <li key={s}>{s}</li>
-              ))}
-            </ul>
-            <p className="mt-4 text-xs text-[#A1A7CA]">
-              Typical stack: <span className="text-slate-200">{prototype.stack}</span>
-            </p>
+        <div className="rounded-2xl border border-neon-indigo/50 bg-neon-indigo/10 p-5">
+          <h2 className="text-sm font-bold text-white">Is this close to what you need?</h2>
+          <p className="mt-1 text-sm text-[#C9CEEA]">Tell me what is different and I will reply within a day.</p>
+          <SystemButton variant="primary" className="mt-4 w-full" onClick={ask}>
+            Ask about this feature
+          </SystemButton>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {prototype.tags.map((t) => (
+              <Chip key={t}>{t}</Chip>
+            ))}
           </div>
-
-          <div className="rounded-2xl border border-neon-indigo/50 bg-neon-indigo/10 p-5">
-            <h2 className="text-sm font-bold text-white">Is this close to what you need?</h2>
-            <p className="mt-1 text-sm text-[#C9CEEA]">Tell me what is different and I will reply within a day.</p>
-            <SystemButton variant="primary" className="mt-4 w-full" onClick={ask}>
-              Ask about this feature
-            </SystemButton>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {prototype.tags.map((t) => (
-                <Chip key={t}>{t}</Chip>
-              ))}
-            </div>
-          </div>
-        </aside>
+        </div>
       </div>
 
       <nav aria-label="More prototypes" className="mt-12 grid gap-3 border-t border-panel-edge pt-6 sm:grid-cols-2">

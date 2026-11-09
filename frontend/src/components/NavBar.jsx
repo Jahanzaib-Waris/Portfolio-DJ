@@ -8,7 +8,6 @@ const navLinks = [
   { to: '/blogs', label: 'Blog' },
   { to: '/#services', label: 'Services', isAnchor: true },
   { to: '/#about', label: 'About', isAnchor: true },
-  { to: '/projects', label: 'Projects' },
 ]
 
 export default function NavBar({ profile, onRequestQuote }) {

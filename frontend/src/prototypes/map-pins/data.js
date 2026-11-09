@@ -4,12 +4,12 @@ export const ORIGIN = { x: 500, y: 330 }
 export const CATEGORIES = ['Sport', 'Food', 'Music', 'Outdoors', 'Tech', 'Art']
 
 export const CATEGORY_COLOURS = {
-  Sport: '#34D399',
-  Food: '#FBBF24',
-  Music: '#F472B6',
-  Outdoors: '#2DD4BF',
-  Tech: '#38BDF8',
-  Art: '#A78BFA',
+  Sport: '#4FD6A0',
+  Food: '#FFC14D',
+  Music: '#FF8FB8',
+  Outdoors: '#3FCBC0',
+  Tech: '#6FB7FF',
+  Art: '#B39DFF',
 }
 
 export const pins = [

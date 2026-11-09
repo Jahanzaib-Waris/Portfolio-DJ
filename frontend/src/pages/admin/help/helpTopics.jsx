@@ -517,6 +517,7 @@ export const helpTopics = [
               you know exactly what they tried.
             </P>
             <Ul>
+              <li>Each demo is shown in a phone, tablet or browser frame that visitors can switch between, with a soft pastel app look. On a real phone it fills the screen instead.</li>
               <li>All data is made up and nothing visitors do in a demo is stored.</li>
               <li>Prototypes are part of the website&rsquo;s code, not edited in this panel. Adding or changing one is a development task (see <B>docs/PROTOTYPES.md</B> in the repository).</li>
               <li>See which demos get used in <Go to="/admin/analytics">Analytics</Go>: look for pages starting with /prototypes. A quote that mentions a prototype tells you which feature the client has in mind.</li>

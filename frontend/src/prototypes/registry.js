@@ -9,6 +9,9 @@
 export const prototypes = [
   {
     slug: 'swipe-cards',
+    accent: 'pink',
+    colour: '#FF8FB8',
+    url: 'meetly.example/discover',
     title: 'Swipe cards',
     category: 'Mobile UX',
     tagline: 'Swipe left to favourite, right to skip.',
@@ -33,6 +36,9 @@ export const prototypes = [
   },
   {
     slug: 'ai-chat',
+    accent: 'lavender',
+    colour: '#B39DFF',
+    url: 'brewly.example/help',
     title: 'AI chat with rules',
     category: 'AI',
     tagline: 'An assistant that answers the way your brand does.',
@@ -57,6 +63,9 @@ export const prototypes = [
   },
   {
     slug: 'voice-chat',
+    accent: 'peach',
+    colour: '#FFAB7A',
+    url: 'brewly.example/voice',
     title: 'Voice chat with AI',
     category: 'AI',
     tagline: 'Talk to the assistant and hear it answer.',
@@ -81,6 +90,9 @@ export const prototypes = [
   },
   {
     slug: 'nearby-map',
+    accent: 'mint',
+    colour: '#6FDDB8',
+    url: 'meetly.example/nearby',
     title: 'Map with custom pins',
     category: 'Maps',
     tagline: 'People and projects around you, on a map.',
@@ -105,6 +117,9 @@ export const prototypes = [
   },
   {
     slug: 'survey-match',
+    accent: 'lemon',
+    colour: '#FFD95A',
+    url: 'meetly.example/find-your-people',
     title: 'Survey-based matching',
     category: 'Personalisation',
     tagline: 'A short survey that ranks who or what suits you.',

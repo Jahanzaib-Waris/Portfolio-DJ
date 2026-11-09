@@ -1,29 +1,20 @@
 import { useMemo, useState } from 'react'
-import { Avatar, Chip, DemoShell } from '../ui'
+import { AppScreen, KButton, KChip, KawaiiFace, Sparkle } from '../kawaii'
 import { CONNECT_OPTIONS, GOAL_OPTIONS, INTERESTS, NEARBY_LABELS, SOCIAL_LABELS, TIME_LABELS, profiles } from './data'
 import { isStepValid, rankProfiles } from './scoring'
 
 const STEPS = 6
 const initialAnswers = { interests: [], social: 3, connect: null, goal: null, time: 3, nearby: 2 }
+const QUESTION_TITLES = ['What are you into?', 'How social is your ideal week?', 'How do you like to connect?', 'What are you looking for?', 'How much time can you give?', 'How much does distance matter?']
 
 function Ring({ value }) {
   const r = 26
   const c = 2 * Math.PI * r
   return (
     <svg viewBox="0 0 64 64" className="h-16 w-16 shrink-0" role="img" aria-label={`${value} percent match`}>
-      <circle cx="32" cy="32" r={r} fill="none" stroke="#232848" strokeWidth="6" />
-      <circle
-        cx="32"
-        cy="32"
-        r={r}
-        fill="none"
-        stroke="#7C6CFF"
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeDasharray={`${(value / 100) * c} ${c}`}
-        transform="rotate(-90 32 32)"
-      />
-      <text x="32" y="37" textAnchor="middle" fontSize="15" fontWeight="700" fill="#fff">
+      <circle cx="32" cy="32" r={r} fill="none" stroke="#F3E4F2" strokeWidth="7" />
+      <circle cx="32" cy="32" r={r} fill="none" stroke="#FFC93D" strokeWidth="7" strokeLinecap="round" strokeDasharray={`${(value / 100) * c} ${c}`} transform="rotate(-90 32 32)" />
+      <text x="32" y="37" textAnchor="middle" fontSize="15" fontWeight="900" fill="#4A3B5C">
         {value}%
       </text>
     </svg>
@@ -32,31 +23,28 @@ function Ring({ value }) {
 
 function Breakdown({ parts }) {
   return (
-    <ul className="mt-3 space-y-2">
+    <ul className="mt-3 space-y-2.5">
       {parts.map((p) => (
-        <li key={p.key} className="text-xs">
-          <div className="flex justify-between gap-2 text-[#C9CEEA]">
+        <li key={p.key} className="text-xs font-bold">
+          <div className="flex justify-between gap-2 text-kw-ink">
             <span>{p.label}</span>
-            <span className="shrink-0 font-semibold text-white">
+            <span className="shrink-0">
               {p.points.toFixed(0)} / {p.max.toFixed(0)}
             </span>
           </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-panel-edge">
-            <div className="h-full rounded-full bg-gradient-to-r from-neon-indigo to-neon-blue" style={{ width: `${(p.points / p.max) * 100}%` }} />
+          <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-kw-line">
+            <div className="h-full rounded-full bg-(--kw-accent)" style={{ width: `${(p.points / p.max) * 100}%` }} />
           </div>
-          <p className="mt-0.5 text-[#A1A7CA]">{p.note}</p>
+          <p className="mt-0.5 font-semibold text-kw-muted">{p.note}</p>
         </li>
       ))}
     </ul>
   )
 }
 
-function Slider({ id, label, value, onChange, min, max, labels }) {
+function Slider({ id, value, onChange, min, max, labels }) {
   return (
     <div>
-      <label htmlFor={id} className="text-sm font-semibold text-white">
-        {label}
-      </label>
       <input
         id={id}
         type="range"
@@ -65,14 +53,15 @@ function Slider({ id, label, value, onChange, min, max, labels }) {
         step="1"
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
+        aria-label={QUESTION_TITLES[Number(id.replace('q', ''))]}
         aria-valuetext={labels[value - min]}
-        className="mt-4 w-full accent-[#6D5AF6]"
+        className="mt-6 w-full accent-[#FFC93D]"
       />
-      <div className="mt-1 flex justify-between text-xs text-[#A1A7CA]">
+      <div className="mt-1 flex justify-between text-xs font-bold text-kw-muted">
         <span>{labels[0]}</span>
         <span>{labels[labels.length - 1]}</span>
       </div>
-      <p className="mt-3 text-center text-lg font-bold text-white">{labels[value - min]}</p>
+      <p className="mt-4 text-center text-xl font-black text-kw-ink">{labels[value - min]}</p>
     </div>
   )
 }
@@ -80,16 +69,16 @@ function Slider({ id, label, value, onChange, min, max, labels }) {
 function Choice({ legend, options, value, onChange }) {
   return (
     <fieldset>
-      <legend className="text-sm font-semibold text-white">{legend}</legend>
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      <legend className="sr-only">{legend}</legend>
+      <div className="mt-2 grid gap-2.5 @md:grid-cols-2">
         {options.map((o) => (
           <label
             key={o.id}
-            className={`flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
-              value === o.id ? 'border-neon-indigo bg-neon-indigo/15 text-white' : 'border-panel-edge bg-abyss/50 text-[#C9CEEA] hover:border-slate-400'
+            className={`flex cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 text-sm font-extrabold transition-colors ${
+              value === o.id ? 'border-(--kw-accent) bg-(--kw-accent-soft) text-kw-ink' : 'border-kw-line bg-white text-kw-muted hover:border-(--kw-accent)'
             }`}
           >
-            <input type="radio" name={legend} checked={value === o.id} onChange={() => onChange(o.id)} className="accent-[#6D5AF6]" />
+            <input type="radio" name={legend} checked={value === o.id} onChange={() => onChange(o.id)} className="h-4 w-4 accent-[#FFC93D]" />
             {o.label}
           </label>
         ))}
@@ -134,159 +123,140 @@ export default function SurveyMatch() {
   const valid = isStepValid(step, answers)
 
   return (
-    <DemoShell title="Find your people" onReset={reset}>
-      {!finished ? (
-        <div className="mx-auto max-w-xl">
-          <div className="mb-5">
-            <div className="flex justify-between text-xs text-[#A1A7CA]">
-              <span>
-                Question {step + 1} of {STEPS}
-              </span>
-              <span>About 1 minute</span>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-panel-edge" role="progressbar" aria-valuemin={1} aria-valuemax={STEPS} aria-valuenow={step + 1}>
-              <div className="h-full rounded-full bg-gradient-to-r from-neon-indigo to-neon-blue transition-all" style={{ width: `${((step + 1) / STEPS) * 100}%` }} />
-            </div>
+    <AppScreen
+      accent="lemon"
+      title={finished ? 'Your matches' : 'Find your people'}
+      subtitle={finished ? `${ranked.length} people and groups scored` : `Question ${step + 1} of ${STEPS}`}
+      action={
+        finished ? (
+          <KButton variant="plain" onClick={reset} className="!px-3 !py-1.5 !text-xs">
+            Start over
+          </KButton>
+        ) : (
+          <div className="flex gap-1" role="progressbar" aria-valuemin={1} aria-valuemax={STEPS} aria-valuenow={step + 1} aria-label="Survey progress">
+            {Array.from({ length: STEPS }, (_, i) => (
+              <span key={i} className={`h-2.5 w-2.5 rounded-full ${i <= step ? 'bg-(--kw-accent)' : 'bg-kw-line'}`} />
+            ))}
           </div>
-
-          <div className="min-h-[15rem]">
+        )
+      }
+    >
+      {!finished ? (
+        <div className="mx-auto max-w-xl px-5 pb-5">
+          <div className="rounded-3xl border-2 border-kw-line bg-white p-5 shadow-[0_10px_0_-4px_var(--kw-accent-soft)]">
+            <h3 className="flex items-center gap-2 text-lg font-black text-kw-ink">
+              {QUESTION_TITLES[step]}
+              <Sparkle className="h-3.5 w-3.5 text-(--kw-accent)" />
+            </h3>
             {step === 0 && (
-              <fieldset>
-                <legend className="text-sm font-semibold text-white">What are you into? Pick up to four.</legend>
-                <div className="mt-3 flex flex-wrap gap-2">
+              <fieldset className="mt-3">
+                <legend className="sr-only">Pick up to four interests</legend>
+                <p className="text-xs font-bold text-kw-muted">Pick up to four.</p>
+                <div className="mt-2.5 flex flex-wrap gap-2">
                   {INTERESTS.map((i) => (
-                    <Chip key={i} active={answers.interests.includes(i)} onClick={() => toggleInterest(i)} className="!px-4 !py-2 !text-sm">
+                    <KChip key={i} active={answers.interests.includes(i)} onClick={() => toggleInterest(i)} className="!px-4 !py-2 !text-sm">
                       {i}
-                    </Chip>
+                    </KChip>
                   ))}
                 </div>
-                <p className="mt-3 text-xs text-[#A1A7CA]">{answers.interests.length} of 4 chosen{answers.interests.length === 4 ? ' (tap one to swap)' : ''}</p>
+                <p className="mt-3 text-xs font-bold text-kw-muted">
+                  {answers.interests.length} of 4 chosen{answers.interests.length === 4 ? ' (tap one to swap)' : ''}
+                </p>
               </fieldset>
             )}
-            {step === 1 && <Slider id="social" label="How social is your ideal week?" value={answers.social} onChange={(v) => set({ social: v })} min={1} max={5} labels={SOCIAL_LABELS} />}
+            {step === 1 && <Slider id="q1" value={answers.social} onChange={(v) => set({ social: v })} min={1} max={5} labels={SOCIAL_LABELS} />}
             {step === 2 && <Choice legend="How do you like to connect?" options={CONNECT_OPTIONS} value={answers.connect} onChange={(v) => set({ connect: v })} />}
             {step === 3 && <Choice legend="What are you looking for?" options={GOAL_OPTIONS} value={answers.goal} onChange={(v) => set({ goal: v })} />}
-            {step === 4 && <Slider id="time" label="How much time could you give each week?" value={answers.time} onChange={(v) => set({ time: v })} min={1} max={5} labels={TIME_LABELS} />}
-            {step === 5 && <Slider id="nearby" label="How much does it matter that they are nearby?" value={answers.nearby} onChange={(v) => set({ nearby: v })} min={0} max={3} labels={NEARBY_LABELS} />}
+            {step === 4 && <Slider id="q4" value={answers.time} onChange={(v) => set({ time: v })} min={1} max={5} labels={TIME_LABELS} />}
+            {step === 5 && <Slider id="q5" value={answers.nearby} onChange={(v) => set({ nearby: v })} min={0} max={3} labels={NEARBY_LABELS} />}
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => setStep((s) => Math.max(0, s - 1))}
-              disabled={step === 0}
-              className="rounded-lg border border-panel-edge px-4 py-2.5 text-sm font-medium text-slate-200 hover:border-slate-400 disabled:opacity-40"
-            >
+            <KButton variant="plain" onClick={() => setStep((s) => Math.max(0, s - 1))} disabled={step === 0}>
               Back
-            </button>
-            {!valid && <p className="text-xs text-amber-300">{step === 0 ? 'Pick at least one interest.' : 'Choose an option to continue.'}</p>}
-            <button
-              type="button"
-              disabled={!valid}
-              onClick={() => (step === STEPS - 1 ? setFinished(true) : setStep((s) => s + 1))}
-              className="system-button system-button-primary px-6 py-2.5 text-sm font-semibold disabled:opacity-50"
-            >
+            </KButton>
+            {!valid && <p className="text-xs font-bold text-[#B3542A]">{step === 0 ? 'Pick at least one interest.' : 'Choose an option to continue.'}</p>}
+            <KButton disabled={!valid} onClick={() => (step === STEPS - 1 ? setFinished(true) : setStep((s) => s + 1))}>
               {step === STEPS - 1 ? 'See my matches' : 'Next'}
-            </button>
+            </KButton>
           </div>
         </div>
       ) : (
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-lg font-bold text-white">Your best matches</h3>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setFinished(false)
-                  setStep(0)
-                }}
-                className="rounded-lg border border-panel-edge px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-slate-400"
-              >
-                Change my answers
-              </button>
-              <button type="button" onClick={reset} className="rounded-lg border border-panel-edge px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-slate-400">
-                Start over
-              </button>
-            </div>
-          </div>
-
-          <ol className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="px-5 pb-6">
+          <ol className="grid gap-3 @2xl:grid-cols-3">
             {ranked.slice(0, 3).map((r, i) => (
-              <li key={r.profile.id} className="rounded-xl border border-panel-edge bg-abyss/50 p-4">
+              <li key={r.profile.id} className="rounded-3xl border-2 border-kw-line bg-white p-4 shadow-[0_8px_0_-4px_var(--kw-accent-soft)]">
                 <div className="flex items-center gap-3">
                   <Ring value={r.total} />
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-neon-blue">#{i + 1} match</p>
-                    <p className="truncate font-semibold text-white">{r.profile.name}</p>
-                    <p className="text-xs text-[#A1A7CA]">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-black text-(--kw-accent-ink)">#{i + 1} match</p>
+                    <p className="truncate font-black text-kw-ink">{r.profile.name}</p>
+                    <p className="text-xs font-bold text-kw-muted">
                       {r.profile.kind === 'group' ? 'Group' : 'Person'} &middot; {r.profile.distanceKm} km
                     </p>
                   </div>
+                  <KawaiiFace seed={r.profile.id} className="h-12 w-12" />
                 </div>
-                <p className="mt-2 text-sm text-slate-200">{r.profile.blurb}</p>
+                <p className="mt-2 text-sm font-semibold text-kw-ink">{r.profile.blurb}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {r.reasons.map((reason) => (
-                    <Chip key={reason}>{reason}</Chip>
+                    <KChip key={reason} small active>
+                      {reason}
+                    </KChip>
                   ))}
                 </div>
               </li>
             ))}
           </ol>
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-panel-edge pt-4 text-xs text-[#C9CEEA]">
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 border-t-2 border-kw-line pt-4 text-xs font-extrabold text-kw-muted">
             <div className="flex gap-1.5" role="group" aria-label="Filter by type">
               {['All', 'person', 'group'].map((k) => (
-                <Chip key={k} active={kind === k} onClick={() => setKind(k)}>
+                <KChip key={k} small active={kind === k} onClick={() => setKind(k)}>
                   {k === 'All' ? 'Everyone' : k === 'person' ? 'People' : 'Groups'}
-                </Chip>
+                </KChip>
               ))}
             </div>
             <label className="flex items-center gap-2">
               Minimum match
-              <input type="range" min="0" max="90" step="5" value={minMatch} onChange={(e) => setMinMatch(Number(e.target.value))} className="w-28 accent-[#6D5AF6]" />
-              <span className="w-9 font-semibold text-white">{minMatch}%</span>
+              <input type="range" min="0" max="90" step="5" value={minMatch} onChange={(e) => setMinMatch(Number(e.target.value))} className="w-24 accent-[#FFC93D]" />
+              <span className="w-9 text-kw-ink">{minMatch}%</span>
             </label>
             <label className="flex items-center gap-2">
               Sort
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-md border border-panel-edge bg-abyss px-2 py-1 text-xs text-slate-100">
+              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="rounded-xl border-2 border-kw-line bg-white px-2 py-1 text-xs font-bold text-kw-ink">
                 <option value="match">Best match</option>
                 <option value="nearest">Nearest</option>
               </select>
             </label>
           </div>
 
-          <p className="mt-3 text-xs text-[#A1A7CA]" role="status">
+          <p className="mt-3 text-xs font-bold text-kw-muted" role="status">
             Showing {results.length} of {ranked.length}
           </p>
           {results.length === 0 ? (
-            <p className="mt-3 rounded-xl border border-dashed border-panel-edge p-6 text-center text-sm text-[#A1A7CA]">No results at this minimum. Lower the match slider.</p>
+            <p className="mt-3 rounded-3xl border-2 border-dashed border-kw-line p-6 text-center text-sm font-bold text-kw-muted">No results at this minimum. Lower the match slider.</p>
           ) : (
             <ul className="mt-2 space-y-2">
               {results.map((r) => {
                 const expanded = open === r.profile.id
                 return (
-                  <li key={r.profile.id} className="rounded-xl border border-panel-edge bg-abyss/40">
-                    <button
-                      type="button"
-                      onClick={() => setOpen(expanded ? null : r.profile.id)}
-                      aria-expanded={expanded}
-                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
-                    >
-                      <Avatar name={r.profile.name} index={r.profile.id} />
+                  <li key={r.profile.id} className="rounded-3xl border-2 border-kw-line bg-white">
+                    <button type="button" onClick={() => setOpen(expanded ? null : r.profile.id)} aria-expanded={expanded} className="flex w-full items-center gap-3 px-3 py-2.5 text-left">
+                      <KawaiiFace seed={r.profile.id} className="h-11 w-11" />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-semibold text-white">{r.profile.name}</span>
-                        <span className="block truncate text-xs text-[#A1A7CA]">
+                        <span className="block truncate text-sm font-black text-kw-ink">{r.profile.name}</span>
+                        <span className="block truncate text-xs font-semibold text-kw-muted">
                           {r.profile.kind === 'group' ? 'Group' : 'Person'} &middot; {r.profile.distanceKm} km &middot; {r.profile.blurb}
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className="block text-base font-bold text-white">{r.total}%</span>
-                        <span className="block text-[11px] text-neon-blue">{expanded ? 'Hide why' : 'Why?'}</span>
+                        <span className="block text-base font-black text-kw-ink">{r.total}%</span>
+                        <span className="block text-[11px] font-black text-(--kw-accent-ink)">{expanded ? 'Hide why' : 'Why?'}</span>
                       </span>
                     </button>
                     {expanded && (
-                      <div className="border-t border-panel-edge px-4 pb-4">
+                      <div className="border-t-2 border-kw-line px-4 pb-4">
                         <Breakdown parts={r.parts} />
                       </div>
                     )}
@@ -297,6 +267,6 @@ export default function SurveyMatch() {
           )}
         </div>
       )}
-    </DemoShell>
+    </AppScreen>
   )
 }

@@ -392,7 +392,7 @@ String timeAgo(DateTime date) {
             {prototypes.map((p) => (
               <li key={p.slug}>
                 <Link to={`/prototypes/${p.slug}`} className="fb-card group transition-transform hover:-translate-y-1">
-                  <span className="fb-icon" aria-hidden="true">
+                  <span className="fb-icon" aria-hidden="true" style={{ color: p.colour, background: `${p.colour}26`, borderColor: `${p.colour}66` }}>
                     <ProtoIcon slug={p.slug} />
                   </span>
                   <h3>{p.title}</h3>

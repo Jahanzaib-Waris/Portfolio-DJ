@@ -1927,3 +1927,43 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* ---- Prototype apps: "kawaii" pastel theme -------------------------------------------
+   Used only inside the device frames on /prototypes, so the demos look like a separate,
+   friendly consumer app while the surrounding site keeps the dark FlowBase look. */
+@theme {
+  --color-kw-bg: #FFF7FB;
+  --color-kw-card: #FFFFFF;
+  --color-kw-ink: #4A3B5C;
+  --color-kw-muted: #7F7298;
+  --color-kw-line: #F3E4F2;
+}
+
+@layer components {
+  .kw-app {
+    background: var(--color-kw-bg);
+    color: var(--color-kw-ink);
+    font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Arial Rounded MT Bold", "Nunito", var(--font-sans);
+  }
+
+  /* One accent per prototype; demos read these three variables. */
+  .kw-pink     { --kw-accent: #FF8FB8; --kw-accent-soft: #FFE3EF; --kw-accent-ink: #B3285F; }
+  .kw-lavender { --kw-accent: #B39DFF; --kw-accent-soft: #EEE8FF; --kw-accent-ink: #5A3FC0; }
+  .kw-peach    { --kw-accent: #FFAB7A; --kw-accent-soft: #FFECDF; --kw-accent-ink: #A8470F; }
+  .kw-mint     { --kw-accent: #6FDDB8; --kw-accent-soft: #DCF8EE; --kw-accent-ink: #0B6F55; }
+  .kw-lemon    { --kw-accent: #FFD95A; --kw-accent-soft: #FFF5CC; --kw-accent-ink: #7C5A00; }
+
+  .kw-pop {
+    box-shadow: 0 8px 0 -2px var(--kw-accent-soft), 0 14px 24px -12px rgb(74 59 92 / 0.25);
+  }
+
+  .kw-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+  .kw-scroll::-webkit-scrollbar-thumb { background: var(--kw-accent-soft); border-radius: 999px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes kw-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes kw-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1.1); } }
+  .kw-float { animation: kw-float 3.2s ease-in-out infinite; }
+  .kw-twinkle { animation: kw-twinkle 2.4s ease-in-out infinite; }
+}
