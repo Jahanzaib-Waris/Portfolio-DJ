@@ -95,8 +95,8 @@ CREATE TABLE IF NOT EXISTS public.site_theme (
     color_accent TEXT DEFAULT '#6D5AF6',
     color_status_green TEXT DEFAULT '#3fb950',
     color_status_red TEXT DEFAULT '#FCA5A5',
-    font_display TEXT DEFAULT 'Manrope',
-    font_mono TEXT DEFAULT 'Fira Code',
+    font_display TEXT DEFAULT 'Plus Jakarta Sans',
+    font_mono TEXT DEFAULT 'JetBrains Mono',
     radius_scale TEXT DEFAULT 'soft',
     shadow_intensity TEXT DEFAULT 'none',
     button_style TEXT DEFAULT 'solid',
@@ -375,7 +375,7 @@ INSERT INTO public.site_theme (
 VALUES (
     1, '#0A0C16', '#11142A', '#232848', '#38BDF8',
     '#7C6CFF', '#6D5AF6', '#3fb950', '#FCA5A5',
-    'Manrope', 'Fira Code', 'soft', 'none', 'solid', 'clean'
+    'Plus Jakarta Sans', 'JetBrains Mono', 'soft', 'none', 'solid', 'clean'
 )
 ON CONFLICT (id) DO NOTHING;
 

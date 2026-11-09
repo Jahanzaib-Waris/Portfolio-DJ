@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) and Antigravity when
 - **Hosting & CDN**: **Firebase Hosting** (Project ID: `jerry-dev-studio`).
 - **CMS & Control Panel**: Custom route-guarded admin panel (`/admin`) featuring the **FlowBase Visual Block Builder V2**, runtime-editable theme tokens, lead inbox, and full B2B Sales CRM.
 
+> `backend/` is a retired Django API kept for reference only. The app talks to Supabase directly; ignore `backend/` unless asked. Docs in `docs/` describe the Supabase/Firebase architecture (see `docs/ARCHITECTURE.md`).
+
 ## Commands
 
 ### Frontend (`cd frontend`)

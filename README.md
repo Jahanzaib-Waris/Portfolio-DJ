@@ -4,7 +4,7 @@
 > **Backend & Database:** Supabase (PostgreSQL 17, Storage, Auth, RLS)  
 > **Hosting & CDN:** Firebase Hosting (Project ID: `jerry-dev-studio`)
 
-A high-performance FlutterFlow & mobile engineering portfolio, client portal, and technical publication built with the custom **FlowBase** design system (`#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted Manrope and Fira Code variable typography).
+A high-performance FlutterFlow & mobile engineering portfolio, client portal, and technical publication built with the custom **FlowBase** design system (`#0A0C16` canvas, violet `#6D5AF6` primary, sky `#38BDF8` accents, self-hosted Plus Jakarta Sans, Inter, and JetBrains Mono variable typography).
 
 ---
 
@@ -15,6 +15,7 @@ frontend/     React 19 + Vite SPA (Client marketing, technical publication, Flow
 supabase/     PostgreSQL schema, Row Level Security (RLS) policies, storage buckets, migration seeds
 public/       Favicon suite, Web App Manifest, RSS 2.0 feed, sitemap.xml
 docs/         Architecture blueprints, SRS, testing guides, deployment reference
+backend/      LEGACY Django API — retired, not used by the app or deployed (kept for reference)
 ```
 
 ---

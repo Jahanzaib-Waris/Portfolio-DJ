@@ -1,8 +1,10 @@
 # Portfolio-DJ — Project Reference
 
-**Jerry Dev Studio** ([https://jerry-dev-studio.web.app/](https://jerry-dev-studio.web.app/)): A high-performance FlutterFlow & mobile engineering studio portfolio, client portal, and technical publication built with the **FlowBase** design system (deep navy canvas, violet primary, sky blue accents, self-hosted typography). React (Vite) single-page frontend deployed on **Firebase Hosting** and backed directly by **Supabase** (PostgreSQL, Supabase Auth, Storage, and Row Level Security). The admin panel is a custom route-guarded control panel: grouped sidebar, live analytics, content CRUD, FlowBase Visual Block Builder V2, site settings, and a runtime-editable theme.
+**Jerry Dev Studio** ([https://jerry-dev-studio.web.app/](https://jerry-dev-studio.web.app/)): a FlutterFlow & mobile engineering studio portfolio, client portal, and technical publication built with the **FlowBase** design system (deep navy canvas, violet primary, sky blue accents, self-hosted typography). A React (Vite) single-page app on **Firebase Hosting**, talking **directly to Supabase** (PostgreSQL, Supabase Auth, Storage, Row Level Security, Edge Functions). There is no application server: authorization lives in RLS policies, and the two server-side integrations run as Supabase Edge Functions.
 
-Last updated: 2026-11-02.
+The admin panel (`/admin`) is a route-guarded control panel: grouped sidebar, live analytics, content CRUD, the FlowBase Visual Block Builder V2, site settings, a runtime-editable theme, and a B2B sales CRM.
+
+Last updated: 2026-11-09.
 
 ---
 
@@ -12,511 +14,240 @@ Last updated: 2026-11-02.
 Portfolio-DJ/
 ├── CLAUDE.md                entry point for AI coding sessions — read this first
 ├── README.md                setup instructions
-├── docs/
-│   ├── ARCHITECTURE.md      this file
-│   ├── SRS.md               Software Requirements Specification & System Schema
-│   ├── DEPLOYMENT.md        step-by-step Vercel + Supabase deployment
-│   └── TESTING.md           manual test checklist for the admin panel / public site
+├── firebase.json            Hosting config: serves frontend/dist, SPA rewrite, immutable asset caching
+├── docs/                    ARCHITECTURE (this file), SRS, DEPLOYMENT, TESTING, QUICK-TEST
 │
-├── backend/                 Django project
-│   ├── .python-version      pins Python 3.13 (Django 6.0 requires >=3.12)
-│   ├── requirements.txt
-│   ├── vercel.json          function config (maxDuration 30)
-│   ├── manage.py
-│   ├── config/               settings package (not an app)
-│   │   ├── settings.py      all configuration, env-driven
-│   │   ├── urls.py          root URL conf
-│   │   ├── permissions.py   IsAdminUserOrReadOnly, shared by every content app
-│   │   ├── pagination.py    StandardPagination (page_size query param, max 100)
-│   │   └── wsgi.py / asgi.py
-│   ├── accounts/             JWT auth + change-password (no models)
-│   ├── profiles/              Profile (singleton) + Skill
-│   ├── blog/                 BlogPost
-│   ├── projects/              Project (has `is_featured`)
-│   ├── quotes/                QuoteRequest
-│   ├── sitesettings/          SiteBranding (singleton) + SiteTheme (singleton)
-│   └── analytics/             PageView — tracking beacon + aggregated summary
+├── supabase/
+│   ├── schema.sql           tables, indexes, RLS policies, storage bucket, RPCs, seed rows (idempotent)
+│   ├── seed_scheduled_blogs.sql   editorial-calendar blog seed
+│   ├── config.toml          edge function config (verify_jwt = true for both)
+│   └── functions/
+│       ├── ai-proxy/        LLM calls (Ollama Cloud, Groq, OpenAI) — keeps provider CORS/keys off the browser path
+│       └── apollo-proxy/    Apollo.io contact enrichment
 │
-└── frontend/                 React + Vite SPA
-    ├── vercel.json           SPA rewrite (all paths -> index.html)
-    ├── vite.config.js        dev proxy: /api and /media -> 127.0.0.1:8000
-    ├── .oxlintrc.json
-    ├── public/
-    │   └── fonts/            self-hosted Manrope and Fira Code variable woff2 fonts
-    └── src/
-        ├── main.jsx          entry
-        ├── App.jsx           route table + applies the site theme once at boot
-        ├── index.css         theme tokens (CSS custom properties) + component classes
-        ├── api/client.js      axios instance, auth interceptors, every API call
-        ├── auth/
-        │   ├── tokenStore.js     access token (memory) + refresh token (localStorage)
-        │   ├── authContext.js    context + useAuth hook
-        │   └── AuthProvider.jsx  session boot, login, logout
-        ├── hooks/
-        │   ├── usePaginatedList.js   "Load more" pagination with URL-shareable depth
-        │   └── useDocumentMeta.js    sets tab title + meta description; each public page owns its own
-        ├── utils/
-        │   ├── apiErrors.js      DRF error-shape helpers for forms
-        │   ├── buildPayload.js   JSON-vs-multipart payload builder for file fields
-        │   └── applyTheme.js     resolves SiteTheme -> CSS custom properties, live
-        ├── components/
-        │   ├── PublicLayout.jsx   navbar + footer + quote modal; fetches profile/
-        │   │                      branding; fires the analytics tracking beacon
-        │   ├── NavBar, Footer, StatusPanel, SystemButton, Skeleton,
-        │   │   RequestQuoteModal
-        │   └── admin/
-        │       ├── RequireAuth.jsx      route guard
-        │       ├── AdminLayout.jsx      grouped, collapsible sidebar shell
-        │       ├── Field.jsx, formStyles.js, ConfirmDialog.jsx, MarkdownEditor.jsx
-        │       ├── SearchInput.jsx      client-side filter over already-loaded list items
-        │       └── AnalyticsChart.jsx   single-series line+area chart, no library
-        └── pages/
-            ├── Home, Blogs, BlogDetail, Projects
-            ├── NotFound.jsx     public-styled 404 (catch-all under PublicLayout)
-            └── admin/
-                ├── AdminLogin.jsx, Dashboard.jsx (counts + a 7-day traffic widget)
-                ├── AdminNotFound.jsx   admin-styled 404 (last child route under AdminLayout)
-                ├── BlogList.jsx, BlogEditor.jsx
-                ├── ProjectList.jsx, ProjectEditor.jsx
-                ├── SkillsManager.jsx, ProfileEditor.jsx
-                ├── QuoteInbox.jsx
-                ├── Analytics.jsx
-                └── settings/
-                    ├── AccountSettings.jsx    password change
-                    ├── BrandingSettings.jsx   site name, logo, favicon
-                    └── ThemeEditor.jsx        colors, fonts, radius/shadow, button/card style
+├── frontend/                React 19 + Vite SPA
+│   ├── public/              favicons, manifest.json, robots.txt, sitemap.xml, feed.xml,
+│   │                        fonts/ (self-hosted variable woff2)
+│   └── src/
+│       ├── main.jsx, App.jsx    entry; route table; applies the site theme once at boot
+│       ├── index.css            FlowBase tokens (CSS custom properties) + component classes
+│       ├── api/
+│       │   ├── supabase.js      client + uploadMedia() to the `media` bucket
+│       │   ├── client.js        every data call (the contract the UI codes against) + TTL cache
+│       │   ├── aiClient.js      pitch generation, multi-provider, settings in localStorage
+│       │   ├── apolloClient.js  enrichment via apollo-proxy
+│       │   ├── radarClient.js   Hacker News / RemoteOK / Jobicy fetchers
+│       │   └── radarScoring.js  0–100 opportunity score + freshness decay
+│       ├── auth/            AuthProvider (Supabase session listener), authContext
+│       ├── hooks/           useDocumentMeta (SEO), usePaginatedList
+│       ├── utils/           applyTheme, blogBlocks (Block Builder <-> HTML), slugify, buildPayload, apiErrors
+│       ├── components/      PublicLayout, NavBar, Footer, RequestQuoteModal, RichTextContent, ...
+│       │   └── admin/       AdminLayout, RequireAuth, Toast*, AdminPageHeader, BlogBlockBuilder,
+│       │                    BlockPreviewRenderer, BlockPropertiesDrawer, RichTextEditor, ...
+│       └── pages/
+│           ├── Home, Solutions, Blogs, BlogDetail, Projects, NotFound
+│           └── admin/       Dashboard, BlogList/Editor, ProjectList/Editor, SkillsManager, ProfileEditor,
+│                            QuoteInbox, Analytics, crm/ (Pipeline, Prospects, ClientRadar, LeadDetailDrawer),
+│                            settings/ (Account, Branding, ThemeEditor, Integrations)
+│
+└── backend/                 LEGACY — see below
 ```
+
+### `backend/` is legacy
+
+`backend/` is the original Django 6 + DRF + SimpleJWT API (Vercel + Supabase Postgres). The frontend no longer calls it: `frontend/src/api/client.js` queries Supabase directly and auth is Supabase Auth. It is kept in the repo for reference only; it is not deployed, not in the build, and not needed to run the site. Nothing in this document describes it except this note. (Its data model was ported to `supabase/schema.sql`; the analytics aggregation became the `get_analytics_summary` RPC.)
 
 ---
 
 ## 2. Stack and packages
 
-No new dependencies were added building the admin dashboard, analytics, or theme system —
-everything above is built on what was already here (DRF views/serializers, inline SVG for the
-chart, CSS custom properties for the theme).
-
-### Backend (`backend/requirements.txt`)
-
-| Package | Version | Why it's here |
-|---|---|---|
-| `Django` | 6.0.8 | Web framework. **Requires Python ≥3.12** |
-| `djangorestframework` | 3.17.2 | The API layer — serializers, viewsets, pagination, throttling |
-| `djangorestframework-simplejwt` | 5.5.1 | JWT auth for the admin panel |
-| `django-environ` | 0.14.0 | Reads config from `.env` / environment |
-| `psycopg2-binary` | 2.9.12 | PostgreSQL driver (Supabase) |
-| `Pillow` | 12.3.0 | Required by Django's `ImageField` |
-| `django-cors-headers` | 4.9.0 | Frontend and backend are on different domains |
-| `whitenoise` | 6.11.0 | Serves static files (Django admin CSS) without a separate host |
-| `django-storages` | 1.14.6 | S3-compatible storage backend |
-| `boto3` | 1.40.63 | S3 client used by django-storages |
-| `gunicorn` | 23.0.0 | **Currently unused.** Left from the Render setup; Vercel's native Django support doesn't need it |
-
 ### Frontend (`frontend/package.json`)
 
-| Package | Version | Why it's here |
-|---|---|---|
-| `react` / `react-dom` | ^19.2.7 | UI |
-| `react-router-dom` | ^7.18.1 | Client-side routing |
-| `axios` | ^1.18.1 | HTTP client |
-| `react-markdown` | ^10.1.0 | Renders blog post bodies |
-| `remark-gfm` | ^4.0.1 | GitHub-flavoured Markdown — tables, strikethrough, task lists |
-| `vite` | ^8.1.1 | Build tool and dev server |
-| `tailwindcss` + `@tailwindcss/vite` | ^4.3.2 | Styling (Tailwind v4, config lives in CSS) |
-| `oxlint` | ^1.71.0 | Linter (`npm run lint`) |
-
----
-
-## 3. Data model
-
-**`profiles.Profile`** — singleton, enforced two ways: `clean()` raises if a second row is
-created, and the admin hides the "Add" button once one exists.
-`name`, `tagline`, `bio`, `photo`, `resume`, `email`, `github_url`, `linkedin_url`, `updated_at`
-
-**`profiles.Skill`** — the home page tech-stack cards.
-`name`, `description`, `display_order`
-
-**`blog.BlogPost`**
-`title`, `slug` (unique), `excerpt`, `content` (Markdown), `cover_image`,
-`published_date`, `is_published`, `created_at`, `updated_at`
-Ordered by `-published_date`. **Looked up by slug, not id.**
-
-**`projects.Project`**
-`title`, `description`, `tech_stack` (comma-separated string), `thumbnail`,
-`repo_url`, `live_url`, `display_order`, `is_featured`, `created_at`
-Exposes a `tech_stack_list` property that splits and strips the CSV into tags. Home's
-"Featured Work" shows `is_featured` projects, falling back to the first two by
-`display_order` when none are marked so the section is never empty by default.
-
-**`quotes.QuoteRequest`**
-`name`, `email`, `project_details`, `submitted_at`
-Read-only in Django admin (no add, no edit) — submissions are a record, not content.
-
-**`sitesettings.SiteBranding`** — singleton, same `clean()` guard as Profile, but the API
-auto-creates it on first `GET` (`get_or_create(pk=1)`) rather than 404ing — the public site
-needs branding on every page load, so there's no meaningful "not configured" state.
-`site_name`, `logo`, `favicon`, `updated_at`
-
-**`sitesettings.SiteTheme`** — singleton, same auto-create pattern. One editable theme, not a
-theme gallery. Every field mirrors a CSS custom property in `index.css`.
-`color_void`, `color_panel`, `color_panel_edge`, `color_neon_blue`, `color_neon_indigo`,
-`color_accent`, `color_status_green`, `color_status_red` (hex, validated),
-`font_display`, `font_mono` (curated Google Fonts choices, not arbitrary `@font-face`),
-`radius_scale` (sharp/soft/rounded), `shadow_intensity` (none/subtle/elevated),
-`button_style` (solid/outline/soft), `card_style` (clean/accent), `updated_at`
-
-**`analytics.PageView`** — one row per tracked page view.
-`path`, `referrer`, `is_blog_post`, `slug`, `session_key` (a same-day hash of IP + User-Agent —
-enough to dedupe repeat views into a rough "unique visitors" count with no cookies/PII),
-`created_at`. Indexed on `created_at` and `path`.
-
----
-
-## 4. API reference
-
-Base path `/api/`. Pagination is `PageNumberPagination` at **10 per page**, so list responses
-are `{count, next, previous, results}`.
-
-### Auth — `accounts`
-
-| Method | Path | Access | Purpose |
-|---|---|---|---|
-| POST | `/api/auth/token/` | public, **throttled 5/min/IP** | Login. Returns `access`, `refresh`, `user`. **Staff only** — a valid non-staff login returns 400 |
-| POST | `/api/auth/token/refresh/` | public | Exchange refresh for a new access token |
-| POST | `/api/auth/token/blacklist/` | public | Logout — invalidates the refresh token |
-| GET | `/api/auth/me/` | staff | Current user; used to rehydrate the panel after a reload |
-| POST | `/api/auth/change-password/` | staff | Current + new password. Self-service only — no email/forgot-password flow (single admin, no email sending configured) |
-
-### Content
-
-| Method | Path | Access | Notes |
-|---|---|---|---|
-| GET | `/api/profile/` | public | 404 until a Profile row exists |
-| POST | `/api/profile/` | staff | Creates the singleton. 409 if one already exists |
-| PATCH / PUT | `/api/profile/` | staff | Update |
-| GET | `/api/profile/resume/` | public | Streams the resume as a file download |
-| GET | `/api/profile/skills/` | public | List |
-| POST | `/api/profile/skills/` | staff | Create |
-| GET/PATCH/PUT/DELETE | `/api/profile/skills/<id>/` | mixed | Read public, writes staff |
-| GET | `/api/blog/posts/` | public | Published only; **staff also see drafts** |
-| POST | `/api/blog/posts/` | staff | Create |
-| GET/PATCH/PUT/DELETE | `/api/blog/posts/<slug>/` | mixed | Read public, writes staff. Draft slugs 404 for anonymous |
-| GET | `/api/projects/` | public | List, includes `is_featured` |
-| POST | `/api/projects/` | staff | Create |
-| GET/PATCH/PUT/DELETE | `/api/projects/<id>/` | mixed | Read public, writes staff |
-| POST | `/api/quotes/` | **public, throttled** | The contact form — see below |
-| GET | `/api/quotes/` | staff | Admin inbox. Not throttled |
-| GET/DELETE | `/api/quotes/<id>/` | staff | Read / delete a submission |
-| GET | `/api/settings/branding/` | public | Site name, logo, favicon. Auto-creates with defaults |
-| PATCH/PUT | `/api/settings/branding/` | staff | Update |
-| GET | `/api/settings/theme/` | public | The one theme's current values. Auto-creates with defaults |
-| PATCH/PUT | `/api/settings/theme/` | staff | Update — applies site-wide immediately, no rebuild |
-| POST | `/api/analytics/track/` | **public, throttled** | Tracking beacon; fired once per route change from `PublicLayout` |
-| GET | `/api/analytics/summary/?days=` | staff | Aggregated totals, daily series, top pages/posts/referrers, quotes trend |
-
-`/admin/` — Django admin, still mounted. It is the fallback whenever the custom panel breaks.
-
----
-
-## 5. How authorisation works
-
-**`config/permissions.py` → `IsAdminUserOrReadOnly`** is applied to Profile, Skill, BlogPost,
-Project, and the two `sitesettings` models: safe methods are open to everyone, everything else
-requires `is_staff`. Note the bar is **staff**, not merely authenticated — an ordinary Django
-user cannot edit content.
-
-**Quotes invert this.** `CreatePublicReadStaff` in `quotes/views.py` allows anonymous `create`
-but requires staff for read and delete, because the submissions are private and the *write* is
-the public part.
-
-**Tokens.** Access 15 min, refresh 7 days, with `ROTATE_REFRESH_TOKENS` and
-`BLACKLIST_AFTER_ROTATION` — a refresh token is single-use, so a stolen one only works until
-the real session next refreshes. Blacklisting is why `rest_framework_simplejwt.token_blacklist`
-is in `INSTALLED_APPS` and why deploys need `migrate`.
-
-**Drafts.** `blog/views.py` filters `is_published` inside `get_queryset()` based on the
-requester rather than using a static queryset, so the panel edits drafts at the same URLs the
-public site reads. Anonymous requests for a draft return **404, not 403** — that avoids
-confirming the post exists.
-
-**Throttling.** Three independent scopes, all via DRF's `ScopedRateThrottle` /
-`DEFAULT_THROTTLE_RATES`:
-
-- `quotes` — `POST /api/quotes/` capped at 5/hour per IP (`QUOTE_THROTTLE_RATE`).
-  `get_throttles()` scopes it to the `create` action only — viewset-wide it would also have
-  capped the admin inbox at five reads an hour.
-- `analytics` — `POST /api/analytics/track/` capped at 120/hour per IP
-  (`ANALYTICS_THROTTLE_RATE`). Generous enough for a real visitor browsing several pages,
-  still a real cap against a bot hammering the beacon.
-- `login` — `POST /api/auth/token/` capped at 5/minute per IP (`LOGIN_THROTTLE_RATE`). Added
-  after an audit found the login endpoint had **no** throttle at all — unlimited password
-  guesses were possible. Counts every attempt, successes included, so it can't be dodged by
-  mixing in valid-looking requests.
-
-Two things make throttling real in production rather than decorative:
-
-- **Cache backend.** DRF stores throttle counters in Django's cache. Each Vercel request runs
-  in a separate short-lived function, so the default per-process `LocMemCache` would reset
-  them constantly. When Supabase Postgres is configured, `settings.py` switches to
-  `DatabaseCache` — shared across instances, needs a one-off `createcachetable`.
-- **Client IP.** Behind Vercel the real IP is in `X-Forwarded-For`, which is spoofable.
-  `NUM_PROXIES=1` tells DRF how many hops to trust.
-
-**Production hardening, from a full security sweep (pip-audit, npm audit, a live check of
-every endpoint, `manage.py check --deploy`, a git-history secret scan):**
-
-- `REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES']` drops `BrowsableAPIRenderer` when `DEBUG=False`
-  — verified live that anyone sending `Accept: text/html` used to get the full interactive HTML
-  API browser (including forms for public write endpoints like quotes) on production. JSON-only
-  in prod now; the browsable API still works locally for dev convenience.
-- `SECURE_SSL_REDIRECT=True` in production, alongside the `SECURE_PROXY_SSL_HEADER` that already
-  tells Django how to detect HTTPS behind Vercel's proxy.
-- Dependency versions get bumped promptly when `pip-audit`/`npm audit` flag something, even when
-  the underlying code path isn't actually exercised by this app (e.g. GeoDjango CVEs — this app
-  has no GeoDjango) — free safety margin costs nothing.
-
----
-
-## 6. Configuration
-
-Everything is env-driven with local-first fallbacks, so the project runs with **zero setup**:
-no `.env` means SQLite, local-disk media, in-memory cache, `DEBUG=True`.
-
-| Variable | Effect when set |
+| Package | Why it's here |
 |---|---|
-| `SECRET_KEY`, `DEBUG`, `ALLOWED_HOSTS` | Standard Django |
-| `CSRF_TRUSTED_ORIGINS`, `CORS_ALLOWED_ORIGINS` | Required in production |
-| `SUPABASE_DB_*` | Switches SQLite → Postgres **and** LocMem cache → DatabaseCache |
-| `SUPABASE_STORAGE_*` | Switches local media → Supabase Storage (S3) |
-| `QUOTE_THROTTLE_RATE` | Defaults to `5/hour` |
-| `ANALYTICS_THROTTLE_RATE` | Defaults to `120/hour` |
-| `LOGIN_THROTTLE_RATE` | Defaults to `5/minute` |
-| `NUM_PROXIES` | Set to `1` on Vercel |
-| `SECURE_SSL_REDIRECT` | Defaults to `True` when `DEBUG=False` |
-| `SECURE_HSTS_SECONDS` | Defaults to `31536000` (1 year) when `DEBUG=False` |
-| `SECURE_HSTS_INCLUDE_SUBDOMAINS` | Defaults to `True` when `DEBUG=False` |
-| `SECURE_HSTS_PRELOAD` | Defaults to `False` — opt-in only; submitting to the browser preload list is a separate, much harder to reverse decision than the rest of HSTS |
+| `react` / `react-dom` ^19 | UI |
+| `react-router-dom` ^7 | Routing; admin and CRM pages are `lazy()` chunks |
+| `@supabase/supabase-js` ^2 | Database, Auth, Storage, Edge Function invocation |
+| `@tiptap/*` ^3 | Rich-text editing in the blog editor and block text elements |
+| `dompurify` | Sanitizes post HTML before rendering |
+| `vite` ^8, `@vitejs/plugin-react` | Build tool and dev server |
+| `tailwindcss` + `@tailwindcss/vite` ^4 | Styling (Tailwind v4, tokens in CSS `@theme`) |
+| `oxlint` | Linter (`npm run lint`) |
 
-When `DEBUG=False`, `settings.py` additionally turns on `SECURE_PROXY_SSL_HEADER`,
-`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`, and the HSTS settings above.
+### Platform
 
-**Supabase Storage quirk:** its S3 gateway only accepts SigV4 and requires a signed request for
-*every* object, even in a "public" bucket. Hence `AWS_S3_SIGNATURE_VERSION = 's3v4'` and
-`AWS_QUERYSTRING_AUTH = True`. Media URLs are therefore presigned and **expire after 1 hour**.
+- **Supabase** (PostgreSQL 17, Auth, Storage, Edge Functions on Deno).
+- **Firebase Hosting** — project `jerry-dev-studio`. `firebase.json` rewrites every path to `/index.html` and marks js/css/font assets `immutable` for a year.
 
 ---
 
-## 7. Frontend
+## 3. Data model (`supabase/schema.sql`)
 
-### Routes
+All tables have RLS enabled. "Admin" below means any `authenticated` Supabase user — there is a single admin account, and sign-ups should stay disabled in the Supabase dashboard.
 
-| Path | Page | Layout | Notes |
-|---|---|---|---|
-| `/` | `Home` | Public | Hero, tech stack, featured work, CTA |
-| `/blogs` | `Blogs` | Public | Card grid + Load more (`?page=` tracks depth) |
-| `/blogs/:slug` | `BlogDetail` | Public | Markdown-rendered post |
-| `/projects` | `Projects` | Public | Card grid + Load more |
-| `*` (public tree) | `NotFound` | Public | 404, marketing chrome |
-| `/admin/login` | `AdminLogin` | none | Outside the guard, or it'd be unreachable |
-| `/admin` | `Dashboard` | Admin | Content counts + 7-day traffic widget |
-| `/admin/blog`, `/admin/blog/new`, `/admin/blog/:slug/edit` | Blog CMS | Admin | List, create, edit |
-| `/admin/analytics` | `Analytics` | Admin | Stat tiles, traffic chart, top pages/posts/referrers |
-| `/admin/projects`, `/admin/projects/new`, `/admin/projects/:id/edit` | Projects | Admin | |
-| `/admin/skills` | `SkillsManager` | Admin | |
-| `/admin/profile` | `ProfileEditor` | Admin | |
-| `/admin/quotes` | `QuoteInbox` | Admin | |
-| `/admin/settings/account` | `AccountSettings` | Admin | Password change |
-| `/admin/settings/branding` | `BrandingSettings` | Admin | Site name, logo, favicon |
-| `/admin/settings/theme` | `ThemeEditor` | Admin | Live preview + save |
-| `*` (last child under `/admin`) | `AdminNotFound` | Admin | 404, sidebar chrome — outranks the public wildcard for any `/admin/*` path since it's nested under the literal `admin` segment |
+| Table | Purpose | Key columns | Public access | Admin |
+|---|---|---|---|---|
+| `profiles` | Singleton owner profile | `name`, `tagline`, `bio`, `photo`, `resume`, `email`, `github_url`, `linkedin_url` | read | all |
+| `skills` | Home page tech-stack cards | `name`, `description`, `display_order` | read | all |
+| `blog_posts` | Articles | `title`, `slug` (unique), `category`, `excerpt`, `content` (HTML), `cover_image`, `published_date`, `is_published` | read **only if** `is_published AND published_date <= CURRENT_DATE` | all (incl. drafts/future) |
+| `projects` | Case studies | `title`, `description`, `tech_stack` (CSV), `thumbnail`, `repo_url`, `live_url`, `display_order`, `is_featured` | read | all |
+| `quote_requests` | Inbound enquiries | `name`, `email`, `service`, `backend`, `budget`, `timeline`, `project_link`, `project_details` | **insert only** (non-empty name/email/details enforced in the policy) | read/update/delete |
+| `site_branding` | Singleton (id = 1) | `site_name`, `logo`, `favicon` | read | all |
+| `site_theme` | Singleton (id = 1), runtime theme | 8 colour tokens, `font_display`, `font_mono`, `radius_scale`, `shadow_intensity`, `button_style`, `card_style` | read | all |
+| `page_views` | Analytics events | `path`, `referrer`, `is_blog_post`, `slug`, `session_key` | insert only | read |
+| `crm_leads` | Sales pipeline | `name`, `company`, `job_title`, `email`, `linkedin_url`, `stage`, `temperature`, `source`, `deal_value`, `tech_stack[]`, `next_follow_up`, `quote_request_id` | none | all |
+| `crm_activities` | Per-lead timeline | `lead_id` (cascade), `type`, `content` | none | all |
 
-`App.jsx` fetches the site theme once at boot (`getTheme().then(applyTheme)`) and applies it to
-`document.documentElement` before rendering routes — one shared theme for both the public site
-and the admin panel, not a per-surface one.
+Functions (RPCs):
 
-Two separate route trees: public routes nest under `PublicLayout`, admin routes under
-`RequireAuth` → `AdminLayout`. The admin panel deliberately does **not** render the marketing
-navbar or footer. `AdminLayout`'s sidebar is grouped and collapsible (Blog, Portfolio, Settings
-each expand to their children) rather than a flat list.
+- `get_analytics_summary(days)` — totals, daily series, top pages/posts/referrers, quote trend, in one query.
+- `cleanup_old_page_views(retention_days)` — authenticated-only retention sweep (clamped to 7–365 days). Nothing in the UI calls it yet.
 
-`PublicLayout` fetches the profile and branding once, drives dynamic branding (nav avatar,
-name, `document.title`, favicon), and fires the analytics tracking beacon
-(`trackPageView`) on mount and on every route change — admin navigation never reaches this
-layout, so it's naturally excluded from traffic stats. The quote modal is global, opened from
-the navbar, hero, and closing CTA.
+Storage: public-read `media` bucket; only authenticated users may upload/update/delete. `uploadMedia(file, folder)` in `api/supabase.js` returns the public URL, which is what gets stored in the `photo`, `thumbnail`, `cover_image`, `logo`, `favicon` columns.
 
-### Admin panel authentication
-
-The access token lives **in memory only** and dies on reload; the refresh token is in
-`localStorage`. The trade-off is deliberate and documented in `auth/tokenStore.js`: the
-refresh token is readable by any script on the page, which is acceptable for a single-admin
-portfolio but would not be for a multi-tenant app, where an httpOnly cookie is correct.
-
-Boot sequence on every page load: `AuthProvider` starts in a `booting` state → refreshes using
-the stored token → calls `/api/auth/me/` → resolves to `authenticated` or `anonymous`.
-`RequireAuth` renders nothing but a spinner until that settles, otherwise a reload would bounce
-a perfectly valid session to the login screen.
-
-Two subtleties in `api/client.js` worth not breaking:
-
-- **Refresh is single-flight.** Several requests can 401 at once; since the server rotates
-  refresh tokens, a second concurrent refresh would present an already-blacklisted token and
-  fail. They all await one shared promise.
-- **The rotated refresh token must be stored.** Each refresh returns a *new* refresh token and
-  blacklists the old one. Dropping it breaks the *next* refresh — a bug that only surfaces
-  ~15 minutes into a session.
-
-A failed refresh clears tokens and calls a session-expired handler, which drops the panel back
-to the login screen.
-
-### Conventions
-
-Every page uses the same `loading` / `ready` / `error` (or `empty`) state machine with skeleton
-placeholders. Sections hide themselves entirely when their fetch errors, so a failed request
-degrades to a shorter page rather than an error message.
-
-`hooks/usePaginatedList.js` drives both public list pages and several admin lists: appends
-pages, ignores clicks while a fetch is in flight, and on failure keeps existing items on screen
-with an inline retry. It also round-trips how many pages have been loaded through a `?page=`
-search param (via `replace`, not `push`, so "Load more" clicks don't spam browser history) — a
-shared or reloaded link restores that depth by re-fetching pages `1..N` on mount instead of
-silently resetting to the first 10 items.
-
-`api/client.js` holds every API call. `VITE_API_BASE_URL` is unset in dev (Vite proxies `/api`
-to Django) and points at the deployed API in production.
-
-`hooks/useDocumentMeta.js` gives each public page its own browser tab title and meta
-description (Home, Blogs, Projects, BlogDetail all call it) — sourced from real content
-(profile tagline, post excerpt) rather than one static title shared across the whole site.
-`PublicLayout` no longer sets `document.title` itself, which also removes a latent race that
-used to exist between it and whichever page mounted.
-
-`components/admin/SearchInput.jsx` is a client-side filter over whatever's already loaded on
-screen (BlogList, ProjectList, QuoteInbox each use it) — **not** a server-side search. With
-"Load more" pagination, a term only matches items fetched so far. A real server-side search
-would need a query param on the list endpoints; not needed yet at this scale.
-
-SEO basics: `index.html` carries a static meta description + Open Graph/Twitter Card tags (for
-when the root URL itself is shared), plus `public/robots.txt` and a static `public/sitemap.xml`
-listing only the three top-level routes. Per-blog-post OG previews aren't achievable without
-SSR or a server-side proxy — link-preview bots (Twitter/Facebook/Slack) don't execute JS, so a
-plain client-rendered SPA can't give them a per-post title/image. Google's own crawler does
-execute JS and picks up `useDocumentMeta`'s per-page titles, and discovers blog post URLs by
-following links from `/blogs` even without them being individually listed in the sitemap.
-
-### Theming
-
-Tailwind v4, configured in CSS via `@theme` in `index.css` — there is no `tailwind.config.js`.
-The visual system is the **FlowBase** developer-focused palette:
-- **Canvas / base:** `#0A0C16` (near-black with faint blue tint) with fixed radial background glows (`#7C6CFF` violet top, `#38BDF8` sky right).
-- **Cards / panels:** `#11142A` (surface) to `#171B35` (raised gradient), with 1px `#232848` borders.
-- **Accents:** `#6D5AF6` primary buttons (with inset highlight + violet glow shadow), `#7C6CFF` decorative violet, and `#38BDF8` sky blue links / kickers.
-- **Typography:** Self-hosted variable woff2 fonts (`Manrope` display/body, `Fira Code` monospace in `frontend/public/fonts/`).
-
-Every themeable value is a CSS custom property with a default matching the shipped look:
-`--color-void`, `--color-panel`, `--color-panel-edge`, `--color-neon-blue`,
-`--color-neon-indigo`, `--color-accent`, plus status colours, `--theme-radius`,
-`--theme-shadow`, `--card-border-color`, `--btn-primary-bg/fg/border`, `--font-display`,
-`--font-mono-ui`. This is what makes it **runtime-editable**: `utils/applyTheme.js` resolves
-the `SiteTheme` API response into these vars (plus injecting Google Fonts `<link>`s) and calls
-`document.documentElement.style.setProperty(...)` — no rebuild, no redeploy, just a `PATCH` and
-a page load. `pages/admin/settings/ThemeEditor.jsx` edits it with a live preview that uses the
-same resolver functions, so the preview matches what saving actually produces.
-
-Deliberately **one theme, not a multi-theme gallery** — the singleton `SiteTheme` model and the
-CSS-custom-property approach both assume this; a future theme *gallery* would be a different,
-larger feature.
-
-Component classes:
-- `.system-panel`, `.system-panel-glow`: Cards with subtle top-to-bottom surface gradients, hover lift (`translateY(-3px)`), and violet border/shadow transitions.
-- `.system-heading`: Display typography with tight tracking and balanced wraps.
-- `.eyebrow`: Capsule pill with a glowing gradient dot (`#7C6CFF` → `#38BDF8`).
-- `.fb-kicker`: Monospace uppercase technical label in sky blue (`#38BDF8`).
-- `.fb-grad-text`: Brand gradient text clipping (`#7C6CFF` to `#38BDF8`) for hero headline highlights.
-- `.fb-lead`: Balanced, muted body lead paragraph.
-- `.fb-window`: Illustrated code editor window with macOS-style window controls, syntax highlighting tokens (`.c`, `.k`, `.t`, `.f`, `.s`, `.n`), and status footer.
-- `.fb-cta`: Wide closing call-to-action banner with dual radial corner glows and 28px border radius.
-- `.fb-stat`, `.fb-icon`, `.fb-chip`: Metric card, icon container, and monospace tech tag pills.
-- `.system-button`: Outlined / ghost variant, plus `.system-button-primary` with solid `#6D5AF6` and glow shadow.
-- `.skeleton`: Animated placeholder shimmer matching FlowBase panel contrast.
-- `.markdown-body`: Rendered post content with violet left-edge blockquotes, sky blue links with underlines, and tinted inline code chips.
-
-The site is dark-only (`color-scheme: dark`) — no light mode.
+CRM stage values: `lead`, `contacted`, `proposal`, `negotiation`, `won`, `lost`. Temperatures: `cold`, `warm`, `hot`.
 
 ---
 
-## 8. Local development
+## 4. How the data layer works
 
-Requires Python ≥3.12 (pinned to 3.13 via `backend/.python-version`) and Node.
+**`api/client.js`** is the single place that talks to Supabase. It preserves the response shapes the UI was originally written against: list calls return a `{ count, next, results }` envelope, and file fields accept `File` objects that are uploaded via `uploadMedia` before the row is written.
 
-```bash
-cd backend
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py createsuperuser
-.venv/bin/python manage.py runserver
-```
+**Egress and quota controls**
+
+- `getBlogPosts()` omits `content` — the list only needs metadata; the body is fetched by `getBlogPost(slug)`.
+- A TTL cache (`getCached` / `setCached` / `invalidateCache`) keeps results in memory and `sessionStorage` (default 5 min). Mutations invalidate by key prefix.
+- `trackPageView` skips headless/bot user agents, de-dupes the same path within 30 s, and keys visitors with a random `__pv_session` id in `localStorage` (no IP, no cookies).
+- `cleanup_old_page_views` can trim the table, but must be invoked manually (see `DEPLOYMENT.md`).
+
+**Scheduled publishing.** There is no cron. Public queries filter `is_published = true AND published_date <= today`, and the same rule is enforced in RLS, so a future-dated post is invisible to anonymous readers (the API and a direct REST call alike) until its date arrives. Admins see everything.
+
+**Quote requests.** `submitQuoteRequest` sends exactly the `quote_requests` columns and does not chain `.select()` — anonymous users have INSERT but not SELECT, so the insert uses `return=minimal`. Spam resistance is the RLS validation plus the absence of read access; there is no server-side rate limit.
+
+**Fallbacks.** If `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are missing, `isSupabaseConfigured` is false and `client.js` returns `null`/defaults instead of crashing; `BlogDetail` and `Solutions` additionally fall back to bundled sample posts (`src/data/fallbackBlogDetails.json`).
+
+---
+
+## 5. Authentication and authorization
+
+- **Sign-in:** `supabase.auth.signInWithPassword(email, password)`. `AuthProvider` subscribes to `onAuthStateChange`; the Supabase SDK persists and silently refreshes the session (`persistSession`, `autoRefreshToken`). There is no custom token store.
+- **Route guard:** `RequireAuth` blocks `/admin/*` until a session exists, preserving the originally requested URL for the post-login redirect. `/admin/login` sits outside the guard.
+- **The real enforcement is RLS**, not the guard. Hiding a route is UX; the policies in §3 are what stop an anonymous caller from writing or reading private rows. Every admin-only table grants access only `TO authenticated`.
+- **Single admin:** policies treat any authenticated user as admin. Keep public sign-ups disabled in Supabase Auth settings, or add a role check to the policies.
+- **Login throttling** is Supabase Auth's built-in rate limiting.
+- **Edge Functions** (`ai-proxy`, `apollo-proxy`) are deployed with `verify_jwt = true` *and* re-verify the caller with `supabase.auth.getUser()` before doing anything, returning 401 otherwise. They take third-party API keys in the request body, so they must never be callable anonymously.
+- **Third-party keys** (Ollama, Groq, OpenAI, Apollo) are entered in `/admin/settings/integrations` and stored in the admin's **browser `localStorage`** — they never reach the database or git. The trade-off is that they are per-browser and readable by any script on the page; acceptable for a single-admin tool, not for multi-user.
+- **Content safety:** post HTML is sanitized with DOMPurify before rendering (`RichTextContent`).
+
+---
+
+## 6. Admin panel
+
+| Route | Page | Notes |
+|---|---|---|
+| `/admin` | `Dashboard` | Clickable KPI cards, pipeline value, quick launchpad, action-required feeds |
+| `/admin/blog`, `/new`, `/:slug/edit` | Blog CMS | FlowBase Visual Block Builder V2 + rich text; scheduling via `published_date` |
+| `/admin/analytics` | `Analytics` | Calls `get_analytics_summary` |
+| `/admin/projects`, `/new`, `/:id/edit` | Projects | |
+| `/admin/skills`, `/admin/profile` | Skills / Profile | |
+| `/admin/quotes` | `QuoteInbox` | Read/delete; **Convert to Deal** inserts a `crm_leads` row linked by `quote_request_id` |
+| `/admin/crm` | `CrmPipeline` | Kanban by stage, deal value, follow-up alerts, mobile list toggle |
+| `/admin/crm/prospects` | `CrmProspects` | Directory with CSV export and outreach shortcuts |
+| `/admin/crm/radar` | `ClientRadar` | Live hiring-feed aggregator with 1-click CRM ingestion |
+| `/admin/settings/account` | `AccountSettings` | Password change via Supabase Auth |
+| `/admin/settings/branding`, `/theme` | Branding / `ThemeEditor` | Writes `site_branding` / `site_theme` |
+| `/admin/settings/integrations` | `IntegrationSettings` | AI provider + Apollo keys, connection tests |
+| `*` under `/admin` | `AdminNotFound` | |
+
+`AdminLayout` provides the grouped sidebar, live badges (unread quotes, CRM follow-ups due), the identity dropdown, and a mobile slide-over drawer. Feedback uses the shared toast system (`useToast()`); `AdminPageHeader` supplies breadcrumbs and the sticky save/cancel bar with a dirty-state badge.
+
+### FlowBase Visual Block Builder V2
+
+Blog posts are composed from auto-layout containers (row/column) and atomic elements (heading, text, image, table, list, video, code card, callout, pull quote, button). Storage is **lossless dual-format** in `blog_posts.content`: clean semantic HTML (so readers, crawlers and RSS need no JS) followed by the exact block tree, URI-encoded in a trailing comment:
+`<!-- FLOWBASE_BLOCKS_V2:<encoded_json>:FLOWBASE_BLOCKS_V2 -->`.
+Reopening a post runs `parseHTMLToBlocks()` (in `utils/blogBlocks.js`) to rebuild the editable tree. Full block schema: `docs/SRS.md` §4.
+
+### CRM and lead tooling
+
+- **Client Radar** (`radarClient.js`) pulls Hacker News "Who is hiring" (including founder emails found in post text), RemoteOK, and Jobicy, and lists freelance-marketplace scanners. `radarScoring.js` computes a deterministic **0–100 Opportunity Score** from freshness (decays over days), reachability (direct contact found), tech-stack match, and deal-intent signals, and tags items `urgent` → `stale`. It is rule-based, not an LLM call.
+- **Apollo enrichment** (`apolloClient.js` → `apollo-proxy`): "Find Decision-Maker & Verified Email" from `LeadDetailDrawer` and `ClientRadar`.
+- **AI Cold Pitch Engine** (`aiClient.js`): providers are Ollama Cloud, Ollama Local (direct to the daemon or a tunnel — this path is browser → daemon, not through the Edge Function), Groq (Llama 3.3 70B), OpenAI/custom, or the zero-API algorithmic templates (default). Output is 3 angles (Rescue & Refactor, Rapid MVP Delivery, Architecture Advisory) × 3 tones (Senior Engineer, Pragmatic Partner, Direct & Punchy).
+
+---
+
+## 7. Public site
+
+| Path | Page |
+|---|---|
+| `/` | `Home` — hero, tech stack, featured work (`is_featured`, falling back to the first two by `display_order`), CTA |
+| `/solutions` | `Solutions` — FlutterFlow fix/guide library: category-filtered post cards backed by `getBlogPosts`, with built-in fallback posts |
+| `/blogs`, `/blogs/:slug` | `Blogs` (category filter, Load more) / `BlogDetail` (sticky TOC with scroll-spy, reading-progress bar) |
+| `/projects` | `Projects` — cards + deep-dive modal |
+| `*` | `NotFound` |
+
+`PublicLayout` fetches profile and branding once, drives dynamic branding (nav name/avatar, favicon), fires `trackPageView` on each route change, and hosts the global quote modal. Admin routes don't use this layout, so admin traffic is never counted.
+
+**SEO.** `useDocumentMeta` sets per-page title, description, canonical URL (`https://jerry-dev-studio.web.app/...`), OpenGraph/Twitter tags and JSON-LD (`WebSite`, `Organization`, `Blog`, `BlogPosting`, `BreadcrumbList`). Static assets: `sitemap.xml`, `feed.xml` (RSS 2.0), `robots.txt`, `manifest.json`, favicon suite. Because this is a client-rendered SPA, link-preview bots that don't run JS only see the static `index.html` tags, not per-post titles/images; Google's crawler does execute JS. `sitemap.xml` and `feed.xml` are static files and must be updated by hand when posts are added.
+
+---
+
+## 8. Theming and typography
+
+Tailwind v4, configured in CSS via `@theme` in `index.css` — there is no `tailwind.config.js`. FlowBase palette:
+
+- **Canvas:** `#0A0C16`, with fixed radial glows (violet `#7C6CFF` top, sky `#38BDF8` right).
+- **Panels:** `#11142A` → `#171B35`, 1px `#232848` borders.
+- **Accents:** `#6D5AF6` primary (with glow), `#7C6CFF` decorative violet, `#38BDF8` links/kickers.
+- **Typography (self-hosted variable woff2 in `frontend/public/fonts/`):**
+  - Display: **Plus Jakarta Sans** (`--font-display`)
+  - Body: **Inter** (`--font-sans`)
+  - Mono: **JetBrains Mono** (`--font-mono`, `--font-mono-ui`)
+  - Plus Jakarta Sans and Inter are preloaded in `index.html` for zero layout shift.
+
+**Fonts are also theme data.** `site_theme.font_display` / `font_mono` can be changed in the Theme Editor (options: Plus Jakarta Sans, Inter, Poppins, Space Grotesk, Manrope, Sora / JetBrains Mono, Fira Code, IBM Plex Mono, Roboto Mono). `applyTheme.js` loads non-self-hosted choices from Google Fonts. **Legacy alias:** earlier schema versions defaulted the theme row to `Manrope` / `Fira Code`; `applyTheme.js` deliberately maps those two values to Plus Jakarta Sans / JetBrains Mono so old rows still render the current brand. The `Manrope` and `Fira Code` `@font-face` blocks and woff2 files remain in the repo only so choosing them in the Theme Editor works offline; they are not part of the default look.
+
+Runtime theming: `utils/applyTheme.js` resolves the `site_theme` row into CSS custom properties (`--color-void`, `--color-panel`, `--color-panel-edge`, `--color-neon-blue`, `--color-neon-indigo`, `--color-accent`, `--theme-radius`, `--theme-shadow`, button/card vars, `--font-display`, `--font-mono-ui`) on `document.documentElement` — no rebuild or redeploy. `App.jsx` applies it once at boot; `ThemeEditor` previews using the same resolvers. One theme, not a gallery. The site is dark-only.
+
+Key component classes: `.system-panel`, `.system-button` / `-primary`, `.system-heading`, `.eyebrow`, `.fb-kicker`, `.fb-grad-text`, `.fb-card`, `.fb-window`, `.fb-cta`, `.fb-stat`, `.fb-chip`, `.skeleton`, `.markdown-body`.
+
+### Mobile standards (320–430px)
+
+Every page and modal must render without horizontal scroll down to 320px. Outer wrappers use `px-4 sm:px-6`; multi-column forms stack with `grid-cols-1 sm:grid-cols-2|3`; modals use `max-h-[92vh] sm:max-h-[85vh] overflow-y-auto` and `p-2.5 sm:p-4`; drawers use `w-[84vw] max-w-xs` or `w-full sm:max-w-xl`.
+
+---
+
+## 9. Local development
 
 ```bash
 cd frontend
 npm install
-npm run dev
+cp .env.example .env     # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
+npm run dev              # http://localhost:5173/
+npm run build            # -> frontend/dist
+npm run lint
 ```
 
-Frontend at `http://localhost:5173/`, API at `http://127.0.0.1:8000/`, Django admin at
-`/admin/`. The Vite dev server proxies `/api` and `/media` to Django, so no CORS setup is
-needed locally.
+There is no local backend to start. The dev server talks to whichever Supabase project `.env` points at, so **local development writes to the same database as production unless you point `.env` at a separate project**. Only the anon key belongs in the frontend; never put the service-role key there.
 
-Note: throttle counters live in memory locally, so **restarting the Django server resets
-them** — useful if you lock yourself out of the quote form or login while testing.
-
-Run the backend test suite with `.venv/bin/python manage.py test` (62 tests across every app).
+Database setup on a fresh Supabase project: run `supabase/schema.sql` in the SQL Editor (idempotent), then optionally `supabase/seed_scheduled_blogs.sql`, then create the admin user under Authentication → Users and disable public sign-ups.
 
 ---
 
-## 9. Deployment
+## 10. Deployment
 
-Two separate Vercel projects from the same repo (root directories `backend` and `frontend`),
-plus Supabase for Postgres and Storage. Full walkthrough in `docs/DEPLOYMENT.md`.
+Frontend: `npm run build` then `firebase deploy --only hosting`. Edge Functions: `supabase functions deploy <ai-proxy|apollo-proxy> --project-ref fbeegpzrbocqgyxeqqtc`. Schema changes are applied by running SQL in the Supabase SQL Editor. Full walkthrough in `docs/DEPLOYMENT.md`.
 
-Vercel has zero-config Django support — it detects `manage.py`, reads `WSGI_APPLICATION`, and
-runs `collectstatic` during the build. Because functions have no persistent shell, `migrate`,
-`createcachetable` and `createsuperuser` are run **locally against Supabase** rather than at
-build time — any new app's migration needs the same manual step before its feature works live.
-
-**Known gotcha (hit once already):** Supabase's free tier auto-pauses a project after about a
-week of inactivity, and a paused project briefly stops resolving in DNS — this looks exactly
-like the project having been deleted from Vercel's runtime logs (`ENOTFOUND`). Check Supabase's
-dashboard for a "Paused" state before assuming the database is gone.
+**Known gotcha:** Supabase free-tier projects auto-pause after about a week of inactivity, and a paused project can stop resolving in DNS — which looks exactly like a deleted project (`ENOTFOUND`). Check the dashboard for a "Paused" state before assuming the database is gone. As of 2026-11-09 the project `fbeegpzrbocqgyxeqqtc` resolves and answers REST and Auth requests.
 
 ---
 
-## 10. Not built yet / deliberately deferred
+## 11. Not built yet / deliberately deferred
 
-- **Email on quote submission.** Submissions land in the database silently — nothing notifies
-  you. Explicitly deprioritized (not forgotten).
-- **Forgot-password email flow.** `change-password` is self-service only (current + new
-  password, while logged in) — no email sending is configured, and a single-admin site doesn't
-  need the added infrastructure of a token-based reset-by-email flow.
-- **Page builder for static marketing pages.** The blog editor features the **FlowBase Visual Block Builder V2** (auto-layout flex containers, atomic elements, comparison tables, checklists, code cards, and video embeds with lossless HTML compilation). Extending this full drag-drop builder to arbitrary custom landing pages remains a future milestone.
-- **Multi-theme / theme gallery.** `SiteTheme` is a singleton by design — one fully customizable
-  theme, not a selection of community themes.
-- **HSTS preload.** `SECURE_HSTS_PRELOAD` defaults off — submitting to the browser preload list
-  is a one-way door (see `hstspreload.org`) that the site owner should opt into deliberately,
-  not something turned on automatically.
-- **Toast notifications.** Editors currently show save feedback as inline text ("Saved",
-  "Unsaved changes") rather than a shared toast system. Considered and explicitly deferred —
-  the inline pattern already works consistently across every editor; a toast refactor is
-  stylistic polish, not a fix.
-- **Bulk actions.** No multi-select delete anywhere (e.g. the Quote inbox) — one at a time via
-  the existing `ConfirmDialog`. No backend bulk-delete endpoint exists either; would need either
-  sequential per-row requests or a new endpoint.
-
-## Known quirks
-
-- `profiles/urls.py` registers a `DefaultRouter` at `''` alongside `ProfileView` at `''`. The
-  ProfileView pattern is listed first so it wins, and the router's generated API-root view is
-  shadowed. Harmless, but `SimpleRouter` would be tidier.
-- `.gitignore` ends with a broad `.env*`, which matches `.env.example`. The two tracked example
-  files are unaffected, but a newly added one would be silently ignored.
-- `gunicorn` is still in `requirements.txt` but unused, left over from a pre-Vercel Render setup.
+- **Email on quote submission** — submissions land in the inbox silently; the unread badge is the only notification.
+- **Forgot-password email flow** — password change is self-service while signed in.
+- **Server-side search** — admin search boxes filter only already-loaded items.
+- **Bulk actions** — no multi-select delete.
+- **Per-post link previews** — needs SSR or a prerender/proxy step.
+- **Automated tests** — there is no frontend test suite; verification is manual (`docs/TESTING.md`).
+- **Role-based admin** — any authenticated user is admin (see §5).
+- **Multi-theme gallery** — `site_theme` is a singleton by design.

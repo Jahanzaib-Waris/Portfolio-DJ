@@ -2,291 +2,208 @@
 
 For a fast 15-minute sanity pass instead of this full checklist, see `QUICK-TEST.md`.
 
-Everything built but not verified by hand. Anything already proven is listed under
-**Verified** at the end of each section, so you don't repeat work.
+There is no automated frontend test suite; `npm run lint` and `npm run build` are the only
+automated gates. Everything else is verified by hand with this list. Tick items as you go.
 
-Current blockers: the local database has **no users**, so every signed-in path is untested.
+> **Test data warning.** The dev server talks to whichever Supabase project is in
+> `frontend/.env`. If that is the production project, everything you create below is real:
+> use obviously-named test records ("ZZ test post") and delete them afterwards, or point `.env`
+> at a separate Supabase project.
 
 ---
 
 ## 0. Setup
 
 ```bash
-cd backend
-.venv/bin/python manage.py createsuperuser   # NOT done yet — 0 users in the local DB
-.venv/bin/python manage.py runserver
-```
-
-```bash
 cd frontend
+cp .env.example .env     # VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+npm install
+npm run lint
+npm run build
 npm run dev
 ```
 
-Public site → http://localhost:5173/ · Panel → http://localhost:5173/admin ·
-API → http://127.0.0.1:8000/ · Django admin → http://127.0.0.1:8000/admin/
+Public site → http://localhost:5173/ · Admin → http://localhost:5173/admin
+
+You need one Supabase Auth user (Dashboard → Authentication → Users) to sign in.
 
 ---
 
 ## 1. Sign-in and session
 
-### Login
-
-- [ ] Correct superuser credentials → lands on the dashboard
-- [ ] Backend stopped → "Cannot reach the server. Is the backend running?"
-- [ ] **Non-staff account** → "This account does not have admin access." *(not* the generic
-      wrong-password message). Create one to test:
-      ```bash
-      .venv/bin/python manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_user('plainuser','p@x.com','testpass123')"
-      ```
-
-### Session handling — the fiddliest part
-
+- [ ] Correct credentials → lands on the dashboard
+- [ ] Wrong password → a clear error, no crash
 - [ ] **Reload while signed in** → stays signed in, briefly showing "Restoring session...".
-      If this bounces you to login, the boot-time refresh is broken.
+      If it bounces to login, session restore is broken.
 - [ ] Visit `/admin/blog` signed out → redirected to login → after signing in, land on
       `/admin/blog` rather than the dashboard
 - [ ] **Log out → browser Back** → must NOT show the panel
-- [ ] Log out, then reload → still logged out (refresh token was blacklisted server-side)
-- [ ] **Leave the tab idle >15 min, then click around.** The access token expires at 15
-      minutes; the panel should refresh silently with no visible interruption. Single most
-      likely thing to be subtly wrong.
-- [ ] Corrupt the stored token and reload → lands on login rather than hanging. In the console:
-      `localStorage.setItem('portfolio.admin.refresh','garbage')`
-
-### Dashboard and layout
-
-- [ ] Four cards show counts matching Django admin
-- [ ] A card shows a red `—` rather than blanking the page if one endpoint fails
-      (stop the backend mid-load)
-- [ ] Sidebar on desktop, hamburger below `lg`
-- [ ] Public navbar/footer do **not** appear on admin pages
-
-**Verified:** `/admin`, `/admin/blog`, `/admin/blog/new` all redirect to login when signed
-out; bad credentials show "Incorrect username or password."
+- [ ] Log out, then reload → still logged out
+- [ ] Leave the tab idle for over an hour, then click around → the SDK refreshes the token
+      silently, or you are sent to login cleanly (no blank screen, no endless spinner)
+- [ ] Sidebar on desktop, hamburger/slide-over drawer on mobile; public navbar/footer do **not**
+      appear on admin pages
+- [ ] Settings → Account → change password, then sign in with the new one
 
 ---
 
-## 2. Blog CMS — entirely untested
-
-The whole editor is unexercised. This is the highest-value section.
+## 2. Blog CMS (Block Builder V2)
 
 ### Creating a post
 
-- [ ] `/admin/blog` → "New post" opens an empty editor
-- [ ] Typing a title fills the slug automatically (`My First Post` → `my-first-post`)
-- [ ] **Edit the slug by hand, then keep typing the title** → the slug must stop following it
-- [ ] Accents and punctuation are stripped (`Café & Crème!` → `cafe-creme`)
-- [ ] Excerpt counter increments and stops at 300
-- [ ] Save → redirects to the edit URL for the new slug
-- [ ] **Save a second post with a duplicate slug** → the error appears *under the slug field*,
-      not as a generic message
+- [ ] "New post" opens an empty editor
+- [ ] Typing a title fills the slug (`My First Post` → `my-first-post`)
+- [ ] Edit the slug by hand, then keep typing the title → slug stops following it
+- [ ] Accents/punctuation are stripped (`Café & Crème!` → `cafe-creme`)
+- [ ] Add one of each block: container (row and column), heading, text, image, table, list,
+      video, code, callout, quote, button; the properties drawer edits each
+- [ ] Save → redirected to the edit URL for the new slug
+- [ ] A duplicate slug shows the error on the slug field, not a generic message
 
-### Editing
+### Editing and round-trip
 
-- [ ] Opening an existing post loads every field including the Markdown body
-- [ ] **The slug does NOT auto-rewrite when you change the title of an existing post** (it's a
-      published URL — silently changing it would break links)
-- [ ] Changing the slug and saving → the browser URL updates to the new slug, and reloading
-      that URL works
-- [ ] "Unsaved changes" appears once you type, and clears after saving
-- [ ] **Type something, then close the tab** → browser warns about unsaved changes
+- [ ] Reopen a saved post → the block tree is rebuilt exactly (lossless
+      `FLOWBASE_BLOCKS_V2` round trip)
+- [ ] The slug does **not** auto-rewrite when you change the title of an existing post
+- [ ] "Unsaved changes" appears when dirty and clears after save; closing the tab while dirty
+      warns
+- [ ] Preview in the editor matches the published page
 
-### Markdown editor
+### Cover image and media
 
-- [ ] Preview updates live as you type
-- [ ] Preview matches the published page exactly (they share one component — if these differ,
-      something is wrong)
-- [ ] Below `lg` width the panes become Write/Preview tabs and both work
-- [ ] Wide code block scrolls inside the preview pane without stretching the layout
+- [ ] Choosing a file shows a preview; Save uploads it to Storage and the public post shows it
+- [ ] Replace and Remove work; saving without touching the cover keeps the existing one
+- [ ] Images inserted into blocks upload and render
 
-### Cover image
+### Publish state and scheduling
 
-- [ ] Choosing a file shows a thumbnail preview before saving
-- [ ] Save → image persists and appears on the public post
-- [ ] Replacing the image on an existing post works
-- [ ] "Remove" → shows "Cover will be removed on save", and after saving the image is gone
-- [ ] **Save a post with an existing cover but no new file** → the cover survives. (This is the
-      JSON-vs-multipart branch; if the cover vanishes, that logic is wrong.)
-
-### Publish state
-
-- [ ] New posts default to Draft
-- [ ] "Save & publish" → badge flips to Published, post appears on the public `/blogs`
-- [ ] "Unpublish" → badge flips to Draft, post disappears from public `/blogs`
-- [ ] A draft is listed in `/admin/blog` but not on the public site
-- [ ] Visiting a draft's slug while signed out gives 404
-
-### Deleting
-
-- [ ] Delete → confirm dialog naming the post
-- [ ] Escape and clicking the backdrop both cancel
-- [ ] Confirming removes it and the list refreshes without a manual reload
+- [ ] New posts default to Draft; Publish makes them appear on `/blogs`; Unpublish removes them
+- [ ] A draft is listed in `/admin/blog` but invisible on the public site; its URL is 404/empty
+      while signed out
+- [ ] **Future `published_date` + published** → hidden from `/blogs`, `/blogs/<slug>`, and a raw
+      REST call while signed out; visible once the date is today or earlier
+- [ ] Delete → confirm dialog → removed; lists refresh without a manual reload
 
 ---
 
-## 3. Projects, Skills, Profile, Quote inbox — also untested
+## 3. Projects, Skills, Profile, Branding, Theme
 
-### Projects
+- [ ] Projects: create/edit/delete; thumbnail upload/replace/remove; saving without a new file
+      keeps the old thumbnail; invalid URLs show an error under the field
+- [ ] Display order reorders the public `/projects` page; "Featured" drives Home's Featured Work
+- [ ] Case-study modal on `/projects` opens and closes (Escape and backdrop)
+- [ ] Skills: add/edit/delete; changes and order show on Home; more than 10 skills all appear
+- [ ] Profile: edit name/tagline/bio/photo/resume/links; name and photo drive the navbar and hero
+- [ ] Branding: site name updates the tab title; logo and favicon upload and apply
+- [ ] Theme: change colours, radius, shadow, button and card style → Save → public site updates;
+      the live preview matches the saved result
+- [ ] Theme fonts: selecting **Plus Jakarta Sans / JetBrains Mono** (the defaults) renders with the
+      self-hosted fonts. A stored `Manrope` / `Fira Code` value still renders as Plus Jakarta
+      Sans / JetBrains Mono (legacy alias in `applyTheme.js`).
 
-- [ ] `/admin/projects` lists existing projects with thumbnail, `#display_order` badge and
-      tech-stack tags; projects without an image show a dashed "no image" placeholder
-- [ ] Typing into **Tech stack** renders live tag chips below the field as you type
-- [ ] Create → redirects to the edit URL for the new project
-- [ ] Changes appear on the public `/projects` page
-- [ ] **Display order actually reorders** the public page (lower first)
-- [ ] Thumbnail upload, replace, and Remove all behave
-- [ ] **Save a project with an existing thumbnail and no new file** → the thumbnail survives
-      (the JSON-vs-multipart branch again)
-- [ ] An invalid Repo/Live URL shows the error *under that field*
-- [ ] Delete → confirm dialog → list refreshes
+---
 
-### Skills
-
-- [ ] Add a skill → appears in the list below without a manual reload
-- [ ] Edit → row becomes inputs; Save persists, Cancel discards
-- [ ] Delete → confirm dialog → removed
-- [ ] Changes show in the home page tech-stack section
-- [ ] Display order controls the order on the home page
-- [ ] **Add more than 10 skills** → all still listed. (They're fetched with `page_size=100`;
-      if only 10 appear, the pagination change didn't take.)
-
-### Profile
-
-- [ ] **With no profile yet** the page says "No profile exists yet" and the button reads
-      "Create profile"
-- [ ] Creating it succeeds, and the button changes to "Save changes"
-- [ ] Name and photo immediately drive the navbar branding and home page hero
-- [ ] Photo upload shows a round preview; Remove works
-- [ ] Resume upload → "View current resume" link appears and opens the PDF
-- [ ] **Save with an existing photo and resume but no new files** → both survive
-- [ ] A "Saved" indicator appears after saving and clears once you edit again
-- [ ] Invalid email or URL → error under that field
+## 4. Quotes, CRM and lead tooling
 
 ### Quote inbox
 
-- [ ] Submit the public form → the request appears at `/admin/quotes`
-- [ ] Newest appears first
-- [ ] Clicking a row expands the full message; clicking again collapses it
-- [ ] "Reply" opens your mail client addressed to the sender
-- [ ] Delete → confirm dialog → removed
-- [ ] **The inbox is not rate-limited** — reload it 8+ times in a row and it keeps working
-      (the 5/hour cap must apply only to public submissions)
+- [ ] Submit the public form (all fields) → the request appears at `/admin/quotes`, newest first
+- [ ] The submit returns success even though anonymous users cannot read the row back
+- [ ] Row expands to the full message; "Reply" opens the mail client; delete asks to confirm
+- [ ] The unread badge in the sidebar updates
+- [ ] "Convert to Deal" creates a `crm_leads` row linked to the quote
 
-### Panel-wide
+### CRM
 
-- [ ] Every sidebar item is now clickable — no greyed `soon` entries remain
-- [ ] Each page sets its own browser tab title
-- [ ] Unsaved-changes warning fires on the Project and Profile forms too
+- [ ] Pipeline: move a deal across stages; value totals update; follow-up alerts show for overdue
+      dates; mobile list toggle works
+- [ ] Prospects: search, filter, **CSV export** downloads and opens correctly
+- [ ] Lead drawer: edit fields, log activities of each type, delete an activity, schedule a
+      follow-up, outreach shortcuts open the right links
 
----
+### Client Radar and integrations
 
-## 4. Public site
-
-**Verified in the browser against seeded content:**
-
-- All Markdown renders — headings, bold, italic, inline code, fenced blocks, lists,
-  blockquote, table, hr
-- Links carry `target="_blank" rel="noreferrer"`
-- A deliberately wide code block scrolls in its own box (`overflow-x: auto`) and the page does
-  **not** scroll sideways
-- Pagination on `/blogs`: 10 posts → Load more → 12 appended, no duplicates, button disappears
-  on the last page
-- `BlogDetail` is now lazy-loaded and still renders Markdown correctly after that change
-
-Residual checks — these were **not** covered:
-
-- [ ] Same Markdown page on a **narrow phone viewport** (the scroll check was at 1280px)
-- [ ] **Raw HTML in post content stays inert.** Paste `<script>alert(1)</script>` into a post
-      and confirm no alert fires and the tag is not rendered as HTML
-- [ ] Table renders with visible borders and scrolls when too wide
-- [ ] Pagination on `/projects` (needs 11+ projects) — only `/blogs` was tested
-- [ ] Double-clicking Load more fast doesn't double-load
-- [ ] Stop the backend, then click Load more → existing items stay and an inline
-      "Couldn't load more" appears
-
-### Quote form throttle
-
-- [ ] 6 rapid submissions: first 5 succeed, 6th fails
-- [ ] Submissions appear in Django admin → Quote requests
-
-**Gotchas:** 5/hour per IP, so this burns your quota. Locally the counter is in-memory, so
-**restarting the Django server resets it** — the escape hatch if you lock yourself out.
-
-*Automated coverage exists:* `[201,201,201,201,201,429]` with `Retry-After: 3600`, and the
-throttled request persisting no row.
+- [ ] Radar loads Hacker News / RemoteOK / Jobicy results; one source failing does not blank the page
+- [ ] Opportunity scores are 0–100; sorting and the freshness filter work; stale items are flagged
+- [ ] "Add to CRM" inserts a lead and opens the pitch drawer
+- [ ] Integrations: save a key, hide/show the password toggle, "Test connection" succeeds for a
+      valid key and fails cleanly for a bad one
+- [ ] Pitch Engine: the algorithmic provider generates all 3 angles × 3 tones with no key; a
+      configured LLM provider returns text; failures fall back with a toast
+- [ ] Apollo: "Find Decision-Maker & Verified Email" fills contact fields (or reports no match).
+      Signed out, calling the Edge Function directly returns 401.
 
 ---
 
-## 5. API authorisation
+## 5. Public site
 
-*Covered by 11 automated tests that passed* — anonymous reads succeed and writes 401, staff
-CRUD works, non-staff can't obtain a token, drafts stay hidden, the quote inbox is unthrottled
-for staff. Re-check by hand only if something looks wrong.
-
----
-
-## 6. Production deploy — required before the live site works
-
-> **Blocked.** The deployed API currently 500s on every request — the Supabase project it points
-> at no longer exists. Confirmed 2026-08-02 from Vercel runtime logs:
-> `FATAL: (ENOTFOUND) tenant/user postgres.fbeegpzrbocqgyxeqqtc not found`, and
-> `fbeegpzrbocqgyxeqqtc.supabase.co` has no DNS record. None of the steps below can run until
-> there is a live database. This is unrelated to the application code — the connection fails
-> before any view executes.
-
-**First, restore the database:**
-
-- [ ] Check Supabase — was the project deleted, or does it exist under a different reference?
-- [ ] Update `SUPABASE_DB_HOST`, `SUPABASE_DB_USER`, `SUPABASE_DB_PASSWORD` in the backend
-      Vercel project
-- [ ] Set `SUPABASE_DB_PORT` to **5432** (session pooler), not the 6543 currently configured
-- [ ] Check Project Settings → Deployment Protection isn't blocking the domain the frontend calls
-
-**Then the deploy steps.** `abcf36f` (JWT auth) is already pushed, so the deployed backend is
-running code whose tables don't exist yet.
-
-- [ ] Set `NUM_PROXIES=1` in the backend Vercel project's env vars
-- [ ] Optionally set `QUOTE_THROTTLE_RATE` (defaults to `5/hour`)
-- [ ] Run migrations and the cache table against Supabase:
-      ```bash
-      cd backend                          # already linked to the portfolio-dj project
-      vercel env pull .env.local --environment=production
-      cp .env.local .env
-      python manage.py migrate            # token_blacklist — LOGIN FAILS WITHOUT THIS
-      python manage.py createcachetable   # throttle counters — QUOTES ERROR WITHOUT THIS
-      rm .env                             # or local dev silently runs against production
-      ```
-      **`SUPABASE_DB_PASSWORD` is flagged sensitive in Vercel**, so `env pull` writes the literal
-      string `[SENSITIVE]` rather than the value. Paste the real password into `.env` by hand
-      before running migrate, or the connection fails. The same applies to `SECRET_KEY` and
-      `CORS_ALLOWED_ORIGINS` — any placeholder works locally for a migration, but `[SENSITIVE]`
-      itself fails the system check for CORS.
-- [ ] Redeploy the backend
-
-Then on the deployed site:
-
-- [ ] `/admin/login` on the frontend domain signs in successfully
-- [ ] Reload keeps the session. **This is the first real test of cross-domain JWT** — locally
-      Vite proxies `/api` to the same origin, so localhost never exercises it
-- [ ] **Cover image upload works against Supabase Storage**, not just local disk
-- [ ] Quote form still throttles at 5/hour — proves `DatabaseCache` is live; if the limit never
-      triggers, the cache table is missing
-- [ ] Uploaded images and the resume still load
-- [ ] Django admin at `/admin/` on the backend domain still works as the fallback
+- [ ] Home, Solutions, Blogs, Blog detail, Projects all load with real content
+- [ ] `/blogs` category filter and Load more append without duplicates; the button disappears
+      on the last page
+- [ ] Blog detail: sticky TOC highlights the current section, progress bar tracks scrolling,
+      code blocks scroll inside their own box (page does not scroll sideways)
+- [ ] **Raw HTML stays inert.** Put `<script>alert(1)</script>` in a post's text and confirm no alert fires
+- [ ] Table blocks scroll when too wide; video blocks are responsive
+- [ ] Unknown URL → public 404; unknown `/admin/...` URL (signed in) → admin 404
+- [ ] Per-page tab titles and meta descriptions differ (`useDocumentMeta`); view-source shows
+      canonical + JSON-LD after JS runs
+- [ ] `/robots.txt`, `/sitemap.xml`, `/feed.xml` serve their files, not the app shell
+- [ ] Analytics: browse a few pages, then `/admin/analytics` shows the views; refreshing the same
+      page within 30 seconds does not add a duplicate
 
 ---
 
-## 7. Known issues, not bugs to report
+## 6. Authorization (RLS) — do this after any schema or policy change
 
-- **Media URLs expire after 1 hour.** Supabase's S3 gateway requires a signed request for every
-  object. Fine live; any cached response will have dead image links.
-- **Pagination has no URL state** — a scrolled position isn't shareable or restorable.
-- **`SECURE_HSTS_SECONDS` is unset**, flagged by `manage.py check --deploy`.
-- **`gunicorn` is unused** but still in `requirements.txt`, left from the Render setup.
-- No tests are committed — every `tests.py` is still an empty stub.
-- **Production is down.** The deployed API 500s on every request: its Supabase project no longer
-  exists (`fbeegpzrbocqgyxeqqtc` has no DNS record). Nothing in §6 can run until that's fixed.
-- `SUPABASE_DB_PORT` is set to **6543** (transaction pooler). Django needs the session pooler on
-  **5432**, or `DISABLE_SERVER_SIDE_CURSORS = True`.
-- The backend Vercel project has **Deployment Protection** enabled. If that covers the domain the
-  frontend calls, the live site can't reach the API even once the database is restored.
+Run each against the project URL with only the anon key, expecting the stated result:
+
+```bash
+URL=https://<project-ref>.supabase.co ; KEY=<anon key>
+curl -s "$URL/rest/v1/quote_requests?select=*"  -H "apikey: $KEY"   # [] or permission error, never rows
+curl -s "$URL/rest/v1/crm_leads?select=*"       -H "apikey: $KEY"   # [] or permission error
+curl -s "$URL/rest/v1/page_views?select=*"      -H "apikey: $KEY"   # [] or permission error
+curl -s "$URL/rest/v1/blog_posts?select=slug,is_published,published_date" -H "apikey: $KEY"  # published, non-future only
+curl -s -X POST "$URL/rest/v1/projects" -H "apikey: $KEY" -H "Content-Type: application/json" -d '{"title":"x"}'  # must be rejected
+curl -s -X POST "$URL/functions/v1/ai-proxy" -H "apikey: $KEY" -d '{}'  # 401, not a result
+```
+
+- [ ] All of the above behave as stated
+- [ ] A direct anonymous insert into `quote_requests` with an empty `name` is rejected
+- [ ] Anonymous storage upload to the `media` bucket is rejected; public read of an existing file works
+
+---
+
+## 7. Mobile (320px – 430px)
+
+Test at 320, 375 and 430 wide (browser devtools device mode):
+
+- [ ] No horizontal scrollbar on any public page or any admin page
+- [ ] Forms stack to one column; inputs are not squished
+- [ ] Modals fit the screen and scroll internally; drawers do not exceed the viewport
+- [ ] Admin sidebar opens as a slide-over drawer; Kanban has the compact list toggle
+
+---
+
+## 8. Production deploy checks
+
+After `firebase deploy --only hosting` (see `DEPLOYMENT.md`):
+
+- [ ] Run `QUICK-TEST.md` against https://jerry-dev-studio.web.app
+- [ ] Deep link refresh works (e.g. reload on `/blogs/<slug>` and `/admin/crm`) — proves the SPA rewrite
+- [ ] Hard reload shows fonts without a layout jump
+- [ ] The built bundle contains the anon key only: search `dist/` for `service_role` → no matches
+
+---
+
+## 9. Known issues, not bugs to report
+
+- **Quote form has no rate limit.** Protection is RLS validation and the lack of anonymous read
+  access; add a CAPTCHA or Edge Function if spam appears.
+- **Integration keys live in `localStorage`**, so they are per-browser and must be re-entered on
+  each device.
+- **Any authenticated user is admin.** Keep public sign-ups disabled.
+- **`sitemap.xml` and `feed.xml` are static**; new posts must be added by hand.
+- **Link-preview bots** (Slack, X, Facebook) see only the static `index.html` tags, not per-post
+  titles or images.
+- **Supabase free-tier auto-pause** can make the site fail with DNS/`ENOTFOUND` errors after a
+  week idle; restore the project from the Supabase dashboard.

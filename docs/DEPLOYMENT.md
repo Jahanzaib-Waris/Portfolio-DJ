@@ -1,120 +1,84 @@
 # Deployment Guide
 
-Stack: **Vercel** (Django API) + **Vercel** (React frontend) + **Supabase** (Postgres + Storage).
+Stack: **Firebase Hosting** (React SPA) + **Supabase** (Postgres, Auth, Storage, Edge Functions).
 
-The backend is production-ready (whitenoise for static files, Supabase Storage for media,
-CSRF/proxy settings) — see `backend/vercel.json` and `backend/.env.example`. The frontend reads
-its API URL from `VITE_API_BASE_URL` — see `frontend/.env.example` and `frontend/vercel.json`.
+There is no application server. The browser talks to Supabase directly with the public anon key, and Row Level Security decides what each caller may do. The legacy Django app in `backend/` is not part of deployment (see `docs/ARCHITECTURE.md` §1).
 
-Backend and frontend are two separate Vercel projects (same repo, different root directory), so
-each gets its own `*.vercel.app` domain. That means there's a bit of a chicken-and-egg order
-below: deploy the backend first, then the frontend, then circle back and update two env vars on
-the backend with the frontend's real URL.
+> **Never paste real credentials into this file or any tracked file.** The Supabase **anon** key is designed to be public, but the **service-role** key, database password, and any third-party API keys must never be committed or placed in `frontend/.env`.
 
 ## 1. Create the Supabase project
 
-1. Go to [supabase.com](https://supabase.com) and create a new project (pick a strong database
-   password — you'll need it below).
-2. **Database credentials**: Project Settings → Database → Connection pooling. Note the host,
-   port, database name, user, and the password you set.
-3. **Storage bucket**: Storage → create a new bucket, e.g. `media`. Make it **public** (so
-   uploaded photos/resumes/covers are viewable without extra auth).
-4. **Storage S3 credentials**: Project Settings → Storage → S3 Connection. Note the endpoint URL,
-   region, access key ID, and secret access key.
+1. Create a project at [supabase.com](https://supabase.com) and note the **Project URL** and **anon key** (Project Settings → API).
+2. **Schema:** SQL Editor → paste and run `supabase/schema.sql`. It is idempotent (`IF NOT EXISTS`, `DROP POLICY IF EXISTS`, `ON CONFLICT DO NOTHING`), so re-running after edits is safe. It creates the tables, RLS policies, the public-read `media` storage bucket and its write policies, the analytics RPCs, the CRM tables, and seed rows (branding, theme, starter posts).
+3. **Optional content:** run `supabase/seed_scheduled_blogs.sql` for the dated editorial-calendar posts.
+4. **Admin user:** Authentication → Users → Add user (email + password). This is the account you sign into `/admin` with.
+5. **Disable public sign-ups:** Authentication → Sign In / Providers → turn off "Allow new users to sign up". RLS treats *any* authenticated user as admin, so open sign-ups would make everyone an admin.
 
-> **Never paste real credentials into this file.** It's tracked in git and pushed to GitHub —
-> secrets belong in `backend/.env` (gitignored, for local testing) or directly in the Vercel
-> dashboard env var fields, never in a committed doc.
+## 2. Deploy the Edge Functions
 
-## 2. Deploy the backend to Vercel
+Two Deno functions, both with `verify_jwt = true` (see `supabase/config.toml`): `ai-proxy` and `apollo-proxy`.
 
-Vercel has native (zero-config) Django support: it detects `manage.py`, reads `WSGI_APPLICATION`
-from settings, and runs `collectstatic` automatically during the build — no `Procfile` or
-`gunicorn` needed.
+```bash
+supabase login
+supabase functions deploy ai-proxy     --project-ref <project-ref>
+supabase functions deploy apollo-proxy --project-ref <project-ref>
+```
 
-1. Push this repo to GitHub if you haven't already (it already is, at
-   `Jahanzaib-Waris/Portfolio-DJ`).
-2. In Vercel: **New Project**, import the repo, set the **root directory** to `backend`.
-3. Vercel should auto-detect the Python/Django framework. Leave build/output settings at their
-   defaults.
-4. Add these environment variables (Project Settings → Environment Variables):
-   - `SECRET_KEY` → a long random string
-   - `DEBUG` → `False`
-   - `ALLOWED_HOSTS` → your Vercel domain, e.g. `portfolio-backend.vercel.app`
-   - `CSRF_TRUSTED_ORIGINS` → `https://portfolio-backend.vercel.app`
-   - `CORS_ALLOWED_ORIGINS` → leave a placeholder for now (e.g. `https://placeholder.vercel.app`)
-     — you'll update this in step 4 once you know the real frontend URL
-   - `SUPABASE_DB_HOST`, `SUPABASE_DB_PORT` (`5432`), `SUPABASE_DB_NAME` (`postgres`),
-     `SUPABASE_DB_USER`, `SUPABASE_DB_PASSWORD` → from step 1
-   - `SUPABASE_STORAGE_BUCKET_NAME`, `SUPABASE_STORAGE_ENDPOINT_URL`,
-     `SUPABASE_STORAGE_ACCESS_KEY_ID`, `SUPABASE_STORAGE_SECRET_ACCESS_KEY`,
-     `SUPABASE_STORAGE_REGION` (`us-east-1`) → from step 1
-   - `NUM_PROXIES` → `1`, so the quote-form throttle reads the real client IP from
-     Vercel's `X-Forwarded-For` header rather than a value the caller can spoof
-   - `QUOTE_THROTTLE_RATE` → optional, defaults to `5/hour`
-5. Deploy.
-6. Vercel Functions have no persistent shell, so migrations, the cache table, and
-   `createsuperuser` run locally against the same Supabase database instead:
-   ```
-   cd backend
-   vercel pull              # writes .env.local with the project's env vars
-   cp .env.local .env       # Django's settings.py only reads .env, not .env.local
-   python manage.py migrate
-   python manage.py createcachetable
-   python manage.py createsuperuser
-   ```
-   `createcachetable` is required once. Rate limiting stores its counters in the cache,
-   and each Vercel request runs in a separate short-lived function — an in-memory cache
-   would reset constantly, so the counters live in a shared Postgres table instead.
-   (Requires the [Vercel CLI](https://vercel.com/docs/cli): `npm i -g vercel`, then `vercel link`
-   once to connect this directory to the project before `vercel pull` works.)
-7. Confirm the API works: visit `https://<your-backend>.vercel.app/api/profile/` (should return
-   JSON, likely a 404 body until you add a Profile) and `https://<your-backend>.vercel.app/admin/`.
+The current project ref is `fbeegpzrbocqgyxeqqtc`. The functions need no secrets of their own: they use the auto-provided `SUPABASE_URL` / `SUPABASE_ANON_KEY` to verify the caller, and third-party keys arrive per-request from the admin's browser.
 
-## 3. Deploy the frontend to Vercel
+## 3. Configure and build the frontend
 
-1. In Vercel: **New Project**, import the same GitHub repo again, set the **root directory** to
-   `frontend`.
-2. Framework preset should auto-detect Vite. Build command `npm run build`, output directory
-   `dist` (Vercel defaults are fine).
-3. Add an environment variable:
-   - `VITE_API_BASE_URL` → `https://<your-backend>.vercel.app/api`
-4. Deploy. Vercel gives you a URL like `https://portfolio-dj.vercel.app`.
+```bash
+cd frontend
+cp .env.example .env
+```
 
-## 4. Close the loop: update backend CORS/CSRF with the real frontend URL
+```env
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key>
+```
 
-Back in the backend Vercel project's env vars:
-- `CORS_ALLOWED_ORIGINS` → `https://portfolio-dj.vercel.app` (your real frontend URL)
+```bash
+npm install
+npm run lint
+npm run build          # outputs frontend/dist
+```
 
-Save and redeploy the backend project. This is the step that actually lets the deployed frontend
-talk to the deployed API (until this is set, requests will fail CORS checks in the browser).
+Vite inlines `VITE_*` values at build time, so rebuild after changing them.
+
+## 4. Deploy to Firebase Hosting
+
+`firebase.json` serves `frontend/dist`, rewrites every path to `/index.html` (SPA routing), and sets long-lived immutable caching on js/css/font files. The Firebase project is `jerry-dev-studio` (`.firebaserc`).
+
+```bash
+firebase login
+firebase deploy --only hosting
+# or: npx -y firebase-tools deploy --only hosting
+```
+
+Live at https://jerry-dev-studio.web.app/.
 
 ## 5. Populate content
 
-Log into `https://<your-backend>.vercel.app/admin/` with the superuser from step 2 and fill in:
-- **Profile** (name, tagline, bio, photo, resume, social links) — uploads go to Supabase
-  Storage, so they'll persist across redeploys.
-- **Skill** entries (shown on the home page tech stack section)
-- **Blog posts** and **Projects**
+Sign in at `/admin/login` with the admin user from step 1.4, then fill in Profile, Skills, Projects, Blog posts, Branding and Theme. Uploads go to the `media` bucket.
 
-## 6. Verify end-to-end
+Open `/admin/settings/integrations` to enter AI provider and Apollo keys. They are stored in that browser's `localStorage` only, so repeat this on each device you use.
 
-- Home page loads your real profile, skills, and featured projects
-- Blog/Projects pages list real content
-- Uploaded photo/resume/cover images actually render (confirms Supabase Storage is wired up)
-- Request Quote form submits successfully (check Django admin → Quote requests)
-- Mobile nav menu works
-- Django admin login works over HTTPS (confirms `CSRF_TRUSTED_ORIGINS` is correct)
+## 6. Verify end to end
 
-## Notes / things to revisit later
+Run `docs/QUICK-TEST.md` against the live site. Key signals:
 
-- **Custom domain**: Vercel supports adding one per project under Project Settings → Domains; no
-  code changes needed beyond adding the new domain to `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`,
-  and `CORS_ALLOWED_ORIGINS`.
-- **Cold starts**: Vercel Functions scale to zero between requests, so an idle backend's first
-  request after a while will be slower. Fine for a portfolio.
-- **Function timeout**: `backend/vercel.json` sets `maxDuration: 30` for the Django function.
-  Raise it there if a request ever needs longer (Hobby plan caps apply).
-- **Database migrations** run locally against Supabase (see step 2.6) rather than as part of the
-  build, since Vercel Functions have no persistent shell. Remember to run `python manage.py
-  migrate` locally after pulling any model changes, before/after deploying.
+- Home loads real profile/projects (confirms anon reads + RLS read policies).
+- The quote form submits and the row appears in `/admin/quotes` (confirms the anon INSERT policy).
+- A future-dated post is **not** visible on `/blogs` while signed out (confirms the scheduling RLS).
+- Image upload in the admin works (confirms the storage policies).
+- Pitch generation / Apollo enrichment return results rather than 401 (confirms the Edge Functions and JWT).
+
+## Notes
+
+- **Schema changes** are applied by running SQL in the Supabase SQL Editor; update `supabase/schema.sql` in the same commit so it stays the source of truth. `schema.sql` is for fresh setups: `INSERT ... ON CONFLICT DO NOTHING` seed rows never overwrite an existing row, so changed defaults (e.g. the theme fonts) do not alter a live database — change those through the admin UI.
+- **Free-tier pausing.** Supabase pauses idle free projects after about a week. A paused project can stop resolving in DNS, which looks like the project was deleted (`ENOTFOUND`). Check the dashboard for "Paused" and restore it before debugging anything else.
+- **Analytics retention.** `cleanup_old_page_views(retention_days)` trims old `page_views` rows, but it rejects anything that is not an authenticated JWT, so it cannot be run from the SQL Editor and no admin UI calls it yet. Invoke it with `supabase.rpc('cleanup_old_page_views', { retention_days: 90 })` from a signed-in session (e.g. the browser console on `/admin`), or schedule it with `pg_cron` after relaxing that check.
+- **Static SEO files.** `frontend/public/sitemap.xml` and `feed.xml` are hand-maintained; update them when publishing new posts.
+- **Custom domain.** Add it under Firebase Hosting → Add custom domain, then update the canonical URL base in `useDocumentMeta.js`, `index.html`, `sitemap.xml`, `feed.xml`, and `robots.txt`.
+- **Rollback.** Firebase Hosting keeps release history; roll back from the Hosting console.

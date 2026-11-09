@@ -1,9 +1,9 @@
 # Software Requirements Specification (SRS)
 ## Portfolio-DJ & FlowBase Content Management System
 
-**Document Version:** 1.0.0  
+**Document Version:** 2.0.0  
 **Status:** Approved / Living Specification  
-**Date:** September 2026  
+**Date:** November 2026 (architecture migrated from Django/Vercel to Supabase/Firebase; see `docs/ARCHITECTURE.md`)  
 **System Author & Lead Architect:** Jahanzaib Waris  
 **Repository:** `Jahanzaib-Waris/Portfolio-DJ`  
 
@@ -17,16 +17,17 @@ This Software Requirements Specification (SRS) document provides a complete desc
 ### 1.2 Document Scope
 This document covers:
 1. **Public Presentation Layer:** High-performance single-page application (SPA) featuring personal branding, project showcases, interactive case studies, skills matrix, service quote requests, traffic analytics beacon, and the public blog reader.
-2. **Administrative Control Panel Layer:** Secure, JWT-authenticated management dashboard managing profile attributes, project portfolios, incoming quote submissions, runtime visual theme customization, traffic analytics reporting, and the **FlowBase Block Builder Engine**.
+2. **Administrative Control Panel Layer:** Secure, Supabase-Auth-protected management dashboard managing profile attributes, project portfolios, incoming quote submissions, runtime visual theme customization, traffic analytics reporting, the **FlowBase Block Builder Engine**, and a B2B sales CRM (pipeline, prospects, Client Radar, AI cold-pitch engine, Apollo.io enrichment).
 3. **FlowBase Visual Block Builder Engine:** A modular, auto-layout content builder allowing the composition of rich blog articles using Flexbox containers (Rows and Stacks) and atomic elements (text, images, headings, comparison tables, checklists, code cards, callouts, pull quotes, and video embeds) with lossless compilation into standards-compliant HTML.
-4. **Backend API Layer:** RESTful API services powered by Django 6 and Django REST Framework (DRF), backed by PostgreSQL (Supabase) in production and SQLite in local development, with S3-compatible cloud media storage.
+4. **Backend Layer:** Supabase — PostgreSQL 17 with Row Level Security as the authorization layer, Supabase Auth, Supabase Storage (`media` bucket), and two Deno Edge Functions (`ai-proxy`, `apollo-proxy`). The frontend queries Supabase directly; there is no custom application server. (The legacy Django API in `backend/` is retired and not part of the system.)
 
 ### 1.3 Definitions, Acronyms, and Abbreviations
 - **API:** Application Programming Interface
 - **CMS:** Content Management System
 - **CRUD:** Create, Read, Update, Delete
-- **DRF:** Django REST Framework
-- **JWT:** JSON Web Token (Access: 15 minutes, Refresh: 7 days with token rotation)
+- **RLS:** PostgreSQL Row Level Security
+- **Edge Function:** Supabase-hosted Deno serverless function
+- **JWT:** JSON Web Token issued by Supabase Auth and refreshed automatically by the client SDK
 - **SPA:** Single Page Application (React 19 + Vite)
 - **UGC:** User-Generated Content
 - **SRS:** Software Requirements Specification
@@ -40,134 +41,80 @@ This document covers:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        CLIENT LAYER (Vercel Edge)                      │
+│                 CLIENT LAYER (Firebase Hosting + CDN)                  │
 │                                                                        │
-│   Public Client (Visitors)             Admin Panel (Staff Only)         │
-│   - Hero & Profile Presentation        - JWT Auth & Session Store      │
-│   - Project Gallery & Detail           - Analytics Dashboard           │
+│   Public Client (Visitors)             Admin Panel (/admin)            │
+│   - Hero & Profile                     - Supabase Auth session         │
+│   - Projects & Case Studies            - Dashboard & Analytics         │
 │   - Blog Reader & Block Renderers      - FlowBase Block Builder V2     │
-│   - Interactive Quote Contact Form     - Theme & Branding Inspector    │
-│   - Analytics Beacon                   - Media & Asset Management      │
-└────────────────────────────────────┬───────────────────────────────────┘
-                                     │ HTTPS / JSON / Multipart
-                                     ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                    API SERVICE LAYER (Django 6 + DRF)                  │
-│                                                                        │
-│   Routing & Throttles:                                                 │
-│   - Quotas: Quote (5/hr), Track (120/hr), Login (5/min)                │
-│   - Auth: SimpleJWT with Token Rotation & Blacklisting                 │
-│                                                                        │
-│   Core Apps:                                                           │
-│   - accounts: Auth & Credentials                                       │
-│   - profiles: Bio, Social Links, Skills & Competencies                 │
-│   - projects: Case Studies, Featured Flags, Tech Stack Tags            │
-│   - blog: BlogPost Engine with Lossless FlowBase Blocks                │
-│   - quotes: Inbound Client Inquiries & Lead Management                 │
-│   - sitesettings: Dynamic SiteBranding & Runtime SiteTheme            │
-│   - analytics: PageView Event Aggregation & Trend Insights            │
-└──────────────────┬─────────────────────────────────┬───────────────────┘
-                   │                                 │
-                   ▼                                 ▼
-┌──────────────────────────────────────┐  ┌──────────────────────────────┐
-│       DATABASE STORAGE LAYER         │  │     OBJECT STORAGE LAYER     │
-│  - Supabase PostgreSQL (Production)  │  │  - Supabase S3 Storage       │
-│  - Local SQLite (Development)        │  │  - Cover Images, Media Assets│
-└──────────────────────────────────────┘  └──────────────────────────────┘
+│   - Quote Request Form                 - Theme & Branding              │
+│   - Analytics Beacon                   - CRM, Client Radar, AI Pitch   │
+└──────────────┬───────────────────────────────────┬─────────────────────┘
+               │ HTTPS (supabase-js, anon/user JWT)│ HTTPS (user JWT)
+               ▼                                   ▼
+┌─────────────────────────────────────┐  ┌───────────────────────────────┐
+│  SUPABASE                           │  │  EDGE FUNCTIONS (Deno)        │
+│  - PostgreSQL 17 + RLS policies     │  │  - ai-proxy (Ollama/Groq/     │
+│  - Auth (email + password)          │  │    OpenAI)                    │
+│  - Storage: public `media` bucket   │  │  - apollo-proxy (Apollo.io)   │
+│  - RPCs: get_analytics_summary,     │  │  verify_jwt = true and caller │
+│    cleanup_old_page_views           │  │  re-checked with auth.getUser │
+└─────────────────────────────────────┘  └───────────────┬───────────────┘
+                                                         ▼
+                                          Third-party APIs (keys supplied
+                                          per request from the admin browser)
 ```
 
 ### 2.2 Technology Stack
 - **Frontend Framework:** React 19.x, React Router 7.x
-- **Build Tooling & Bundler:** Vite 8.x, Rolldown / ESBuild, Oxlint
+- **Build Tooling & Bundler:** Vite 8.x, Oxlint
 - **CSS Architecture:** Tailwind CSS v4, CSS Custom Properties (`@theme` design tokens)
-- **Backend Framework:** Django 6.0 (Python 3.13)
-- **API Framework:** Django REST Framework (DRF) 3.16+
-- **Authentication:** `rest_framework_simplejwt` with server-side blacklist rotation
-- **Database:** PostgreSQL (Supabase) in production; SQLite for zero-config local development
-- **Media Asset Storage:** Supabase S3-compatible object bucket with `django-storages`
-- **Hosting & Infrastructure:** Vercel Serverless Functions (Backend) + Vercel Static Hosting (Frontend)
+- **Rich Text:** TipTap 3.x; HTML sanitized with DOMPurify
+- **Backend Platform:** Supabase (PostgreSQL 17, Auth, Storage, Edge Functions)
+- **Hosting:** Firebase Hosting (project `jerry-dev-studio`)
 
 ---
 
 ## 3. Data Models & Database Schemas
 
-### 3.1 Accounts & Authentication
-- **User:** Built-in Django `AbstractUser`. Access to the administrative panel strictly requires `is_staff = True`.
-- **JWT Blacklist:** `OutstandingToken` and `BlacklistedToken` models prevent replay attacks upon refresh token usage.
+The authoritative definition is `supabase/schema.sql`. "Admin" means an authenticated Supabase user (single-admin deployment; public sign-ups are disabled).
 
-### 3.2 Profiles & Skills (`profiles` app)
-- **`Profile` (Singleton):**
-  - `name` (CharField, max 100)
-  - `role_title` (CharField, max 150)
-  - `tagline` (CharField, max 255)
-  - `bio` (TextField)
-  - `location` (CharField, max 100)
-  - `avatar` (ImageField, upload to `profile/`)
-  - `years_of_experience` (PositiveIntegerField)
-  - `completed_projects_count` (PositiveIntegerField)
-  - `github_url`, `linkedin_url`, `twitter_url`, `whatsapp_number` (URL/CharFields)
-  - `resume_file` (FileField, upload to `resumes/`)
-- **`Skill`:**
-  - `name` (CharField, max 80)
-  - `category` (CharField: `frontend`, `backend`, `mobile`, `database`, `devops`, `tools`)
-  - `proficiency` (IntegerField: 1–100)
-  - `is_featured` (BooleanField, default `False`)
-  - `icon_name` (CharField, max 50)
-  - `order` (PositiveIntegerField, default 0)
+### 3.1 Authentication
+Supabase Auth, email + password. There is no separate user table in the app schema. Access to `/admin/*` requires a valid session in the UI, and — the actual security boundary — every admin-only table and storage write is guarded by RLS policies `TO authenticated`.
 
-### 3.3 Projects & Case Studies (`projects` app)
-- **`Project`:**
-  - `title` (CharField, max 150)
-  - `slug` (SlugField, unique, max 180)
-  - `summary` (CharField, max 255)
-  - `description` (TextField)
-  - `cover_image` (ImageField, upload to `projects/covers/`)
-  - `client_name` (CharField, max 100)
-  - `project_type` (CharField: `web`, `mobile`, `saas`, `ecommerce`, `open_source`)
-  - `tech_stack` (JSONField: array of string badges)
-  - `live_url` (URLField, optional)
-  - `github_url` (URLField, optional)
-  - `is_featured` (BooleanField, default `False`)
-  - `order` (PositiveIntegerField, default 0)
-  - `created_at`, `updated_at` (DateTimeFields)
+### 3.2 Profile & Skills
+- **`profiles` (singleton):** `name`, `tagline`, `bio`, `photo`, `resume`, `email`, `github_url`, `linkedin_url`, `updated_at`. Public read; admin write.
+- **`skills`:** `name`, `description`, `display_order`. Public read; admin write.
 
-### 3.4 Blog Engine (`blog` app)
-- **`BlogPost`:**
-  - `title` (CharField, max 200)
-  - `slug` (SlugField, unique, max 220)
-  - `excerpt` (CharField, max 300)
-  - `content` (TextField: stores compiled HTML with embedded lossless JSON block metadata)
-  - `cover_image` (ImageField, upload to `blog/covers/`)
-  - `published_date` (DateField, default `timezone.now`)
-  - `is_published` (BooleanField, default `False`)
-  - `created_at`, `updated_at` (DateTimeFields)
+### 3.3 Projects & Case Studies
+- **`projects`:** `title`, `description`, `tech_stack` (comma-separated text, split into chips in the UI), `thumbnail`, `repo_url`, `live_url`, `display_order`, `is_featured`, `created_at`. Public read; admin write.
 
-### 3.5 Inquiries & Quotes (`quotes` app)
-- **`QuoteRequest`:**
-  - `full_name` (CharField, max 100)
-  - `email` (EmailField)
-  - `company_name` (CharField, max 120, optional)
-  - `budget_range` (CharField: `<5k`, `5k-10k`, `10k-25k`, `25k+`)
-  - `timeline` (CharField: `urgent`, `1-2_months`, `flexible`)
-  - `project_type` (CharField: `flutter`, `fullstack`, `web`, `consulting`)
-  - `message` (TextField)
-  - `is_read` (BooleanField, default `False`)
-  - `created_at` (DateTimeField, auto_now_add)
+### 3.4 Blog Engine
+- **`blog_posts`:** `title`, `slug` (unique), `category`, `excerpt`, `content` (compiled HTML plus embedded block metadata, see §4.3), `cover_image`, `published_date`, `is_published`, `created_at`, `updated_at`.
+- **Visibility rule (enforced in RLS and mirrored in queries):** anonymous readers see a post only when `is_published = true AND published_date <= CURRENT_DATE`; admins see all. This provides zero-cron scheduled publishing.
 
-### 3.6 Settings & Theming (`sitesettings` app)
-- **`SiteBranding` (Singleton):**
-  - `brand_name` (CharField, default `'Jahanzaib Waris'`)
-  - `tagline` (CharField, max 200)
-  - `logo_light`, `logo_dark`, `favicon` (ImageFields)
-- **`SiteTheme` (Singleton):**
-  - Holds runtime-editable design tokens: Primary color, Accent color, Dark canvas background, Panel surface color, Border radius, Font families. Resolves to CSS Custom Properties without application rebuild.
+### 3.5 Inquiries & Quotes
+- **`quote_requests`:** `name`, `email`, `service`, `backend`, `budget`, `timeline`, `project_link`, `project_details`, `submitted_at`. Anonymous **insert only** (policy requires non-empty name, email, details); admin read/update/delete.
 
-### 3.7 Analytics Tracker (`analytics` app)
-- **`PageView`:**
-  - `path` (CharField, max 255)
-  - `referrer` (CharField, max 255, optional)
-  - `user_agent` (CharField, max 255)
-  - `timestamp` (DateTimeField, auto_now_add)
+### 3.6 Settings & Theming
+- **`site_branding` (singleton, id = 1):** `site_name`, `logo`, `favicon`.
+- **`site_theme` (singleton, id = 1):** colour tokens (`color_void`, `color_panel`, `color_panel_edge`, `color_neon_blue`, `color_neon_indigo`, `color_accent`, `color_status_green`, `color_status_red`), `font_display` (default Plus Jakarta Sans), `font_mono` (default JetBrains Mono), `radius_scale`, `shadow_intensity`, `button_style`, `card_style`. Resolved to CSS custom properties at runtime without a rebuild.
+
+### 3.7 Analytics
+- **`page_views`:** `path`, `referrer`, `is_blog_post`, `slug`, `session_key` (random per-browser id, no PII), `created_at`. Anonymous insert; admin read.
+- **RPC `get_analytics_summary(days)`:** aggregated totals, daily series, top pages/posts/referrers, quote trend.
+- **RPC `cleanup_old_page_views(retention_days)`:** authenticated-only retention sweep.
+
+### 3.8 CRM
+- **`crm_leads`:** contact and company fields, `stage` (`lead`, `contacted`, `proposal`, `negotiation`, `won`, `lost`), `temperature` (`cold`, `warm`, `hot`), `source`, `deal_value`, `currency`, `tech_stack[]`, `notes`, `next_follow_up`, optional `quote_request_id`.
+- **`crm_activities`:** `lead_id` (cascades on delete), `type` (`note`, `linkedin_message`, `email`, `call`, `meeting`, `proposal_sent`), `content`.
+- Admin-only; no public access.
+
+### 3.9 Lead Tooling (non-database)
+- **Client Radar:** aggregates Hacker News hiring posts, RemoteOK and Jobicy; ranks each item with a rule-based 0–100 Opportunity Score (freshness decay, reachability, tech-stack match, deal-intent signals).
+- **AI Cold Pitch Engine:** Ollama Cloud, Ollama Local, Groq, OpenAI/custom, or built-in algorithmic templates; 3 angles × 3 tones.
+- **Apollo.io enrichment:** decision-maker and verified-email lookup via `apollo-proxy`.
+- Provider keys are held in the admin browser's `localStorage`, never in the database or repository.
 
 ---
 
@@ -203,7 +150,7 @@ The FlowBase Visual Block Builder provides a visual, modular publishing experien
   - `gradient`: `none`, `neon` (violet-cyan), `emerald`, `amber`
 - **Text Block (`text`):** Rich text HTML with inline formatting, bold, italics, links, and code spans.
 - **Image Block (`image`):**
-  - `src`: Image URL or direct upload via multipart API
+  - `src`: Image URL or direct upload to the Supabase Storage `media` bucket
   - `alt`: Accessibility description
   - `caption`: Displayed below image in muted monospace
   - `width`: In-layout width (`auto`, `25%`, `33%`, `40%`, `50%`, `100%`)
@@ -263,19 +210,26 @@ When an author re-opens the post in the admin panel, `parseHTMLToBlocks()` extra
 ## 5. Security & Non-Functional Requirements
 
 ### 5.1 Authentication & Authorization
-- All administrative routes (`/admin/*`) require a valid JWT issued to a staff account (`user.is_staff = True`).
-- Token rotation ensures each refresh token is single-use; subsequent requests using an invalidated token fail immediately.
-- Password change requires verifying the active current password.
+- Administrative routes (`/admin/*`) require a Supabase Auth session; the session is persisted and refreshed automatically by the client SDK.
+- Authorization is enforced by PostgreSQL RLS, not by the UI route guard. Anonymous callers can only read public content and insert quote requests and page views.
+- Edge Functions require a valid user JWT (`verify_jwt = true`) and re-validate it with `auth.getUser()`.
+- Password change uses `supabase.auth.updateUser`.
+- Public sign-ups must remain disabled, because RLS treats every authenticated user as admin.
 
-### 5.2 API Rate Limiting & Throttling
-- **Quote Form Submission (`POST /api/quotes/`):** 5 requests per hour per IP (`QUOTE_THROTTLE_RATE`).
-- **Analytics Beacon (`POST /api/analytics/track/`):** 120 requests per hour per IP (`ANALYTICS_THROTTLE_RATE`).
-- **Authentication Endpoint (`POST /api/auth/token/`):** 5 attempts per minute per IP (`LOGIN_THROTTLE_RATE`).
+### 5.2 Abuse Controls
+- **Login:** Supabase Auth's built-in rate limiting.
+- **Quote form:** no per-IP throttle; mitigated by RLS input validation and by anonymous users having no read access. (Add an Edge Function or CAPTCHA if abuse appears.)
+- **Analytics beacon:** client-side bot filtering and 30-second path de-duplication; table size managed via `cleanup_old_page_views`.
 
 ### 5.3 Performance & Optimization
-- **Self-Hosted Typography:** Manrope and Fira Code are served locally in `.woff2` format with `font-display: swap` to eliminate external Google Fonts latency.
-- **Image Optimization:** Lazy-loading enabled on all compiled block images; responsive viewport bounding via CSS `object-fit: cover`.
-- **Bundle Splitting:** Vite chunks vendors and dynamic administrative routes to keep the initial public bundle under 350 kB.
+- **Self-Hosted Typography:** Plus Jakarta Sans, Inter and JetBrains Mono are served locally as variable `.woff2` with `font-display: swap`; the two UI faces are preloaded.
+- **Egress Reduction:** blog list queries omit the HTML body; a TTL cache (memory + `sessionStorage`) with mutation-based invalidation fronts all reads.
+- **Image Optimization:** lazy-loading on compiled block images; `object-fit: cover` framing.
+- **Bundle Splitting:** admin and CRM routes are lazy-loaded so the public bundle stays small.
+- **Asset Caching:** Firebase Hosting serves js/css/fonts with a one-year `immutable` cache header.
+
+### 5.4 Responsiveness
+All public pages and the full admin panel must render without horizontal scrolling from 320px upward (see `docs/ARCHITECTURE.md` §8 for the layout rules).
 
 ---
 
@@ -286,6 +240,7 @@ When an author re-opens the post in the admin panel, `parseHTMLToBlocks()` extra
 - **Global Project Context (Git as Source of Truth):**
   - `CLAUDE.md`: Quick reference commands, directory layout, and operational rules.
   - `docs/ARCHITECTURE.md`: Technical architecture and system behavior reference.
+  - `docs/DEPLOYMENT.md`, `docs/TESTING.md`, `docs/QUICK-TEST.md`: Deployment and verification guides.
   - `docs/SRS.md` (This Document): Software Requirements Specification.
   - `git commit history`: Exact chronological record of all architectural updates.
 - **Working Across Multiple PCs:**
