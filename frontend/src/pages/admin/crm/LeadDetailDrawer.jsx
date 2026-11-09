@@ -15,6 +15,8 @@ import {
 } from '../../../api/client'
 import ConfirmDialog from '../../../components/admin/ConfirmDialog'
 import { useToast } from '../../../components/admin/toastStore'
+import { buildPitch } from '../../../utils/pitch'
+import { planAfterActivity, OUTREACH_TYPES } from './crmCadence'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 
 const ACTIVITY_TYPES = [
@@ -23,6 +25,7 @@ const ACTIVITY_TYPES = [
   { key: 'call', label: 'Phone Call', icon: '' },
   { key: 'linkedin', label: 'LinkedIn InMail', icon: '' },
   { key: 'meeting', label: 'Meeting Demo', icon: '' },
+  { key: 'reply', label: 'Reply Received', icon: '' },
 ]
 
 export default function LeadDetailDrawer({
@@ -150,6 +153,29 @@ export default function LeadDetailDrawer({
     }
   }
 
+  // After an outreach activity is logged, schedule the next follow-up (3, 7, then 14
+  // days); a logged reply stops the sequence. See crmCadence.js.
+  const applyCadence = async (type, priorActivities) => {
+    const priorOutreach = priorActivities.filter((a) => OUTREACH_TYPES.includes(a.type)).length
+    const plan = planAfterActivity({ type, priorOutreach, stage: formData.stage })
+    if (!plan) return
+    try {
+      const patch = { next_follow_up: plan.nextFollowUp, stage: plan.stage }
+      if (plan.temperature) patch.temperature = plan.temperature
+      const updated = await updateCrmLead(lead.id, patch)
+      setFormData((prev) => ({
+        ...prev,
+        next_follow_up: plan.nextFollowUp || '',
+        stage: updated.stage,
+        temperature: updated.temperature,
+      }))
+      onLeadUpdated(updated)
+      toast.info(plan.message)
+    } catch {
+      // The activity itself was saved; the schedule can be set by hand.
+    }
+  }
+
   const handleAddActivity = async (e) => {
     e.preventDefault()
     if (!newActivityContent.trim()) return
@@ -162,6 +188,7 @@ export default function LeadDetailDrawer({
       setActivities((prev) => [added, ...prev])
       setNewActivityContent('')
       toast.success('Activity logged!')
+      await applyCadence(newActivityType, activities)
     } catch (err) {
       toast.error('Could not log activity: ' + err.message)
     } finally {
@@ -269,198 +296,9 @@ export default function LeadDetailDrawer({
     setTimeout(() => setCopiedKey(null), 2000)
   }
 
-  // AI Personalized Pitch Generator
-  const getPitchContent = () => {
-    const rawName = (formData.name || '').trim()
-    const firstName =
-      rawName && !rawName.toLowerCase().includes('lead') && !rawName.toLowerCase().includes('hiring')
-        ? rawName.split(' ')[0]
-        : 'there'
-    const company = (formData.company || '').trim() || 'your team'
-    const stack = techStackInput.trim() || 'Flutter & Supabase'
-
-    if (pitchAngle === 'rescue') {
-      const subject = `Resolving ${company}'s mobile / Flutter engineering blockers`
-      const inmail = `Hi ${firstName}, saw what you're building at ${company}. As a senior mobile engineer (Flutter/Supabase), I help teams debug state bottlenecks, custom Dart integrations, and App Store blockers. Would love to share quick insights: https://jerry-dev-studio.web.app/projects`
-
-      let body = ''
-      if (pitchTone === 'senior') {
-        body = `Hi ${firstName},
-
-I came across your work at ${company} and wanted to reach out directly regarding your engineering roadmap.
-
-I'm Jerry Waris, a senior full-stack and mobile engineer specializing in Flutter, FlutterFlow, and Supabase architecture. Technical founders frequently bring me in when roadmaps hit friction—whether that's complex FlutterFlow custom actions, state management bugs, slow backend queries, or App Store / Play Store rejection blockers.
-
-A few recent outcomes from my engineering studio:
-• Resolved production crashes and custom Dart integration blockers for cross-platform apps.
-• Hardened Supabase backends with robust Row-Level Security (RLS) policies and real-time synchronization.
-• Delivered critical features under aggressive timelines without sacrificing code quality.
-
-You can inspect my recent client work and engineering case studies here:
-https://jerry-dev-studio.web.app/projects
-
-Would you be open to a 10-minute technical sync this week to see if I can take those blockers off your plate?
-
-Best regards,
-Jerry Waris
-Senior Full-Stack & Mobile Engineer | Jerry Dev Studio
-https://jerry-dev-studio.web.app`
-      } else if (pitchTone === 'consultant') {
-        body = `Hi ${firstName},
-
-Technical blockers in production apps often cost teams weeks of stalled momentum and lost user trust.
-
-I'm Jerry Waris, a senior software engineer who partners with venture-backed and high-growth startups to eliminate engineering bottlenecks across ${stack}. My focus is rapid turnaround: fixing stability issues, streamlining custom integrations, and ensuring your release pipeline is bulletproof.
-
-Recent client highlights:
-• Audit & stabilization of complex mobile codebases, eliminating repeat crash reports.
-• Supabase database optimization reducing latency and securing user tenancy.
-• Full technical sign-off enabling seamless App Store approvals.
-
-Check out verified project demos at https://jerry-dev-studio.web.app/projects
-
-Are you free for a quick 10-minute discovery call this Thursday to discuss ${company}'s current technical priorities?
-
-Best,
-Jerry Waris
-Principal Engineer, Jerry Dev Studio`
-      } else {
-        body = `Hi ${firstName},
-
-Quick note regarding ${company}'s mobile roadmap.
-
-I'm Jerry Waris, a senior Flutter & Supabase engineer. I help founders eliminate sticky bugs, build custom Dart logic, and get production mobile apps past App Store blockers in days instead of months.
-
-Engineering portfolio & demos: https://jerry-dev-studio.web.app/projects
-
-Do you have 10 minutes this week for a brief technical chat?
-
-Best,
-Jerry Waris
-Jerry Dev Studio`
-      }
-
-      return { subject, body, inmail }
-    } else if (pitchAngle === 'mvp') {
-      const subject = `Accelerating ${company}'s mobile MVP (production-ready in weeks)`
-      const inmail = `Hi ${firstName}, noticed ${company}'s growth. I specialize in rapid 0-to-1 mobile/web MVPs using FlutterFlow & Supabase—shipping production-grade apps in 2–4 weeks without tech debt. Portfolio: https://jerry-dev-studio.web.app/projects`
-
-      let body = ''
-      if (pitchTone === 'senior') {
-        body = `Hi ${firstName},
-
-Building a new mobile or web product usually forces a tough choice: spend months on custom code, or build a low-code prototype that breaks when scaling.
-
-I bridge that gap. I'm Jerry Waris, a senior engineer who combines the visual build velocity of FlutterFlow with custom Dart architecture and high-performance Supabase backends. You get a production-ready mobile app deployed to iOS & Android in 2–4 weeks—with clean, exportable code you completely own.
-
-Studio capabilities for ${company}:
-• End-to-end mobile MVP delivered in 2 to 4 weeks.
-• Scalable PostgreSQL & Supabase Auth, Storage, and Edge Functions.
-• Complete App Store & Google Play submission and launch readiness.
-
-Portfolio of recent launches: https://jerry-dev-studio.web.app/projects
-
-Would you be open to a 10-minute intro call this week to talk through your product vision?
-
-Best regards,
-Jerry Waris
-Senior Full-Stack & Mobile Engineer | Jerry Dev Studio`
-      } else if (pitchTone === 'consultant') {
-        body = `Hi ${firstName},
-
-Speed-to-market is the single biggest advantage for early-stage products.
-
-I help startups build and launch polished MVPs in under 4 weeks by leveraging modern high-velocity stacks (${stack}). Rather than burning quarters of engineering runway, you get a market-ready iOS and Android app that satisfies early adopters and investors alike.
-
-Recent deliverables include:
-• Full-stack mobile application shipped from zero to App Store in 21 days.
-• Multi-tenant Supabase architecture designed to scale seamlessly to 100k+ users.
-• Transparent sprints with direct engineer-to-founder communication.
-
-Live projects: https://jerry-dev-studio.web.app/projects
-
-If ${company} is planning an MVP launch this quarter, let's schedule a 10-minute intro call.
-
-Best,
-Jerry Waris
-Jerry Dev Studio`
-      } else {
-        body = `Hi ${firstName},
-
-I saw ${company} is expanding and wanted to see if you're looking to launch a mobile app or MVP this quarter.
-
-I build and ship production-ready Flutter & Supabase apps in 2 to 4 weeks, combining rapid UI velocity with rock-solid backend architecture.
-
-Case studies: https://jerry-dev-studio.web.app/projects
-
-Open to a quick 10-minute sync this week?
-
-Best,
-Jerry Waris`
-      }
-
-      return { subject, body, inmail }
-    } else {
-      const subject = `Senior engineering & backend architecture for ${company}`
-      const inmail = `Hi ${firstName}, reaching out regarding ${company}'s tech stack. I help engineering teams scale Flutter & Supabase architectures—clean code, rock-solid RLS, and high-performance backend pipelines. Demos: https://jerry-dev-studio.web.app/projects`
-
-      let body = ''
-      if (pitchTone === 'senior') {
-        body = `Hi ${firstName},
-
-As applications grow, maintaining modular architecture and zero-regression velocity becomes critical.
-
-I'm Jerry Waris, a senior software engineer specializing in scalable mobile architecture, custom Dart logic, and hardened Supabase/PostgreSQL backends. I help engineering teams transition from rapid prototypes to high-performance enterprise-grade systems without slowing down feature delivery.
-
-Key technical competencies:
-• Modular state management (Riverpod/Bloc) and clean Dart architecture.
-• Enterprise Supabase: advanced Row-Level Security, custom Edge Functions, database indexing.
-• Automated CI/CD pipelines for seamless App Store and Play Store releases.
-
-Explore my architecture & solutions: https://jerry-dev-studio.web.app/solutions
-
-Let's connect for 10 minutes this week to discuss how I can support ${company}'s engineering initiatives.
-
-Best regards,
-Jerry Waris
-Senior Full-Stack & Mobile Engineer | Jerry Dev Studio`
-      } else if (pitchTone === 'consultant') {
-        body = `Hi ${firstName},
-
-Scaling technical infrastructure without compounding technical debt is one of the toughest challenges for high-growth products.
-
-I advise and support engineering teams building with ${stack}, ensuring backend security, real-time performance, and maintainable application structure that supports long-term product velocity.
-
-Recent impact:
-• Re-architected backend queries, dropping load latency by over 60%.
-• Implemented rigorous PostgreSQL security policies and automated schema migrations.
-• Audited and restructured front-end codebases for maintainability and testability.
-
-Portfolio & Case Studies: https://jerry-dev-studio.web.app/projects
-
-Would you have 10 minutes later this week for a brief introductory conversation?
-
-Best,
-Jerry Waris
-Principal Engineer, Jerry Dev Studio`
-      } else {
-        body = `Hi ${firstName},
-
-Reaching out regarding ${company}'s engineering architecture.
-
-I'm Jerry Waris, a senior engineer specializing in scaling Flutter apps and Supabase backends. I help teams eliminate technical debt, optimize performance, and build scalable infrastructure.
-
-Engineering highlights: https://jerry-dev-studio.web.app/projects
-
-Free for a quick 10-minute sync this week?
-
-Best,
-Jerry Waris`
-      }
-
-      return { subject, body, inmail }
-    }
-  }
+  // Post-aware algorithmic pitch (see utils/pitch.js)
+  const getPitchContent = () =>
+    buildPitch({ lead: formData, angle: pitchAngle, tone: pitchTone, techStack: techStackInput })
 
   // Handle Log Pitch Sent to CRM timeline
   const handleLogPitchActivity = async () => {
@@ -478,6 +316,7 @@ Jerry Waris`
       })
       setActivities((prev) => [added, ...prev])
       toast.success('Logged outreach pitch to CRM activity timeline!')
+      await applyCadence('email', activities)
     } catch (err) {
       toast.error('Could not log activity: ' + err.message)
     } finally {

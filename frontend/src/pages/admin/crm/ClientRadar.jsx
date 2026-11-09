@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { buildMailto, buildPitch } from '../../../utils/pitch'
 import { enrichCompanyDecisionMaker } from '../../../api/apolloClient'
 import {
   createCrmLead,
@@ -25,11 +26,13 @@ import { Skeleton } from '../../../components/Skeleton'
 import StatusPanel from '../../../components/StatusPanel'
 import SystemButton from '../../../components/SystemButton'
 import LeadDetailDrawer from './LeadDetailDrawer'
+import RescueScanner from './RescueScanner'
 
 const TABS = [
   { key: 'hn', label: 'Hacker News Founders', desc: 'Direct startup founder hiring posts with verified contact emails' },
   { key: 'remote', label: 'Remote Mobile Gigs', desc: 'Live mobile & engineering roles from Jobicy and RemoteOK' },
-  { key: 'scanners', label: 'Freelance Market Scanners', desc: 'Curated 1-click live search scanners for Upwork, Contra & Wellfound' },
+  { key: 'rescue', label: 'App Rescue Scanner', desc: 'App Store apps with low ratings or no recent updates, ranked as rescue leads (prototype)' },
+  { key: 'scanners', label: 'Search Links', desc: 'One-click searches on Upwork, Contra, Wellfound, Reddit and the FlutterFlow forum' },
 ]
 
 const FILTER_PILLS = [
@@ -101,12 +104,23 @@ const FIT_STYLES = {
   not_fit: 'bg-rose-500/15 border-rose-500/30 text-rose-300',
 }
 
-const radarSource = (item) =>
-  item.source === 'hacker_news' ? 'hacker_news' : 'job_board'
+const radarSource = (item) => {
+  if (item.source === 'hacker_news') return 'hacker_news'
+  if (item.source === 'app_store') return 'other'
+  return 'job_board'
+}
+
+// Ready-to-send draft for a radar post (mailto link), tailored to the post.
+const draftMailto = (item) => {
+  const lead = buildRadarLeadPayload(item)
+  const angle = item.source === 'app_store' ? 'rescue' : 'mvp'
+  return buildMailto(item.email, buildPitch({ lead, angle, tone: 'senior', techStack: lead.tech_stack.join(', ') }))
+}
 
 // The contact's real name is unknown unless Apollo found a person.
 const radarContactName = (item) => {
   if (item.decisionMaker) return item.decisionMaker.split(' (')[0]
+  if (item.source === 'app_store') return `${item.company} (app publisher)`
   return `${item.company} (hiring contact)`
 }
 
@@ -137,6 +151,7 @@ export default function ClientRadar() {
   const [hnItems, setHnItems] = useState([])
   const [remoteItems, setRemoteItems] = useState([])
   const [loading, setLoading] = useState(true)
+  const [rescueItems, setRescueItems] = useState([])
   // 'db' = results come from the radar_items table filled by the radar-ingest function;
   // 'live' = fetched in the browser (fallback until that table / function is set up).
   const [storeMode, setStoreMode] = useState('live')
@@ -195,7 +210,7 @@ export default function ClientRadar() {
   )
 
   useEffect(() => {
-    const all = [...hnList, ...remoteList]
+    const all = [...hnList, ...remoteList, ...rescueItems]
     const newlyMatched = all.filter((item) => item.url && existingByUrl[item.url])
     if (newlyMatched.length === 0) return
     setConvertedMap((prev) => {
@@ -212,7 +227,9 @@ export default function ClientRadar() {
       })
       return next
     })
-  }, [hnList, remoteList, existingByUrl])
+  }, [hnList, remoteList, rescueItems, existingByUrl])
+
+  const isFeedTab = activeTab === 'hn' || activeTab === 'remote'
 
   const loadLive = useCallback(async () => {
     const pill = filterPillRef.current
@@ -256,21 +273,21 @@ export default function ClientRadar() {
           setStoreMode('live')
         }
 
-        if (activeTab !== 'scanners') await loadLive()
+        if (isFeedTab) await loadLive()
       } catch {
         toast.error('Failed to load opportunities. Try refreshing.')
       } finally {
         setLoading(false)
       }
     },
-    [activeTab, loadLive, toast],
+    [isFeedTab, loadLive, toast],
   )
 
   useEffect(() => {
-    if (activeTab !== 'scanners') {
+    if (isFeedTab) {
       loadData()
     }
-  }, [activeTab, loadData])
+  }, [isFeedTab, activeTab, loadData])
 
   // Stack pills re-query the live sources; stored results are filtered locally instead.
   const pillMounted = useRef(false)
@@ -279,13 +296,13 @@ export default function ClientRadar() {
       pillMounted.current = true
       return
     }
-    if (storeModeRef.current === 'live' && activeTab !== 'scanners') {
+    if (storeModeRef.current === 'live' && isFeedTab) {
       setLoading(true)
       loadLive()
         .catch(() => toast.error('Failed to load opportunities. Try refreshing.'))
         .finally(() => setLoading(false))
     }
-  }, [filterPill, activeTab, loadLive, toast])
+  }, [filterPill, isFeedTab, loadLive, toast])
 
   const setDismissedPersist = (updater) => {
     setDismissed((prev) => {
@@ -564,7 +581,7 @@ export default function ClientRadar() {
       </div>
 
       {/* Tabs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
         {TABS.map((tab) => {
           const isActive = activeTab === tab.key
           return (
@@ -588,7 +605,7 @@ export default function ClientRadar() {
       </div>
 
       {/* Search, Freshness & Stack Filter Bar (for HN & Remote tabs) */}
-      {activeTab !== 'scanners' && (
+      {isFeedTab && (
         <div className="space-y-3 sm:space-y-3.5 p-3.5 sm:p-4 rounded-xl bg-panel/40 border border-panel-edge">
           {/* Row 1: Primary Tech Stack & Keyword Search */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -862,7 +879,7 @@ export default function ClientRadar() {
                              {item.email}
                           </span>
                           <a
-                            href={`mailto:${item.email}?subject=Flutter & Mobile App Development Support — Jerry Dev Studio`}
+                            href={draftMailto(item)}
                             className="text-emerald-400 hover:underline font-semibold ml-2 whitespace-nowrap"
                           >
                             Send Email →
@@ -1128,7 +1145,7 @@ export default function ClientRadar() {
                              {item.email}
                           </span>
                           <a
-                            href={`mailto:${item.email}?subject=Flutter & Mobile Engineering Support — Jerry Dev Studio`}
+                            href={draftMailto(item)}
                             className="text-emerald-400 hover:underline font-semibold ml-2 whitespace-nowrap"
                           >
                             Send Email →
@@ -1220,6 +1237,17 @@ export default function ClientRadar() {
       )}
 
       {/* -------------------- TAB 3: Curated Freelance Market Scanners -------------------- */}
+      {activeTab === 'rescue' && (
+        <RescueScanner
+          items={rescueItems}
+          setItems={setRescueItems}
+          importedMap={importedMap}
+          importingId={importingId}
+          onImport={handleImportToCrm}
+          onOpenPitch={handleOpenLeadDrawer}
+        />
+      )}
+
       {activeTab === 'scanners' && (
         <div className="space-y-6">
           <div>

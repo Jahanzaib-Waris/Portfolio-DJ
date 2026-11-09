@@ -134,6 +134,10 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 - [ ] With the table missing or empty, the radar still loads live results (header says "Live results fetched in your browser")
 - [ ] Run Refresh Feeds twice: no duplicate posts, and previously dismissed posts stay dismissed
 - [ ] After the daily schedule runs: a digest arrives listing only new, non-full-time posts, and the same post is not emailed again the next day
+- [ ] Lead drawer: log an Email activity on a new lead: stage becomes Contacted and the follow-up is set 3 days out; the second outreach sets +7, the third +14, the fourth clears it. Log "Reply Received": follow-up moves to tomorrow and the lead turns hot
+- [ ] Pitch text names the post it came from, mentions working alongside other clients, and contains no made-up numbers or results
+- [ ] App Rescue Scanner: search "expense tracker" returns apps; flagged ones show reasons (low rating, months since update); "Add to CRM" creates a lead whose notes include the App Store URL, and the card then shows "In CRM"
+- [ ] Search Links tab includes Reddit r/forhire, r/FlutterFlow and the FlutterFlow job-postings forum
 - [ ] Submit a test quote: the lead appears in the CRM Pipeline (when `quote-notify` is deployed), you get the alert, and "Convert to deal" in the inbox shows it as already in CRM instead of creating a duplicate
 - [ ] Submit the same email twice within a day: only the first gets an auto-reply
 - [ ] "Add to CRM" inserts a lead and opens the pitch drawer

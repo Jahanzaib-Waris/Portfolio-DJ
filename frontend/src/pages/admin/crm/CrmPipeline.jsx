@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createCrmLead, getCrmLeads, updateCrmLead } from '../../../api/client'
+import { addCrmActivity, createCrmLead, getCrmLeads, updateCrmLead } from '../../../api/client'
 import SearchInput from '../../../components/admin/SearchInput'
 import { useToast } from '../../../components/admin/toastStore'
 import StatusPanel from '../../../components/StatusPanel'
@@ -129,6 +129,8 @@ export default function CrmPipeline() {
     const nextStage = stageKeys[nextIndex]
     try {
       const updated = await updateCrmLead(lead.id, { stage: nextStage })
+      const stageLabel = STAGES.find((st) => st.key === nextStage)?.label || nextStage
+      addCrmActivity(lead.id, { type: 'note', content: `Moved stage to "${stageLabel}"` }).catch(() => {})
       setLeads((prev) => prev.map((l) => (l.id === lead.id ? updated : l)))
       if (activeLead?.id === lead.id) {
         setActiveLead(updated)
