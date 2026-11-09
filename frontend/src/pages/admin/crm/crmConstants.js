@@ -8,9 +8,9 @@ export const STAGES = [
 ]
 
 export const TEMPERATURES = [
-  { key: 'hot', label: '🔥 Hot', badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
-  { key: 'warm', label: '☀️ Warm', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
-  { key: 'cold', label: '❄️ Cold', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
+  { key: 'hot', label: 'Hot', badge: 'bg-rose-500/20 text-rose-300 border-rose-500/40' },
+  { key: 'warm', label: 'Warm', badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40' },
+  { key: 'cold', label: 'Cold', badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40' },
 ]
 
 export const SOURCES = [

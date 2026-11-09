@@ -102,7 +102,7 @@ export default function Dashboard() {
       count: counts.posts,
       sub: 'Drafts & live posts',
       to: '/admin/blog',
-      color: 'text-neon-blue',
+      color: 'text-white',
       badge: 'Articles',
     },
     {
@@ -110,7 +110,7 @@ export default function Dashboard() {
       count: counts.projects,
       sub: 'Case studies & work',
       to: '/admin/projects',
-      color: 'text-neon-blue',
+      color: 'text-white',
       badge: 'Showcase',
     },
     {
@@ -118,7 +118,7 @@ export default function Dashboard() {
       count: `$${(crmStats.totalPipeline || 0).toLocaleString()}`,
       sub: `${crmStats.activeDeals} deals in progress`,
       to: '/admin/crm',
-      color: 'text-emerald-400',
+      color: 'text-white',
       badge: 'Sales & CRM',
     },
     {
@@ -126,7 +126,7 @@ export default function Dashboard() {
       count: counts.quotes,
       sub: 'Inbound client leads',
       to: '/admin/quotes',
-      color: 'text-neon-indigo',
+      color: 'text-white',
       badge: 'Inbox',
     },
   ]
@@ -136,7 +136,6 @@ export default function Dashboard() {
       {/* Top Banner & Launchpad */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-panel-edge">
         <div>
-          <p className="eyebrow text-xs text-neon-indigo">// Command Center</p>
           <h1 className="mt-2 text-xl text-white font-bold font-display tracking-tight sm:text-3xl">
             Welcome back, <span className="text-neon-blue">{usernameDisplay}</span>
           </h1>
@@ -151,25 +150,25 @@ export default function Dashboard() {
             to="/admin/blog/new"
             className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-neon-blue/15 border border-neon-blue/40 text-neon-blue hover:bg-neon-blue/25 text-xs font-semibold transition-all"
           >
-            <span>✍️</span> + New Post
+             + New Post
           </Link>
           <Link
             to="/admin/projects/new"
             className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-abyss border border-panel-edge text-slate-200 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all"
           >
-            <span>💼</span> + Add Project
+             + Add Project
           </Link>
           <Link
             to="/admin/crm/radar"
-            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-neon-indigo/15 border border-neon-indigo/40 text-neon-indigo hover:bg-neon-indigo/25 text-xs font-semibold transition-all"
+            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-abyss border border-panel-edge text-slate-200 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all"
           >
-            <span>📡</span> Client Radar
+             Client Radar
           </Link>
           <Link
             to="/admin/crm"
-            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25 text-xs font-semibold transition-all"
+            className="flex items-center justify-center sm:justify-start gap-1.5 px-3 py-2 rounded-lg bg-abyss border border-panel-edge text-slate-200 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all"
           >
-            <span>⚡</span> + Log Deal
+             + Log Deal
           </Link>
         </div>
       </div>
@@ -180,13 +179,13 @@ export default function Dashboard() {
           <Link
             key={i}
             to={card.to}
-            className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-4 sm:p-5 transition-all duration-200 hover:border-neon-blue/60 hover:-translate-y-1 hover:shadow-lg"
+            className="group relative block rounded-xl border border-panel-edge bg-panel/70 p-4 sm:p-5 transition-all duration-200 hover:border-neon-blue/60"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400 font-medium">
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 font-medium">
                 {card.badge}
               </span>
-              <span className="text-xs text-slate-500 group-hover:text-neon-blue transition-colors font-medium">
+              <span className="text-xs text-slate-400 group-hover:text-neon-blue transition-colors font-medium">
                 Open &rarr;
               </span>
             </div>
@@ -213,7 +212,7 @@ export default function Dashboard() {
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
             <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
               <h2 className="text-sm font-bold text-amber-300 flex items-center gap-2">
-                <span>⏰</span> CRM Follow-Ups Due Today ({crmDueLeads.length})
+                 CRM Follow-Ups Due Today ({crmDueLeads.length})
               </h2>
               <Link to="/admin/crm" className="text-xs text-amber-400 hover:underline">
                 View Pipeline &rarr;
@@ -231,13 +230,13 @@ export default function Dashboard() {
                   >
                     <div>
                       <p className="text-xs font-bold text-white">{lead.name}</p>
-                      <p className="text-[11px] text-slate-400">{lead.company || lead.job_title}</p>
+                      <p className="text-xs text-slate-400">{lead.company || lead.job_title}</p>
                     </div>
                     <div className="text-right">
                       <span className="font-mono text-xs font-semibold text-emerald-400">
                         ${lead.deal_value || 0}
                       </span>
-                      <p className="text-[10px] font-mono text-amber-400">Due now</p>
+                      <p className="text-xs font-mono text-amber-400">Due now</p>
                     </div>
                   </Link>
                 ))
@@ -249,7 +248,7 @@ export default function Dashboard() {
           <div className="rounded-xl border border-panel-edge bg-panel/60 p-5">
             <div className="flex items-center justify-between pb-3 border-b border-panel-edge">
               <h2 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>✉️</span> Recent Inbound Quotes
+                 Recent Inbound Quotes
               </h2>
               <Link to="/admin/quotes" className="text-xs text-neon-blue hover:underline">
                 Open Inbox &rarr;
@@ -267,9 +266,9 @@ export default function Dashboard() {
                   >
                     <div className="min-w-0 flex-1 mr-2">
                       <p className="text-xs font-bold text-white truncate">{q.name}</p>
-                      <p className="text-[11px] text-slate-400 truncate">{q.service || q.project_details}</p>
+                      <p className="text-xs text-slate-400 truncate">{q.service || q.project_details}</p>
                     </div>
-                    <span className="text-[10px] text-slate-500 font-mono">
+                    <span className="text-xs text-slate-400 font-mono">
                       {new Date(q.submitted_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
                   </Link>

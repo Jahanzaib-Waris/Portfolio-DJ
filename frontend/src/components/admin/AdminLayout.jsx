@@ -62,14 +62,14 @@ const navConfig = [
     label: 'Sales & CRM',
     badgeKey: 'crmDue',
     icon: (
-      <svg className="w-4 h-4 shrink-0 text-neon-indigo" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
       </svg>
     ),
     children: [
       { to: '/admin/crm', label: 'Pipeline & Deals', end: true, ready: true },
       { to: '/admin/crm/prospects', label: 'Lead Prospector', ready: true },
-      { to: '/admin/crm/radar', label: 'Client Radar 📡', ready: true },
+      { to: '/admin/crm/radar', label: 'Client Radar', ready: true },
     ],
   },
   {
@@ -178,11 +178,11 @@ export default function AdminLayout() {
 
   const soonItem = (label) => (
     <span
-      className="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-slate-500"
+      className="flex items-center justify-between rounded-md px-3 py-1.5 text-xs text-slate-400"
       title="Feature under development"
     >
       {label}
-      <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500">soon</span>
+      <span className="text-xs uppercase font-mono tracking-wider text-slate-400">soon</span>
     </span>
   )
 
@@ -220,8 +220,8 @@ export default function AdminLayout() {
                 </div>
                 <div className="flex items-center gap-2">
                   {badgeCount > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                      ⏰ {badgeCount}
+                    <span className="px-1.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                       {badgeCount}
                     </span>
                   )}
                   <span className={`text-xs text-slate-400 transition-transform ${open ? 'rotate-90' : ''}`}>
@@ -265,7 +265,7 @@ export default function AdminLayout() {
             <span className="text-slate-400 group-hover:text-neon-blue">{item.icon}</span>
             <span className="flex-1">{item.label}</span>
             {badgeCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-neon-blue/20 text-neon-blue border border-neon-blue/30">
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-neon-blue/20 text-neon-blue border border-neon-blue/30">
                 {badgeCount}
               </span>
             )}
@@ -279,7 +279,7 @@ export default function AdminLayout() {
 
   return (
     <ToastProvider>
-      <div className="flex min-h-screen flex-col bg-void text-slate-100">
+      <div className="admin-shell flex min-h-screen flex-col bg-void text-slate-100">
       {/* Top Header */}
       <header className="sticky top-0 z-40 border-b border-panel-edge/80 bg-void/90 backdrop-blur-md">
         <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3">
@@ -301,7 +301,7 @@ export default function AdminLayout() {
             <Link to="/admin" className="system-heading flex items-center gap-2 text-base font-bold text-white hover:text-neon-blue transition-colors min-w-0">
               <img src="/logo.png" alt="Jerry Dev Studio" className="h-6 w-6 rounded object-contain shrink-0" />
               <span className="truncate max-w-[130px] xs:max-w-[190px] sm:max-w-none">{siteName ? `${siteName}` : 'Jerry Dev Studio'}</span>
-              <span className="hidden sm:inline-block text-xs font-normal text-slate-500 font-mono shrink-0">
+              <span className="hidden sm:inline-block text-xs font-normal text-slate-400 font-mono shrink-0">
                 / control-panel
               </span>
             </Link>
@@ -336,7 +336,7 @@ export default function AdminLayout() {
         {/* Desktop Sidebar */}
         <aside className="hidden w-64 shrink-0 border-r border-panel-edge/80 bg-abyss/40 p-4 lg:block">
           <div className="sticky top-20">
-            <p className="px-3 pb-2 text-[10px] font-mono uppercase tracking-widest text-slate-500">
+            <p className="px-3 pb-2 text-xs font-mono uppercase tracking-widest text-slate-400">
               Workspace Navigation
             </p>
             {navItems}

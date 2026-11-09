@@ -70,13 +70,12 @@ export default function AdminLogin() {
   }
 
   const inputClass =
-    'w-full rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-all focus:border-neon-blue focus:ring-2 focus:ring-neon-blue/30 focus:ring-offset-1 focus:ring-offset-void'
+    'w-full rounded-md border border-panel-edge bg-abyss/60 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400 outline-none transition-all focus:border-neon-blue focus:ring-2 focus:ring-neon-blue/30 focus:ring-offset-1 focus:ring-offset-void'
 
   return (
     <div className="flex min-h-screen items-center justify-center px-6 py-16">
       <div className="w-full max-w-sm">
         <div className="system-panel p-8">
-          <p className="eyebrow system-heading text-xs text-neon-indigo">// Restricted</p>
           <h1 className="mt-3 text-2xl text-white">Control Panel</h1>
           <p className="mt-2 text-sm text-slate-400">Sign in with your admin account.</p>
 
@@ -140,7 +139,7 @@ export default function AdminLogin() {
 
         <Link
           to="/"
-          className="mt-6 block text-center text-xs text-slate-500 transition-colors hover:text-neon-blue"
+          className="mt-6 block text-center text-xs text-slate-400 transition-colors hover:text-neon-blue"
         >
           &larr; Back to site
         </Link>

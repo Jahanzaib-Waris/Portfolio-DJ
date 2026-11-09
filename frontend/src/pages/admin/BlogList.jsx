@@ -57,7 +57,6 @@ export default function BlogList() {
     <div className="mx-auto max-w-5xl">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow system-heading text-xs text-neon-indigo">// Content</p>
           <h1 className="mt-3 text-2xl text-white sm:text-3xl">Blog posts</h1>
           <p className="mt-2 text-sm text-slate-400">Drafts are visible here only.</p>
         </div>

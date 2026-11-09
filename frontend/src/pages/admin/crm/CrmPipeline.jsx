@@ -198,7 +198,6 @@ export default function CrmPipeline() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="eyebrow system-heading text-xs text-neon-indigo">// Sales & CRM</p>
           <h1 className="mt-2 text-2xl text-white font-bold sm:text-3xl">Sales Pipeline & Deals</h1>
           <p className="mt-1 text-sm text-slate-400">
             Visual Kanban board and deal tracking for client acquisition, inbound quotes, and outreach.
@@ -210,7 +209,7 @@ export default function CrmPipeline() {
             to="/admin/crm/prospects"
             className="px-3.5 py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors"
           >
-            📋 Lead Prospector Table
+             Lead Prospector Table
           </Link>
           <SystemButton
             variant="primary"
@@ -226,35 +225,35 @@ export default function CrmPipeline() {
       {/* Metric Cards */}
       <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
         <StatusPanel className="p-3 sm:p-4">
-          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Total Pipeline</p>
+          <p className="text-xs sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Total Pipeline</p>
           <p className="text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums text-white mt-1">
             ${metrics.totalPipeline.toLocaleString()}
           </p>
-          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Active + Won opportunities</p>
+          <p className="text-xs sm:text-xs text-slate-400 mt-1 truncate">Active + Won opportunities</p>
         </StatusPanel>
 
         <StatusPanel className="p-3 sm:p-4">
-          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Active Deals</p>
+          <p className="text-xs sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Active Deals</p>
           <p className="text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums text-neon-blue mt-1">
             {metrics.activeDealsCount}
           </p>
-          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">In discussion or proposal</p>
+          <p className="text-xs sm:text-xs text-slate-400 mt-1 truncate">In discussion or proposal</p>
         </StatusPanel>
 
         <StatusPanel className="p-3 sm:p-4">
-          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Closed Won</p>
+          <p className="text-xs sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Closed Won</p>
           <p className="text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums text-emerald-400 mt-1">
             ${metrics.wonValue.toLocaleString()}
           </p>
-          <p className="text-[11px] sm:text-xs text-emerald-500/80 mt-1 truncate">{metrics.wonCount} deals won</p>
+          <p className="text-xs sm:text-xs text-emerald-500/80 mt-1 truncate">{metrics.wonCount} deals won</p>
         </StatusPanel>
 
         <StatusPanel className={`p-3 sm:p-4 ${metrics.overdueCount > 0 ? 'border-amber-500/40 bg-amber-500/5' : ''}`}>
-          <p className="text-[11px] sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Follow-Ups Due</p>
+          <p className="text-xs sm:text-xs uppercase tracking-wider text-slate-400 font-mono">Follow-Ups Due</p>
           <p className={`text-xl sm:text-2xl font-extrabold font-display tracking-tight tabular-nums mt-1 ${metrics.overdueCount > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
             {metrics.overdueCount}
           </p>
-          <p className="text-[11px] sm:text-xs text-slate-500 mt-1 truncate">Due today or overdue</p>
+          <p className="text-xs sm:text-xs text-slate-400 mt-1 truncate">Due today or overdue</p>
         </StatusPanel>
       </div>
 
@@ -359,7 +358,7 @@ export default function CrmPipeline() {
 
                 <div className="mt-3 divide-y divide-panel-edge/50">
                   {stageLeads.length === 0 ? (
-                    <p className="text-xs text-slate-500 py-3 text-center">No deals in this stage.</p>
+                    <p className="text-xs text-slate-400 py-3 text-center">No deals in this stage.</p>
                   ) : (
                     stageLeads.map((lead) => {
                       const tempObj = TEMPERATURES.find((t) => t.key === lead.temperature)
@@ -378,7 +377,7 @@ export default function CrmPipeline() {
                                 <span className="text-xs text-slate-400">@ {lead.company}</span>
                               )}
                               {tempObj && (
-                                <span className={`text-[10px] px-2 py-0.2 rounded border ${tempObj.badge}`}>
+                                <span className={`text-xs px-2 py-0.2 rounded border ${tempObj.badge}`}>
                                   {tempObj.label}
                                 </span>
                               )}
@@ -441,7 +440,7 @@ export default function CrmPipeline() {
                 <div className="pb-2.5 mb-2.5 border-b border-panel-edge/60 flex items-center justify-between">
                   <div>
                     <h3 className={`text-xs font-semibold ${stage.color}`}>{stage.label}</h3>
-                    <span className="text-[11px] text-slate-400 font-mono">
+                    <span className="text-xs text-slate-400 font-mono">
                       ${stageTotal.toLocaleString()}
                     </span>
                   </div>
@@ -453,7 +452,7 @@ export default function CrmPipeline() {
                 {/* Column Cards */}
                 <div className="space-y-2.5 flex-1 overflow-y-auto">
                   {loading && stageIdx === 0 && (
-                    <p className="text-xs text-slate-500 text-center py-4">Loading pipeline...</p>
+                    <p className="text-xs text-slate-400 text-center py-4">Loading pipeline...</p>
                   )}
 
                   {!loading && stageLeads.length === 0 && (
@@ -483,7 +482,7 @@ export default function CrmPipeline() {
                           </h4>
                           {tempObj && (
                             <span
-                              className={`text-[10px] px-1.5 py-0.2 rounded border shrink-0 ${tempObj.badge}`}
+                              className={`text-xs px-1.5 py-0.2 rounded border shrink-0 ${tempObj.badge}`}
                             >
                               {tempObj.label}
                             </span>
@@ -492,7 +491,7 @@ export default function CrmPipeline() {
 
                         {/* Company / Job */}
                         {(lead.company || lead.job_title) && (
-                          <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                          <p className="text-xs text-slate-400 truncate mt-0.5">
                             {lead.job_title ? `${lead.job_title} ` : ''}
                             {lead.company ? `@ ${lead.company}` : ''}
                           </p>
@@ -503,7 +502,7 @@ export default function CrmPipeline() {
                           <span className="font-mono font-semibold text-emerald-400">
                             ${parseFloat(lead.deal_value || 0).toLocaleString()}
                           </span>
-                          <span className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">
+                          <span className="text-xs text-slate-400 uppercase tracking-wider font-mono">
                             {lead.source?.replace('_', ' ')}
                           </span>
                         </div>
@@ -511,11 +510,11 @@ export default function CrmPipeline() {
                         {/* Follow-up reminder indicator */}
                         {lead.next_follow_up && (
                           <div
-                            className={`mt-2 flex items-center gap-1 text-[10px] font-mono ${
-                              isFollowUpDue ? 'text-amber-400 font-semibold' : 'text-slate-500'
+                            className={`mt-2 flex items-center gap-1 text-xs font-mono ${
+                              isFollowUpDue ? 'text-amber-400 font-semibold' : 'text-slate-400'
                             }`}
                           >
-                            <span>⏰ {isFollowUpDue ? 'Due: ' : 'Follow-up: '}</span>
+                            <span>{isFollowUpDue ? 'Due: ' : 'Follow-up: '}</span>
                             <span>{lead.next_follow_up.slice(0, 10)}</span>
                           </div>
                         )}
@@ -526,17 +525,17 @@ export default function CrmPipeline() {
                             type="button"
                             disabled={stageIdx === 0}
                             onClick={(e) => handleQuickMove(e, lead, 'prev')}
-                            className="p-1 rounded bg-abyss hover:bg-panel-edge text-slate-400 hover:text-white disabled:opacity-20 text-[10px]"
+                            className="p-1 rounded bg-abyss hover:bg-panel-edge text-slate-400 hover:text-white disabled:opacity-20 text-xs"
                             title="Move back"
                           >
                             ←
                           </button>
-                          <span className="text-[10px] text-slate-500">View details</span>
+                          <span className="text-xs text-slate-400">View details</span>
                           <button
                             type="button"
                             disabled={stageIdx === STAGES.length - 1}
                             onClick={(e) => handleQuickMove(e, lead, 'next')}
-                            className="p-1 rounded bg-abyss hover:bg-panel-edge text-slate-400 hover:text-white disabled:opacity-20 text-[10px]"
+                            className="p-1 rounded bg-abyss hover:bg-panel-edge text-slate-400 hover:text-white disabled:opacity-20 text-xs"
                             title="Advance stage"
                           >
                             →

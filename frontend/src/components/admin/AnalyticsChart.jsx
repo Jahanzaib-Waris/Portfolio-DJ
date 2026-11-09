@@ -95,7 +95,7 @@ export default function AnalyticsChart({ data, color = 'var(--color-neon-blue)',
               stroke="var(--color-panel-edge)"
               strokeWidth="1"
             />
-            <text x={PADDING.left - 8} y={g.y} textAnchor="end" dominantBaseline="middle" className="fill-slate-500 text-[10px]">
+            <text x={PADDING.left - 8} y={g.y} textAnchor="end" dominantBaseline="middle" className="fill-slate-500 text-xs">
               {g.value}
             </text>
           </g>
@@ -107,7 +107,7 @@ export default function AnalyticsChart({ data, color = 'var(--color-neon-blue)',
             x={points[i].x}
             y={HEIGHT - 6}
             textAnchor={i === 0 ? 'start' : i === points.length - 1 ? 'end' : 'middle'}
-            className="fill-slate-500 text-[10px]"
+            className="fill-slate-500 text-xs"
           >
             {formatDay(points[i].day)}
           </text>

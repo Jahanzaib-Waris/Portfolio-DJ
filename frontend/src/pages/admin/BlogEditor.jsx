@@ -410,22 +410,22 @@ export default function BlogEditor() {
                 {form.title ? form.title : isNew ? 'Untitled Post' : 'Edit Post'}
               </h1>
               {form.is_published && form.published_date > today() ? (
-                <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-[10px] font-mono tracking-wide text-neon-blue shrink-0">
+                <span className="rounded-full border border-neon-blue/30 bg-neon-blue/10 px-2 py-0.5 text-xs font-mono tracking-wide text-neon-blue shrink-0">
                   Scheduled &middot; {form.published_date}
                 </span>
               ) : (
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-mono uppercase tracking-wide shrink-0 ${
+                  className={`rounded-full px-2 py-0.5 text-xs font-mono uppercase tracking-wide shrink-0 ${
                     form.is_published ? 'bg-status-green/10 text-status-green' : 'bg-accent/10 text-accent'
                   }`}
                 >
                   {form.is_published ? 'Live' : 'Draft'}
                 </span>
               )}
-              {dirty && <span className="text-[11px] text-accent font-medium shrink-0">• Unsaved</span>}
+              {dirty && <span className="text-xs text-accent font-medium shrink-0">• Unsaved</span>}
             </div>
             {form.slug && (
-              <span className="font-mono text-[11px] text-slate-500 truncate block">/blogs/{form.slug}</span>
+              <span className="font-mono text-xs text-slate-400 truncate block">/blogs/{form.slug}</span>
             )}
           </div>
         </div>
@@ -439,7 +439,7 @@ export default function BlogEditor() {
               className="flex items-center gap-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 px-2.5 sm:px-3 py-1.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
               title="Populate with the App Store Review Case Study blocks"
             >
-              <span>⚡</span> Load Case Study
+               Load Case Study
             </button>
           )}
 
@@ -516,7 +516,7 @@ export default function BlogEditor() {
             {/* Mode Switcher */}
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-panel-edge/60 pb-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono text-[11px] uppercase tracking-wider text-slate-400">Editor Mode:</span>
+                <span className="font-mono text-xs uppercase tracking-wider text-slate-400">Editor Mode:</span>
                 <div className="flex flex-wrap items-center rounded-lg border border-panel-edge bg-abyss/80 p-0.5 text-xs">
                   <button
                     type="button"
@@ -603,7 +603,7 @@ export default function BlogEditor() {
                   type="button"
                   onClick={() => setSidebarOpen(false)}
                   title="Close sidebar"
-                  className="rounded p-1 text-slate-500 hover:bg-panel-edge hover:text-slate-200 text-xs"
+                  className="rounded p-1 text-slate-400 hover:bg-panel-edge hover:text-slate-200 text-xs"
                 >
                   &times;
                 </button>
@@ -625,9 +625,9 @@ export default function BlogEditor() {
                     onMove={handleMoveBlock}
                   />
                 ) : (
-                  <div className="p-8 text-center text-xs text-slate-500 space-y-2">
+                  <div className="p-8 text-center text-xs text-slate-400 space-y-2">
                     <p className="text-slate-400 font-medium">No block selected</p>
-                    <p className="text-[11px] leading-relaxed">
+                    <p className="text-xs leading-relaxed">
                       Click any block on the canvas to inspect and edit its properties here.
                     </p>
                   </div>
@@ -662,7 +662,7 @@ export default function BlogEditor() {
                       onChange={(e) => update({ excerpt: e.target.value })}
                       className={inputClass}
                     />
-                    <p className="mt-1 text-right text-[10px] text-slate-500">{form.excerpt.length}/300</p>
+                    <p className="mt-1 text-right text-xs text-slate-400">{form.excerpt.length}/300</p>
                     {errorFor('excerpt')}
                   </div>
 

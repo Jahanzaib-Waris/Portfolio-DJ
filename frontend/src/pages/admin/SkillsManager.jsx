@@ -190,7 +190,7 @@ export default function SkillsManager() {
           <h3 className="text-xs font-mono uppercase tracking-wider text-slate-400">
             Configured Skills ({skills.length})
           </h3>
-          <span className="text-xs text-slate-500 font-mono">Sorted by display order</span>
+          <span className="text-xs text-slate-400 font-mono">Sorted by display order</span>
         </div>
 
         {loadState === 'loading' &&

@@ -89,7 +89,6 @@ export default function QuoteInbox() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <p className="eyebrow system-heading text-xs text-neon-indigo">// Inbox</p>
       <h1 className="mt-3 text-2xl text-white sm:text-3xl">Quote requests</h1>
       <p className="mt-2 text-sm text-slate-400">
         Submissions from the site&rsquo;s Request a Quote form, newest first.
@@ -135,7 +134,7 @@ export default function QuoteInbox() {
                   aria-expanded={isOpen}
                 >
                   <h2 className="truncate text-sm font-semibold text-white">{quote.name}</h2>
-                  <p className="mt-1 truncate text-xs text-slate-500">
+                  <p className="mt-1 truncate text-xs text-slate-400">
                     {quote.email} &middot; {formatDate(quote.submitted_at)}
                   </p>
                   {!isOpen && (
@@ -159,7 +158,7 @@ export default function QuoteInbox() {
                       className="rounded-md border border-neon-indigo/50 bg-neon-indigo/10 px-2.5 py-1.5 text-white font-medium transition-colors hover:bg-neon-indigo/20 disabled:opacity-50"
                       title="Convert this quote request into a tracked CRM Deal"
                     >
-                      {convertingId === quote.id ? 'Converting...' : '💼 Convert to Deal'}
+                      {convertingId === quote.id ? 'Converting...' : ' Convert to Deal'}
                     </button>
                   )}
                   <a

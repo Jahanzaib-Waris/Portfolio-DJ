@@ -1906,3 +1906,24 @@
     background: rgba(74, 222, 128, 0.12);
   }
 }
+
+
+/* ---- Admin panel: calm, data-first overrides (scoped; public site unaffected) ---- */
+@layer components {
+  .admin-shell .system-panel {
+    background: var(--color-panel);
+    border-radius: min(var(--theme-radius, 0.5rem), 0.75rem);
+    box-shadow: none;
+  }
+
+  .admin-shell .system-panel-glow:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: rgb(124 108 255 / 0.4);
+  }
+
+  .admin-shell .system-heading {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+}

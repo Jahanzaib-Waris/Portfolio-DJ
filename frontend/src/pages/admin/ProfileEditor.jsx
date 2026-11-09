@@ -296,7 +296,7 @@ export default function ProfileEditor() {
                   rel="noreferrer"
                   className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold text-neon-blue hover:underline"
                 >
-                  <span>📄 View current uploaded resume</span>
+                  <span>View current uploaded resume</span>
                   <span>↗</span>
                 </a>
               )

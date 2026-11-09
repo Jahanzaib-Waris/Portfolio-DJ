@@ -208,7 +208,7 @@ export default function RichTextEditor({ value, onChange, id = 'content' }) {
         </div>
       </div>
 
-      <p className="mt-2 text-xs text-slate-500">
+      <p className="mt-2 text-xs text-slate-400">
         Drag and drop, or paste, an image directly into the content to insert it.
       </p>
     </div>

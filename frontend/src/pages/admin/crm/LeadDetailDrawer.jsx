@@ -18,11 +18,11 @@ import { useToast } from '../../../components/admin/toastStore'
 import { SOURCES, STAGES, TEMPERATURES } from './crmConstants'
 
 const ACTIVITY_TYPES = [
-  { key: 'note', label: '📝 Note', icon: '📝' },
-  { key: 'email', label: '✉️ Email Sent', icon: '✉️' },
-  { key: 'call', label: '📞 Phone Call', icon: '📞' },
-  { key: 'linkedin', label: '💼 LinkedIn InMail', icon: '💼' },
-  { key: 'meeting', label: '🤝 Meeting Demo', icon: '🤝' },
+  { key: 'note', label: 'Note', icon: '' },
+  { key: 'email', label: 'Email Sent', icon: '' },
+  { key: 'call', label: 'Phone Call', icon: '' },
+  { key: 'linkedin', label: 'LinkedIn InMail', icon: '' },
+  { key: 'meeting', label: 'Meeting Demo', icon: '' },
 ]
 
 export default function LeadDetailDrawer({
@@ -245,7 +245,7 @@ export default function LeadDetailDrawer({
       try {
         const act = await addCrmActivity(lead.id, {
           type: 'note',
-          content: `⚡ Apollo.io Enriched: Decision-maker ${contact.name} (${contact.job_title})${contact.email ? ` • ${contact.email}` : ''}`,
+          content: ` Apollo.io Enriched: Decision-maker ${contact.name} (${contact.job_title})${contact.email ? ` • ${contact.email}` : ''}`,
         })
         setActivities((prev) => [act, ...prev])
       } catch {
@@ -613,21 +613,18 @@ Jerry Waris`
           <div className="p-4 rounded-xl bg-gradient-to-r from-[#2860E1]/15 via-abyss to-neon-indigo/15 border border-[#2860E1]/40 space-y-2.5 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#2860E1]/25 border border-[#2860E1]/50 text-white text-base font-bold shrink-0">
-                  ⚡
-                </span>
-                <div>
+                                <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-white tracking-wide">
                       Apollo.io Contact Enrichment
                     </span>
                     {formData.email && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                      <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
                         Email Ready
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-slate-300">
+                  <p className="text-xs text-slate-300">
                     Find verified Founder, CEO &amp; CTO direct email and LinkedIn profile from company domain.
                   </p>
                 </div>
@@ -646,13 +643,13 @@ Jerry Waris`
                   </>
                 ) : (
                   <>
-                    <span>⚡</span> Find Decision-Maker
+                     Find Decision-Maker
                   </>
                 )}
               </button>
             </div>
             {!formData.company_website && !formData.company && (
-              <p className="text-[11px] text-amber-400/90 pl-1">
+              <p className="text-xs text-amber-400/90 pl-1">
                 ⚠️ Enter a company name or website domain below to enable Apollo enrichment.
               </p>
             )}
@@ -662,18 +659,17 @@ Jerry Waris`
           <div className="p-4 rounded-xl bg-abyss/70 border border-panel-edge space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-2 border-b border-panel-edge/60">
               <div className="flex items-center gap-2">
-                <span className="text-base">🧠</span>
-                <span className="text-xs uppercase tracking-wider text-neon-blue font-mono font-bold">
+                                <span className="text-xs uppercase tracking-wider text-neon-blue font-mono font-bold">
                   AI Personalized Cold Pitch Engine
                 </span>
               </div>
 
               {/* Angle Switcher */}
-              <div className="flex flex-wrap gap-1 text-[11px]">
+              <div className="flex flex-wrap gap-1 text-xs">
                 {[
-                  { key: 'rescue', label: '⚡ Technical Rescue' },
-                  { key: 'mvp', label: '🚀 Rapid MVP' },
-                  { key: 'scale', label: '🏛️ Architecture' },
+                  { key: 'rescue', label: 'Technical Rescue' },
+                  { key: 'mvp', label: 'Rapid MVP' },
+                  { key: 'scale', label: 'Architecture' },
                 ].map((angle) => (
                   <button
                     key={angle.key}
@@ -694,7 +690,7 @@ Jerry Waris`
             {/* Tone Selector & Context Indicators */}
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 font-mono text-[11px]">Tone:</span>
+                <span className="text-slate-400 font-mono text-xs">Tone:</span>
                 {[
                   { key: 'senior', label: 'Senior Engineer' },
                   { key: 'consultant', label: 'ROI Consultant' },
@@ -704,7 +700,7 @@ Jerry Waris`
                     key={tone.key}
                     type="button"
                     onClick={() => setPitchTone(tone.key)}
-                    className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
+                    className={`px-2 py-0.5 rounded text-xs transition-colors ${
                       pitchTone === tone.key
                         ? 'bg-panel-edge text-white font-medium'
                         : 'text-slate-400 hover:text-slate-300'
@@ -715,7 +711,7 @@ Jerry Waris`
                 ))}
               </div>
 
-              <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+              <div className="text-xs text-slate-400 font-mono flex items-center gap-2">
                 <span>Target: <strong className="text-slate-200">{formData.company || 'Team'}</strong></span>
                 <span>•</span>
                 <span>Stack: <strong className="text-neon-blue">{techStackInput.trim() || 'Flutter & Supabase'}</strong></span>
@@ -730,15 +726,15 @@ Jerry Waris`
                   href={emailLink}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-neon-blue/15 border border-neon-blue/50 text-neon-blue hover:bg-neon-blue/25 transition-all shadow-sm"
                 >
-                  ✉️ Open in Email Client
+                   Open in Email Client
                 </a>
               ) : (
                 <button
                   type="button"
                   onClick={() => toast.error('No email available. Click "Find Decision-Maker" above to enrich with Apollo!')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge text-slate-500 hover:text-slate-400 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge text-slate-400 hover:text-slate-400 transition-colors"
                 >
-                  ✉️ Email (Needs Address)
+                   Email (Needs Address)
                 </button>
               )}
 
@@ -748,7 +744,7 @@ Jerry Waris`
                 onClick={() => handleCopy(pitch.body, 'body')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge bg-abyss text-slate-200 hover:text-white hover:border-slate-400 transition-all"
               >
-                {copiedKey === 'body' ? '✓ Copied Pitch' : '📋 Copy Full Pitch'}
+                {copiedKey === 'body' ? '✓ Copied Pitch' : ' Copy Full Pitch'}
               </button>
 
               {/* Copy InMail snippet */}
@@ -758,7 +754,7 @@ Jerry Waris`
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge bg-abyss text-[#70B5F9] hover:text-white hover:border-[#0A66C2] transition-all"
                 title="Short copy under 300 characters, ideal for LinkedIn InMail"
               >
-                {copiedKey === 'inmail' ? '✓ Copied InMail' : '💼 Copy InMail'}
+                {copiedKey === 'inmail' ? '✓ Copied InMail' : ' Copy InMail'}
               </button>
 
               {/* Polish with AI Button (Ollama / Groq / OpenAI) */}
@@ -775,7 +771,7 @@ Jerry Waris`
                   </>
                 ) : (
                   <>
-                    <span>✨</span> {customAiPitch ? 'Regenerate AI' : 'Polish with AI'}
+                     {customAiPitch ? 'Regenerate AI' : 'Polish with AI'}
                   </>
                 )}
               </button>
@@ -784,7 +780,7 @@ Jerry Waris`
                 <button
                   type="button"
                   onClick={() => setCustomAiPitch(null)}
-                  className="px-2 py-1 rounded text-[11px] text-slate-400 hover:text-white hover:underline font-mono"
+                  className="px-2 py-1 rounded text-xs text-slate-400 hover:text-white hover:underline font-mono"
                   title="Revert to Jerry's algorithmic formula"
                 >
                   ↩ Revert to Formula
@@ -799,7 +795,7 @@ Jerry Waris`
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge bg-abyss text-slate-400 hover:text-neon-indigo hover:border-neon-indigo/50 transition-all disabled:opacity-50"
                 title="Logs this pitch to the activity timeline below"
               >
-                {loggingPitch ? 'Logging...' : '⚡ Log to Timeline'}
+                {loggingPitch ? 'Logging...' : ' Log to Timeline'}
               </button>
 
               {/* LinkedIn InMail / Profile */}
@@ -824,7 +820,7 @@ Jerry Waris`
                   }}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-panel-edge text-slate-400 hover:text-white transition-colors"
                 >
-                  🔍 Find LinkedIn
+                   Find LinkedIn
                 </button>
               )}
 
@@ -837,7 +833,7 @@ Jerry Waris`
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FF6600]/15 border border-[#FF6600]/50 text-[#FFA366] hover:bg-[#FF6600]/25 transition-colors"
                   title="Open the original discussion post on the associated platform to reply directly"
                 >
-                  <span>🟠</span> Source Post ↗
+                   Source Post ↗
                 </a>
               )}
 
@@ -849,7 +845,7 @@ Jerry Waris`
                   rel="noreferrer"
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/15 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/25 transition-colors"
                 >
-                  💬 WhatsApp
+                   WhatsApp
                 </a>
               )}
             </div>
@@ -862,11 +858,11 @@ Jerry Waris`
                 </span>
                 <div className="flex items-center gap-2">
                   {customAiPitch?.modelUsed && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-neon-indigo/20 text-neon-indigo border border-neon-indigo/40 font-mono">
-                      ✨ {customAiPitch.modelUsed}
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-neon-indigo/20 text-neon-indigo border border-neon-indigo/40 font-mono">
+                       {customAiPitch.modelUsed}
                     </span>
                   )}
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <span className="text-xs text-slate-400 font-mono">
                     {pitch.inmail.length} chars (InMail)
                   </span>
                 </div>
@@ -953,9 +949,9 @@ Jerry Waris`
                     type="button"
                     onClick={handleApolloEnrich}
                     disabled={enriching}
-                    className="text-[11px] text-neon-blue hover:underline flex items-center gap-1 font-mono"
+                    className="text-xs text-neon-blue hover:underline flex items-center gap-1 font-mono"
                   >
-                    ⚡ Apollo Scan
+                     Apollo Scan
                   </button>
                 )}
               </div>
@@ -1028,7 +1024,7 @@ Jerry Waris`
           <div className="p-4 rounded-lg bg-abyss/40 border border-panel-edge">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
               <label className="text-xs uppercase tracking-wider text-slate-300 font-mono">
-                📅 Next Follow-Up Date
+                 Next Follow-Up Date
               </label>
               <div className="flex flex-wrap gap-1.5 text-xs">
                 <button
@@ -1093,7 +1089,7 @@ Jerry Waris`
           {/* Chronological Activity Timeline (Salesforce Style) */}
           <div className="pt-4 border-t border-panel-edge">
             <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
-              <span>📋 Interaction History & Activity Log</span>
+              <span>Interaction History & Activity Log</span>
               <span className="text-xs font-normal text-slate-400">({activities.length})</span>
             </h3>
 
@@ -1139,13 +1135,13 @@ Jerry Waris`
             {/* Timeline Stream */}
             <div className="space-y-2">
               {activitiesLoading && (
-                <p className="text-xs text-slate-500 py-2">Loading activities...</p>
+                <p className="text-xs text-slate-400 py-2">Loading activities...</p>
               )}
               {!activitiesLoading && activities.length === 0 && (
-                <p className="text-xs text-slate-500 py-2">No interactions logged yet. Log the first one above!</p>
+                <p className="text-xs text-slate-400 py-2">No interactions logged yet. Log the first one above!</p>
               )}
               {activities.map((act) => {
-                const typeObj = ACTIVITY_TYPES.find((t) => t.key === act.type) || { icon: '📝', label: act.type }
+                const typeObj = ACTIVITY_TYPES.find((t) => t.key === act.type) || { icon: '', label: act.type }
                 const actDate = new Date(act.created_at).toLocaleString(undefined, {
                   month: 'short',
                   day: 'numeric',
@@ -1159,11 +1155,10 @@ Jerry Waris`
                   >
                     <div className="flex items-center justify-between text-slate-400">
                       <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                        <span>{typeObj.icon}</span>
                         <span>{typeObj.label}</span>
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500">{actDate}</span>
+                        <span className="text-xs text-slate-400">{actDate}</span>
                         <button
                           type="button"
                           onClick={() => handleDeleteActivity(act.id)}
@@ -1183,13 +1178,13 @@ Jerry Waris`
 
           {/* Delete lead action */}
           <div className="pt-6 border-t border-panel-edge flex justify-between items-center">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs text-slate-400">
               Created: {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'N/A'}
             </span>
             <button
               type="button"
               onClick={() => setPendingDelete(true)}
-              className="text-xs text-slate-500 hover:text-rose-400 transition-colors"
+              className="text-xs text-slate-400 hover:text-rose-400 transition-colors"
             >
               Delete Lead
             </button>

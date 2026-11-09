@@ -176,7 +176,6 @@ export default function CrmProspects() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="eyebrow system-heading text-xs text-neon-indigo">// Lead Generation</p>
           <h1 className="mt-2 text-2xl text-white font-bold sm:text-3xl">Lead Prospector</h1>
           <p className="mt-1 text-sm text-slate-400">
             Sales Navigator-style account directory for managing outbound prospects, LinkedIn contacts, and pipeline targets.
@@ -190,13 +189,13 @@ export default function CrmProspects() {
             className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors disabled:opacity-40"
             title="Export filtered prospects to CSV"
           >
-            📥 Export CSV
+             Export CSV
           </button>
           <Link
             to="/admin/crm"
             className="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-md border border-panel-edge text-slate-300 hover:text-white hover:bg-panel-edge/50 text-xs font-semibold transition-colors"
           >
-            📊 Visual Kanban Pipeline
+             Visual Kanban Pipeline
           </Link>
           <SystemButton
             variant="primary"
@@ -275,7 +274,7 @@ export default function CrmProspects() {
       <div className="mt-6 overflow-hidden rounded-lg border border-panel-edge bg-panel">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-abyss/60 border-b border-panel-edge text-slate-400 font-mono uppercase tracking-wider text-[11px]">
+            <thead className="bg-abyss/60 border-b border-panel-edge text-slate-400 font-mono uppercase tracking-wider text-xs">
               <tr>
                 <th className="py-3 px-4">Prospect & Company</th>
                 <th className="py-3 px-4">Title / Role</th>
@@ -290,7 +289,7 @@ export default function CrmProspects() {
             <tbody className="divide-y divide-panel-edge/60 text-slate-200">
               {loading && (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500">
+                  <td colSpan={8} className="py-8 text-center text-slate-400">
                     Loading lead prospects...
                   </td>
                 </tr>
@@ -298,7 +297,7 @@ export default function CrmProspects() {
 
               {!loading && filteredLeads.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-500">
+                  <td colSpan={8} className="py-12 text-center text-slate-400">
                     No prospects match your search criteria.
                   </td>
                 </tr>
@@ -326,7 +325,7 @@ export default function CrmProspects() {
                           <div className="font-semibold text-white group-hover:text-neon-blue transition-colors">
                             {lead.name}
                           </div>
-                          <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                          <div className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
                             {lead.company && <span>{lead.company}</span>}
                             {lead.linkedin_url && (
                               <a
@@ -337,7 +336,7 @@ export default function CrmProspects() {
                                 className="text-[#0A66C2] hover:text-[#70B5F9] transition-colors"
                                 title="LinkedIn Profile"
                               >
-                                🔗 LinkedIn
+                                 LinkedIn
                               </a>
                             )}
                             {lead.company_website && (
@@ -349,7 +348,7 @@ export default function CrmProspects() {
                                 className="text-neon-blue/80 hover:text-neon-blue transition-colors"
                                 title="Company Website"
                               >
-                                🌐 Web
+                                 Web
                               </a>
                             )}
                           </div>
@@ -365,7 +364,7 @@ export default function CrmProspects() {
                     {/* Temperature */}
                     <td className="py-3.5 px-4">
                       {tempObj ? (
-                        <span className={`px-2 py-0.5 rounded-full border text-[11px] font-medium ${tempObj.badge}`}>
+                        <span className={`px-2 py-0.5 rounded-full border text-xs font-medium ${tempObj.badge}`}>
                           {tempObj.label}
                         </span>
                       ) : (
@@ -375,13 +374,13 @@ export default function CrmProspects() {
 
                     {/* Stage */}
                     <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded border text-[11px] font-medium ${stageObj?.color || 'text-slate-400'}`}>
+                      <span className={`px-2 py-0.5 rounded border text-xs font-medium ${stageObj?.color || 'text-slate-400'}`}>
                         {stageObj?.label || lead.stage}
                       </span>
                     </td>
 
                     {/* Source */}
-                    <td className="py-3.5 px-4 text-slate-400 uppercase tracking-wider font-mono text-[10px]">
+                    <td className="py-3.5 px-4 text-slate-400 uppercase tracking-wider font-mono text-xs">
                       {lead.source?.replace('_', ' ')}
                     </td>
 
@@ -391,10 +390,10 @@ export default function CrmProspects() {
                     </td>
 
                     {/* Follow Up */}
-                    <td className="py-3.5 px-4 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 font-mono text-xs">
                       {lead.next_follow_up ? (
                         <span className={isFollowUpDue ? 'text-amber-400 font-semibold flex items-center gap-1' : 'text-slate-400'}>
-                          {isFollowUpDue && '⏰'} {lead.next_follow_up.slice(0, 10)}
+                          {isFollowUpDue ? 'Due ' : ''}{lead.next_follow_up.slice(0, 10)}
                         </span>
                       ) : (
                         <span className="text-slate-600">—</span>
@@ -410,7 +409,7 @@ export default function CrmProspects() {
                             className="p-1.5 rounded bg-abyss border border-panel-edge text-neon-blue hover:bg-panel-edge/80 transition-colors"
                             title="Send Email"
                           >
-                            ✉️
+                            Email
                           </a>
                         )}
                         {lead.linkedin_url && (
@@ -421,7 +420,7 @@ export default function CrmProspects() {
                             className="p-1.5 rounded bg-[#0A66C2]/20 border border-[#0A66C2]/40 text-[#70B5F9] hover:bg-[#0A66C2]/30 transition-colors"
                             title="Open LinkedIn"
                           >
-                            💼
+                            LinkedIn
                           </a>
                         )}
                         <button

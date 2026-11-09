@@ -223,10 +223,7 @@ export default function IntegrationSettings() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-neon-blue/15 text-neon-blue text-lg">
-              🔌
-            </span>
-            <h1 className="text-2xl font-bold font-display tracking-tight text-white sm:text-3xl">
+                        <h1 className="text-2xl font-bold font-display tracking-tight text-white sm:text-3xl">
               API Integrations
             </h1>
           </div>
@@ -259,35 +256,32 @@ export default function IntegrationSettings() {
       <StatusPanel glow={false} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-panel-edge">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-[#2860E1]/15 border border-[#2860E1]/40 flex items-center justify-center text-[#4B83FF] text-xl font-bold font-mono">
-              ⚡
-            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">Apollo.io Contact Enrichment</h2>
                 {apolloStatus === 'connected' && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-400">
                     ✓ Connected
                   </span>
                 )}
                 {apolloStatus === 'saved' && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/40 text-amber-400">
                     Saved (Untested)
                   </span>
                 )}
                 {apolloStatus === 'error' && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-400">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/40 text-rose-400">
                     Authentication Error
                   </span>
                 )}
                 {apolloStatus === 'unconfigured' && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-500/15 border border-slate-500/40 text-slate-400">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-500/15 border border-slate-500/40 text-slate-400">
                     Not Configured
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Powers 1-click &quot;⚡ Find Decision-Maker &amp; Verified Email&quot; in CRM and Client Radar.
+                Powers 1-click &quot; Find Decision-Maker &amp; Verified Email&quot; in CRM and Client Radar.
               </p>
             </div>
           </div>
@@ -346,7 +340,7 @@ export default function IntegrationSettings() {
                 </>
               ) : (
                 <>
-                  <span>🔌</span> Test Connection
+                   Test Connection
                 </>
               )}
             </button>
@@ -370,13 +364,10 @@ export default function IntegrationSettings() {
       <StatusPanel glow={false} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-panel-edge">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-neon-indigo/15 border border-neon-indigo/40 flex items-center justify-center text-neon-indigo text-xl">
-              🦙
-            </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">AI Engine &amp; LLM Provider</h2>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-neon-indigo/20 border border-neon-indigo/40 text-neon-indigo uppercase font-mono">
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-neon-indigo/20 border border-neon-indigo/40 text-neon-indigo uppercase font-mono">
                   {aiProvider === 'ollama' ? `Ollama (${ollamaMode === 'cloud' ? 'Cloud' : 'Local'})` : aiProvider}
                 </span>
               </div>
@@ -394,10 +385,10 @@ export default function IntegrationSettings() {
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
-              { id: 'ollama', label: '🦙 Ollama', desc: 'Cloud Key or Local Host' },
-              { id: 'groq', label: '⚡ Groq (Llama 3)', desc: 'Free Cloud API' },
-              { id: 'openai', label: '🤖 OpenAI / Cloud', desc: 'GPT-4o / Compatible' },
-              { id: 'algorithmic', label: '📐 Built-in Formulas', desc: 'No AI Key Needed' },
+              { id: 'ollama', label: 'Ollama', desc: 'Cloud Key or Local Host' },
+              { id: 'groq', label: 'Groq (Llama 3)', desc: 'Free Cloud API' },
+              { id: 'openai', label: 'OpenAI / Cloud', desc: 'GPT-4o / Compatible' },
+              { id: 'algorithmic', label: 'Built-in Formulas', desc: 'No AI Key Needed' },
             ].map((p) => (
               <button
                 key={p.id}
@@ -413,7 +404,7 @@ export default function IntegrationSettings() {
                 }`}
               >
                 <div className="text-xs font-bold">{p.label}</div>
-                <div className="text-[11px] text-slate-400 mt-0.5">{p.desc}</div>
+                <div className="text-xs text-slate-400 mt-0.5">{p.desc}</div>
               </button>
             ))}
           </div>
@@ -437,7 +428,7 @@ export default function IntegrationSettings() {
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <span>☁️</span> Ollama Cloud (API Key)
+                   Ollama Cloud (API Key)
                 </button>
                 <button
                   type="button"
@@ -451,7 +442,7 @@ export default function IntegrationSettings() {
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
-                  <span>💻</span> Ollama Local (Daemon)
+                   Ollama Local (Daemon)
                 </button>
               </div>
 
@@ -465,7 +456,7 @@ export default function IntegrationSettings() {
                   Manage Ollama Keys (ollama.com) ↗
                 </a>
               ) : (
-                <span className="text-[11px] text-emerald-400 font-mono">Zero Rate Limits</span>
+                <span className="text-xs text-emerald-400 font-mono">Zero Rate Limits</span>
               )}
             </div>
 
@@ -497,7 +488,7 @@ export default function IntegrationSettings() {
                         {showOllamaKey ? <EyeOffIcon /> : <EyeIcon />}
                       </button>
                     </div>
-                    <span className="text-[11px] text-slate-400 mt-1 block">
+                    <span className="text-xs text-slate-400 mt-1 block">
                       Generated at <code className="text-neon-blue">ollama.com/settings/keys</code>
                     </span>
                   </div>
@@ -519,7 +510,7 @@ export default function IntegrationSettings() {
                       <option value="gpt-oss:120b">gpt-oss:120b (High Reasoning)</option>
                       <option value="llama3.2">llama3.2 (Meta)</option>
                     </select>
-                    <span className="text-[11px] text-slate-400 mt-1 block">
+                    <span className="text-xs text-slate-400 mt-1 block">
                       Tested &amp; verified on Ollama Cloud infrastructure
                     </span>
                   </div>
@@ -539,7 +530,7 @@ export default function IntegrationSettings() {
                       </>
                     ) : (
                       <>
-                        <span>⚡</span> Test Ollama Cloud Connection
+                         Test Ollama Cloud Connection
                       </>
                     )}
                   </button>
@@ -559,7 +550,7 @@ export default function IntegrationSettings() {
 
                 <div className="rounded-lg bg-panel border border-panel-edge p-3.5 text-xs text-slate-400 space-y-1.5">
                   <p className="font-semibold text-slate-300 flex items-center gap-1">
-                    <span>🚀</span> Zero Local Setup Required:
+                     Zero Local Setup Required:
                   </p>
                   <p>
                     Your Ollama Cloud API key communicates securely via Jerry Dev Studio&apos;s Supabase Edge Functions with automatic CORS bypass. You do not need to download models or run a daemon on your local computer.
@@ -581,7 +572,7 @@ export default function IntegrationSettings() {
                       placeholder="http://localhost:11434"
                       className={`${inputClass} font-mono text-xs`}
                     />
-                    <span className="text-[11px] text-slate-400 mt-1 block">
+                    <span className="text-xs text-slate-400 mt-1 block">
                       Local: <code>http://localhost:11434</code> or Cloudflare Tunnel HTTPS URL
                     </span>
                   </div>
@@ -597,7 +588,7 @@ export default function IntegrationSettings() {
                       placeholder="llama3.2"
                       className={`${inputClass} font-mono text-xs`}
                     />
-                    <span className="text-[11px] text-slate-400 mt-1 block">
+                    <span className="text-xs text-slate-400 mt-1 block">
                       e.g. <code>llama3.2</code>, <code>mistral</code>, <code>qwen2.5</code>, <code>deepseek-r1</code>
                     </span>
                   </div>
@@ -617,7 +608,7 @@ export default function IntegrationSettings() {
                       </>
                     ) : (
                       <>
-                        <span>🦙</span> Test Local Connection
+                         Test Local Connection
                       </>
                     )}
                   </button>
@@ -637,15 +628,15 @@ export default function IntegrationSettings() {
 
                 <div className="rounded-lg bg-panel border border-panel-edge p-3.5 text-xs text-slate-400 space-y-1.5">
                   <p className="font-semibold text-slate-300 flex items-center gap-1">
-                    <span>💡</span> Local Ollama Browser Quick-Start:
+                     Local Ollama Browser Quick-Start:
                   </p>
                   <p>
                     To allow your browser to connect to a local Ollama daemon, start it with CORS enabled:
                   </p>
-                  <pre className="p-2 rounded bg-abyss font-mono text-[11px] text-neon-blue overflow-x-auto">
+                  <pre className="p-2 rounded bg-abyss font-mono text-xs text-neon-blue overflow-x-auto">
                     OLLAMA_ORIGINS=&quot;*&quot; ollama serve
                   </pre>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs text-slate-400">
                     On the production site (<code>https://jerry-dev-studio.web.app</code>), forward your Ollama port using Cloudflare Tunnel (<code>cloudflared tunnel --url http://localhost:11434</code>) and paste the HTTPS URL above to bypass HTTPS mixed content restrictions.
                   </p>
                 </div>
@@ -659,7 +650,7 @@ export default function IntegrationSettings() {
           <div className="space-y-4 rounded-xl bg-abyss/60 border border-panel-edge p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-1.5">
-                <span>⚡</span> Groq Free Cloud API (Fast Llama 3.3)
+                 Groq Free Cloud API (Fast Llama 3.3)
               </span>
               <a
                 href="https://console.groq.com/keys"
@@ -717,7 +708,7 @@ export default function IntegrationSettings() {
                 disabled={testingAi || !groqKey.trim()}
                 className="px-4 py-2 rounded-lg text-xs font-semibold bg-neon-blue/15 border border-neon-blue/40 text-neon-blue hover:bg-neon-blue/25 transition-all disabled:opacity-40 flex items-center gap-2"
               >
-                {testingAi ? 'Testing Groq...' : '⚡ Test Groq Connection'}
+                {testingAi ? 'Testing Groq...' : ' Test Groq Connection'}
               </button>
 
               {aiTestResult && (
@@ -740,7 +731,7 @@ export default function IntegrationSettings() {
           <div className="space-y-4 rounded-xl bg-abyss/60 border border-panel-edge p-5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-1.5">
-                <span>🤖</span> OpenAI / Custom API Key
+                 OpenAI / Custom API Key
               </span>
               <a
                 href="https://platform.openai.com/api-keys"
@@ -795,7 +786,7 @@ export default function IntegrationSettings() {
         {aiProvider === 'algorithmic' && (
           <div className="rounded-xl bg-abyss/40 border border-panel-edge p-4 text-xs text-slate-300 space-y-1">
             <p className="font-semibold text-white flex items-center gap-1.5">
-              <span>📐</span> Built-in Algorithmic Formulas Active
+               Built-in Algorithmic Formulas Active
             </p>
             <p className="text-slate-400">
               The CRM will generate senior engineering pitches across the 3 core angles using battle-tested dynamic templates based on the client&apos;s tech stack and job notes. Zero API calls or keys required!
@@ -806,8 +797,7 @@ export default function IntegrationSettings() {
 
       {/* Security & Privacy Notice */}
       <div className="rounded-xl border border-panel-edge bg-abyss/40 p-5 flex items-start gap-3">
-        <span className="text-lg">🔒</span>
-        <div className="text-xs text-slate-400 space-y-1">
+                <div className="text-xs text-slate-400 space-y-1">
           <p className="font-semibold text-slate-300">Client-Side Security &amp; Privacy</p>
           <p>
             Your API keys and Ollama endpoints are stored exclusively in your local browser&apos;s private storage. Keys are never saved to public database tables or visible in public client bundles.

@@ -19,9 +19,9 @@ import SystemButton from '../../../components/SystemButton'
 import LeadDetailDrawer from './LeadDetailDrawer'
 
 const TABS = [
-  { key: 'hn', label: '🔥 Hacker News Founders', desc: 'Direct startup founder hiring posts with verified contact emails' },
-  { key: 'remote', label: '💼 Remote Mobile Gigs', desc: 'Live mobile & engineering roles from Jobicy and RemoteOK' },
-  { key: 'scanners', label: '⚡ Freelance Market Scanners', desc: 'Curated 1-click live search scanners for Upwork, Contra & Wellfound' },
+  { key: 'hn', label: 'Hacker News Founders', desc: 'Direct startup founder hiring posts with verified contact emails' },
+  { key: 'remote', label: 'Remote Mobile Gigs', desc: 'Live mobile & engineering roles from Jobicy and RemoteOK' },
+  { key: 'scanners', label: 'Freelance Market Scanners', desc: 'Curated 1-click live search scanners for Upwork, Contra & Wellfound' },
 ]
 
 const FILTER_PILLS = [
@@ -34,17 +34,17 @@ const FILTER_PILLS = [
 
 const FRESHNESS_PILLS = [
   { id: 'all', label: 'All Freshness' },
-  { id: '24h', label: '🔥 Last 24 Hours' },
-  { id: '3d', label: '⚡ Last 3 Days' },
-  { id: '7d', label: '📅 Last 7 Days' },
+  { id: '24h', label: 'Last 24 Hours' },
+  { id: '3d', label: 'Last 3 Days' },
+  { id: '7d', label: 'Last 7 Days' },
   { id: '14d', label: 'Active (< 14 Days)' },
 ]
 
 const SORT_OPTIONS = [
-  { id: 'score', label: '🎯 Highest Opportunity Score (Default)' },
-  { id: 'newest', label: '⏱️ Freshness (Newest First)' },
-  { id: 'email', label: '✉️ Direct Email First' },
-  { id: 'alpha', label: '🏢 Company Name (A-Z)' },
+  { id: 'score', label: 'Highest Opportunity Score (Default)' },
+  { id: 'newest', label: 'Freshness (Newest First)' },
+  { id: 'email', label: 'Direct Email First' },
+  { id: 'alpha', label: 'Company Name (A-Z)' },
 ]
 
 export default function ClientRadar() {
@@ -249,7 +249,7 @@ export default function ClientRadar() {
       const created = await createCrmLead(payload)
       setConvertedMap((prev) => ({ ...prev, [item.id]: created.id }))
       setImportedLeads((prev) => ({ ...prev, [item.id]: created }))
-      toast.success(`Imported "${item.company}"! Click "Open Pitch ⚡" to review pitch & reach out.`)
+      toast.success(`Imported "${item.company}"! Click "Open Pitch " to review pitch & reach out.`)
     } catch (err) {
       toast.error('Failed to import lead: ' + (err.message || 'Unknown error'))
     } finally {
@@ -294,10 +294,7 @@ export default function ClientRadar() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-neon-blue/15 text-neon-blue text-lg">
-              📡
-            </span>
-            <h1 className="text-2xl font-bold font-display tracking-tight text-white sm:text-3xl">
+                        <h1 className="text-2xl font-bold font-display tracking-tight text-white sm:text-3xl">
               Live Client Radar
             </h1>
           </div>
@@ -311,7 +308,7 @@ export default function ClientRadar() {
             to="/admin/crm"
             className="px-3.5 py-1.5 rounded-lg border border-panel-edge bg-abyss text-slate-300 hover:text-white hover:border-slate-400 text-xs font-semibold transition-all flex items-center gap-1.5"
           >
-            <span>💼</span> View Pipeline
+             View Pipeline
           </Link>
           <button
             type="button"
@@ -319,7 +316,7 @@ export default function ClientRadar() {
             disabled={loading}
             className="px-3.5 py-1.5 rounded-lg bg-neon-blue/15 border border-neon-blue/40 text-neon-blue hover:bg-neon-blue/25 text-xs font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
           >
-            <span>🔄</span> {loading ? 'Scanning...' : 'Refresh Feeds'}
+             {loading ? 'Scanning...' : 'Refresh Feeds'}
           </button>
         </div>
       </div>
@@ -354,7 +351,7 @@ export default function ClientRadar() {
           {/* Row 1: Primary Tech Stack & Keyword Search */}
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-mono text-slate-400 mr-1 hidden sm:inline">Stack:</span>
+              <span className="text-xs font-mono text-slate-400 mr-1 hidden sm:inline">Stack:</span>
               {FILTER_PILLS.map((pill) => (
                 <button
                   key={pill.id}
@@ -385,7 +382,7 @@ export default function ClientRadar() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2.5 border-t border-panel-edge/60 text-xs">
             {/* Freshness Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] font-mono text-slate-400 mr-1 hidden sm:inline">Freshness:</span>
+              <span className="text-xs font-mono text-slate-400 mr-1 hidden sm:inline">Freshness:</span>
               {FRESHNESS_PILLS.map((fp) => (
                 <button
                   key={fp.id}
@@ -404,7 +401,7 @@ export default function ClientRadar() {
 
             {/* Sort Selector */}
             <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-              <label htmlFor="radar-sort" className="text-[11px] font-mono text-slate-400 whitespace-nowrap">
+              <label htmlFor="radar-sort" className="text-xs font-mono text-slate-400 whitespace-nowrap">
                 Sort by:
               </label>
               <select
@@ -484,7 +481,7 @@ export default function ClientRadar() {
                               {item.company}
                             </h3>
                             {item.isFounderDirect && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                                 Direct Email
                               </span>
                             )}
@@ -500,11 +497,10 @@ export default function ClientRadar() {
                             className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${opp.badgeColor}`}
                             title="Click to view/hide AI score breakdown"
                           >
-                            <span>{opp.score >= 85 ? '🔥' : opp.score >= 70 ? '⚡' : '📊'}</span>
                             <span>{opp.score} pts</span>
-                            <span className="text-[10px] font-sans opacity-85 hidden sm:inline">• {opp.tierLabel}</span>
+                            <span className="text-xs font-sans opacity-85 hidden sm:inline">• {opp.tierLabel}</span>
                           </button>
-                          <span className={`text-[11px] font-mono flex items-center gap-1 ${
+                          <span className={`text-xs font-mono flex items-center gap-1 ${
                             opp.freshnessStatus === 'urgent'
                               ? 'text-emerald-400 font-semibold'
                               : opp.freshnessStatus === 'fresh'
@@ -513,7 +509,7 @@ export default function ClientRadar() {
                               ? 'text-amber-400 font-medium'
                               : 'text-slate-400'
                           }`}>
-                            <span>{opp.freshnessStatus === 'urgent' ? '🔥' : isStale ? '⚠️' : '⏱️'}</span>
+                            <span>{isStale ? '⚠️' : ''}</span>
                             <span>{opp.freshnessLabel}</span>
                           </span>
                         </div>
@@ -524,25 +520,25 @@ export default function ClientRadar() {
                         <div className="mt-3 p-3 rounded-lg bg-abyss/85 border border-panel-edge text-xs space-y-1.5 font-mono animate-fade-in">
                           <div className="flex items-center justify-between text-slate-300 pb-1.5 border-b border-panel-edge/60">
                             <span className="font-bold text-white flex items-center gap-1.5">
-                              <span>🎯</span> Opportunity Score Breakdown
+                               Opportunity Score Breakdown
                             </span>
                             <span className="text-neon-blue font-bold">{opp.score} / 100 pts</span>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs pt-1">
                             <div className="flex justify-between">
-                              <span className="text-slate-400">⏱️ Freshness ({opp.freshnessLabel}):</span>
+                              <span className="text-slate-400"> Freshness ({opp.freshnessLabel}):</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400">✉️ Reachability:</span>
+                              <span className="text-slate-400"> Reachability:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 30</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400">📱 Studio Tech Fit:</span>
+                              <span className="text-slate-400"> Studio Tech Fit:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.techMatch} / 25</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400">💼 Deal Intent:</span>
+                              <span className="text-slate-400"> Deal Intent:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 10</span>
                             </div>
                           </div>
@@ -551,7 +547,7 @@ export default function ClientRadar() {
 
                       {/* Stale Lead Warning */}
                       {isStale && (
-                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
+                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-300">
                           <span>⚠️</span>
                           <span>Posted {opp.freshnessLabel}. Hiring founder may already have filled this position. Focus on 70+ point fresh leads!</span>
                         </div>
@@ -560,10 +556,10 @@ export default function ClientRadar() {
                       {/* Location & Tags */}
                       <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                         <span className="px-2 py-0.5 rounded bg-abyss border border-panel-edge text-slate-300">
-                          📍 {item.location}
+                           {item.location}
                         </span>
                         <span className="px-2 py-0.5 rounded bg-abyss border border-panel-edge text-slate-300">
-                          ⏱️ {item.type}
+                           {item.type}
                         </span>
                       </div>
 
@@ -576,7 +572,7 @@ export default function ClientRadar() {
                       {item.email ? (
                         <div className="mt-3 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs">
                           <span className="text-emerald-300 font-mono font-medium truncate">
-                            ✉️ {item.email}
+                             {item.email}
                           </span>
                           <a
                             href={`mailto:${item.email}?subject=Flutter & Mobile App Development Support — Jerry Dev Studio`}
@@ -587,7 +583,7 @@ export default function ClientRadar() {
                         </div>
                       ) : (
                         <div className="mt-3 p-2 rounded-lg bg-abyss/60 border border-panel-edge flex items-center justify-between text-xs">
-                          <span className="text-slate-400 font-mono text-[11px] truncate">
+                          <span className="text-slate-400 font-mono text-xs truncate">
                             No email in post
                           </span>
                           <button
@@ -603,7 +599,7 @@ export default function ClientRadar() {
                               </>
                             ) : (
                               <>
-                                <span>⚡</span> Find Founder (Apollo)
+                                 Find Founder (Apollo)
                               </>
                             )}
                           </button>
@@ -612,8 +608,8 @@ export default function ClientRadar() {
 
                       {/* Verified Decision Maker Tag */}
                       {item.decisionMaker && (
-                        <div className="mt-2 text-[11px] text-neon-blue font-mono flex items-center justify-between">
-                          <span>⚡ Verified: <strong className="text-white">{item.decisionMaker}</strong></span>
+                        <div className="mt-2 text-xs text-neon-blue font-mono flex items-center justify-between">
+                          <span>Verified: <strong className="text-white">{item.decisionMaker}</strong></span>
                           {item.linkedin && (
                             <a
                               href={item.linkedin}
@@ -649,7 +645,7 @@ export default function ClientRadar() {
                           >
                             <span>✓ In CRM</span>
                             <span>•</span>
-                            <span className="text-neon-blue underline">Open Pitch ⚡</span>
+                            <span className="text-neon-blue underline">Open Pitch</span>
                           </button>
                         ) : (
                           <SystemButton
@@ -726,7 +722,7 @@ export default function ClientRadar() {
                             <h3 className="text-base font-bold font-display text-white tracking-tight truncate">
                               {item.company}
                             </h3>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-neon-blue/15 text-neon-blue border border-neon-blue/30 shrink-0">
+                            <span className="px-2 py-0.5 rounded text-xs font-mono font-semibold bg-neon-blue/15 text-neon-blue border border-neon-blue/30 shrink-0">
                               {item.sourceLabel}
                             </span>
                           </div>
@@ -741,11 +737,10 @@ export default function ClientRadar() {
                             className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${opp.badgeColor}`}
                             title="Click to view/hide AI score breakdown"
                           >
-                            <span>{opp.score >= 85 ? '🔥' : opp.score >= 70 ? '⚡' : '📊'}</span>
                             <span>{opp.score} pts</span>
-                            <span className="text-[10px] font-sans opacity-85 hidden sm:inline">• {opp.tierLabel}</span>
+                            <span className="text-xs font-sans opacity-85 hidden sm:inline">• {opp.tierLabel}</span>
                           </button>
-                          <span className={`text-[11px] font-mono flex items-center gap-1 ${
+                          <span className={`text-xs font-mono flex items-center gap-1 ${
                             opp.freshnessStatus === 'urgent'
                               ? 'text-emerald-400 font-semibold'
                               : opp.freshnessStatus === 'fresh'
@@ -754,7 +749,7 @@ export default function ClientRadar() {
                               ? 'text-amber-400 font-medium'
                               : 'text-slate-400'
                           }`}>
-                            <span>{opp.freshnessStatus === 'urgent' ? '🔥' : isStale ? '⚠️' : '⏱️'}</span>
+                            <span>{isStale ? '⚠️' : ''}</span>
                             <span>{opp.freshnessLabel}</span>
                           </span>
                         </div>
@@ -765,25 +760,25 @@ export default function ClientRadar() {
                         <div className="mt-3 p-3 rounded-lg bg-abyss/85 border border-panel-edge text-xs space-y-1.5 font-mono animate-fade-in">
                           <div className="flex items-center justify-between text-slate-300 pb-1.5 border-b border-panel-edge/60">
                             <span className="font-bold text-white flex items-center gap-1.5">
-                              <span>🎯</span> Opportunity Score Breakdown
+                               Opportunity Score Breakdown
                             </span>
                             <span className="text-neon-blue font-bold">{opp.score} / 100 pts</span>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-[11px] pt-1">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs pt-1">
                             <div className="flex justify-between">
-                              <span className="text-slate-400">⏱️ Freshness ({opp.freshnessLabel}):</span>
+                              <span className="text-slate-400"> Freshness ({opp.freshnessLabel}):</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400">✉️ Reachability:</span>
+                              <span className="text-slate-400"> Reachability:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 30</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400">📱 Studio Tech Fit:</span>
+                              <span className="text-slate-400"> Studio Tech Fit:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.techMatch} / 25</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400">💼 Deal Intent:</span>
+                              <span className="text-slate-400"> Deal Intent:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 10</span>
                             </div>
                           </div>
@@ -792,7 +787,7 @@ export default function ClientRadar() {
 
                       {/* Stale Lead Warning */}
                       {isStale && (
-                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-[11px] text-amber-300">
+                        <div className="mt-3 p-2 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center gap-2 text-xs text-amber-300">
                           <span>⚠️</span>
                           <span>Posted {opp.freshnessLabel}. Remote listings decay quickly. Focus on 70+ point fresh leads!</span>
                         </div>
@@ -800,14 +795,14 @@ export default function ClientRadar() {
 
                       <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                         <span className="px-2 py-0.5 rounded bg-abyss border border-panel-edge text-slate-300">
-                          📍 {item.location}
+                           {item.location}
                         </span>
                         <span className="px-2 py-0.5 rounded bg-abyss border border-panel-edge text-slate-300">
-                          💼 {item.type}
+                           {item.type}
                         </span>
                         {item.salary && (
                           <span className="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono">
-                            💰 {item.salary}
+                             {item.salary}
                           </span>
                         )}
                       </div>
@@ -820,7 +815,7 @@ export default function ClientRadar() {
                       {item.email ? (
                         <div className="mt-3 p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between text-xs">
                           <span className="text-emerald-300 font-mono font-medium truncate">
-                            ✉️ {item.email}
+                             {item.email}
                           </span>
                           <a
                             href={`mailto:${item.email}?subject=Flutter & Mobile Engineering Support — Jerry Dev Studio`}
@@ -831,7 +826,7 @@ export default function ClientRadar() {
                         </div>
                       ) : (
                         <div className="mt-3 p-2 rounded-lg bg-abyss/60 border border-panel-edge flex items-center justify-between text-xs">
-                          <span className="text-slate-400 font-mono text-[11px] truncate">
+                          <span className="text-slate-400 font-mono text-xs truncate">
                             Direct email not listed
                           </span>
                           <button
@@ -847,7 +842,7 @@ export default function ClientRadar() {
                               </>
                             ) : (
                               <>
-                                <span>⚡</span> Find Founder (Apollo)
+                                 Find Founder (Apollo)
                               </>
                             )}
                           </button>
@@ -856,8 +851,8 @@ export default function ClientRadar() {
 
                       {/* Verified Decision Maker Tag */}
                       {item.decisionMaker && (
-                        <div className="mt-2 text-[11px] text-neon-blue font-mono flex items-center justify-between">
-                          <span>⚡ Verified: <strong className="text-white">{item.decisionMaker}</strong></span>
+                        <div className="mt-2 text-xs text-neon-blue font-mono flex items-center justify-between">
+                          <span>Verified: <strong className="text-white">{item.decisionMaker}</strong></span>
                           {item.linkedin && (
                             <a
                               href={item.linkedin}
@@ -892,7 +887,7 @@ export default function ClientRadar() {
                           >
                             <span>✓ In CRM</span>
                             <span>•</span>
-                            <span className="text-neon-blue underline">Open Pitch ⚡</span>
+                            <span className="text-neon-blue underline">Open Pitch</span>
                           </button>
                         ) : (
                           <SystemButton
@@ -934,10 +929,10 @@ export default function ClientRadar() {
               >
                 <div>
                   <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider bg-neon-indigo/20 text-neon-indigo border border-neon-indigo/30">
+                    <span className="px-2 py-0.5 rounded text-xs font-mono font-bold uppercase tracking-wider bg-neon-indigo/20 text-neon-indigo border border-neon-indigo/30">
                       {scanner.platform}
                     </span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/20 text-emerald-300">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-semibold bg-emerald-500/20 text-emerald-300">
                       {scanner.badge}
                     </span>
                   </div>
