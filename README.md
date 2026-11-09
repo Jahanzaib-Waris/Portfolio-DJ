@@ -12,7 +12,7 @@ A high-performance FlutterFlow & mobile engineering portfolio, client portal, an
 
 ```
 frontend/     React 19 + Vite SPA (Client marketing, technical publication, FlowBase admin CMS)
-supabase/     PostgreSQL schema, Row Level Security (RLS) policies, storage buckets, migration seeds
+supabase/     PostgreSQL schema, RLS policies, storage buckets, seeds, Edge Functions
 public/       Favicon suite, Web App Manifest, RSS 2.0 feed, sitemap.xml
 docs/         Architecture blueprints, SRS, testing guides, deployment reference
 backend/      LEGACY Django API — retired, not used by the app or deployed (kept for reference)
@@ -26,10 +26,10 @@ backend/      LEGACY Django API — retired, not used by the app or deployed (ke
 - **Modern Developer Publication UX:** `max-w-7xl` asymmetric canvas, sticky Table of Contents with real-time `IntersectionObserver` scroll-spy, fixed reading progress bar, high-contrast readable typography (18px body, 15.2px code blocks), and community errata feedback.
 - **Mobile-Responsive Architecture (320px–430px):** Full viewport optimization down to iPhone SE / small Androids across all public views, modals, and the complete admin control panel.
 - **B2B Sales CRM & Pipeline:** Interactive Kanban pipeline, Sales Navigator-style prospect directory with CSV export, and Salesforce-style deal inspector drawer.
-- **Client Radar & AI Opportunity Scoring:** Live hiring feed aggregator (Hacker News, Jobicy, RemoteOK) with opportunity freshness decay, dynamic sorting, and a 100-point AI-powered Opportunity Score (Tech Fit, Direct Contact, Recency, Seniority, Budget signals).
-- **Apollo.io Lead Enrichment & AI Cold Pitch Engine:** Edge Function proxied contact discovery and multi-provider AI pitch generation (Ollama Cloud/Local, Groq Llama 3.3, OpenAI, or dynamic algorithmic templates) across 3 angles and 3 professional tones.
+- **Client Radar:** Daily server-side lead discovery (Hacker News, Jobicy, RemoteOK) stored in Supabase with shared dismiss/import status, a Discord digest of new leads, an engagement-fit filter that hides full-time roles, a rule-based 0-100 Opportunity Score, an App Store "rescue" scanner, and one-click search links for Upwork, Contra, Wellfound, Reddit and the FlutterFlow forum.
+- **Apollo.io Lead Enrichment & Pitch Engine:** Edge Function proxied contact discovery and pitch generation (Ollama Cloud/Local, Groq, OpenAI, or built-in templates that reference the actual post and make no invented claims) across 3 angles and 3 tones, with an automatic follow-up cadence (+3/+7/+14 days).
 - **Supabase Quota & Performance Optimizations:** 90% egress reduction on blog queries, client-side TTL memory/sessionStorage caching layer, bot spam filters, and automated PostgreSQL retention cleanup RPC.
-- **Lead Generation & Client Enquiries:** Sanitized quote request pipeline with direct PostgreSQL RLS insertion and real-time admin inbox with 1-click deal conversion.
+- **Lead Generation & Client Enquiries:** Sanitized quote request pipeline with direct PostgreSQL RLS insertion, instant Discord alerts, automatic CRM lead creation, and an admin inbox with 1-click deal conversion.
 - **Interactive Case Studies:** Deep-dive modal architecture presenting project challenges, architectural solutions, and tech stack chips.
 - **Route-Guarded Control Panel (`/admin`):** FlowBase Visual Block Builder V2, runtime-editable theme tokens, lead inbox, API integrations manager, and password visibility toggles.
 - **SEO & Syndication:** Automated Schema.org JSON-LD generation (`WebSite`, `Organization`, `Blog`, `BlogPosting`, `BreadcrumbList`), RSS 2.0 (`/feed.xml`), and XML sitemap (`/sitemap.xml`).
@@ -68,6 +68,9 @@ firebase deploy --only hosting
 Database migrations, schema definitions, and blog migration scripts are maintained in `/supabase`:
 - `supabase/schema.sql`: Full database schema, indexes, RLS policies, and analytics RPCs.
 - `supabase/seed_scheduled_blogs.sql`: Editorial calendar and technical guide seed migration.
+- `supabase/radar.sql`, `quote_notify.sql`, `radar_cron.sql`: Client Radar storage, quote trigger and daily schedule (see `docs/DEPLOYMENT.md` §7-8).
+- `supabase/functions/`: Edge Functions `ai-proxy`, `apollo-proxy`, `quote-notify`, `radar-ingest`, plus shared radar code in `_shared/radar/`.
+- `supabase/fixes/`: one-time data repairs that have been applied.
 
 ---
 

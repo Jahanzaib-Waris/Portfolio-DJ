@@ -113,6 +113,13 @@ By default Client Radar fetches posts live in your browser. This step makes the 
 
 Until step 1 is done, Client Radar keeps working in live mode, so the order above is safe. The digest includes only posts that are new, not full-time-only, and scoring at least `DIGEST_MIN_SCORE`, and each post is emailed once. Posts you never act on are deleted after 45 days without being seen again; dismissed and imported posts are kept.
 
+## Current production state (2026-11-09)
+
+- Project `fbeegpzrbocqgyxeqqtc`: `radar.sql`, `quote_notify.sql` and `radar_cron.sql` are applied; `radar-ingest` and `quote-notify` are deployed; Vault holds `project_url`, `radar_cron_secret`, `quote_webhook_secret`.
+- Function secrets set: `RADAR_CRON_SECRET`, `QUOTE_WEBHOOK_SECRET`, `SITE_URL`, `NOTIFY_WEBHOOK_URL` (Discord). No email provider (no `RESEND_API_KEY`), so email alerts and the visitor auto-reply are off.
+- The daily job `radar-ingest-daily` runs at 03:00 UTC. The legacy Django tables were dropped; a backup of their 267 rows was kept locally outside the repo.
+- The live `site_theme` row still stores the old `Manrope` / `Fira Code` defaults (rendered as Plus Jakarta Sans / JetBrains Mono through an alias in `applyTheme.js`); re-saving the theme in the admin replaces them.
+
 ## Notes
 
 - **Schema changes** are applied by running SQL in the Supabase SQL Editor; update `supabase/schema.sql` in the same commit so it stays the source of truth. `schema.sql` is for fresh setups: `INSERT ... ON CONFLICT DO NOTHING` seed rows never overwrite an existing row, so changed defaults (e.g. the theme fonts) do not alter a live database — change those through the admin UI.
