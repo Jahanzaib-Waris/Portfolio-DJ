@@ -236,6 +236,8 @@ Write a high-converting, personalized cold email pitch and a short LinkedIn InMa
 Tone: ${tone} (${tone === 'senior' ? 'no fluff, technical authority, clear outcomes' : tone === 'consultant' ? 'ROI and business impact focused' : 'crisp, 3 short paragraphs'}).
 Target Angle: ${angleDescriptions[angle] || angleDescriptions.rescue}
 Portfolio link to include: https://jerry-dev-studio.web.app/projects
+Engagement model: Jerry works with several clients at once and takes scoped projects, fixed blocks of hours, or retainers. Never present the message as applying for an employee job; if the source is a job posting, propose a contract engagement for that specific role or problem instead.
+Use only facts that appear in the notes below. Do not invent company details, metrics, or prior contact.
 
 Respond STRICTLY in valid JSON format with keys:
 {

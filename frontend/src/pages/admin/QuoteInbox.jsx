@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useState } from 'react'
 
-import { convertQuoteToLead, deleteQuoteRequest, getQuoteRequests } from '../../api/client'
+import { convertQuoteToLead, deleteQuoteRequest, getCrmLeads, getQuoteRequests } from '../../api/client'
 import ConfirmDialog from '../../components/admin/ConfirmDialog'
 import RowActionsMenu from '../../components/admin/RowActionsMenu'
 import SearchInput from '../../components/admin/SearchInput'
@@ -47,6 +47,24 @@ export default function QuoteInbox() {
 
   const [convertingId, setConvertingId] = useState(null)
   const [convertedMap, setConvertedMap] = useState({})
+
+  // Quotes already turned into CRM leads (manually, or automatically by quote-notify).
+  useEffect(() => {
+    let cancelled = false
+    getCrmLeads()
+      .then(({ items }) => {
+        if (cancelled) return
+        const map = {}
+        items.forEach((lead) => {
+          if (lead.quote_request_id) map[lead.quote_request_id] = lead.id
+        })
+        setConvertedMap((prev) => ({ ...map, ...prev }))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const toast = useToast()
 

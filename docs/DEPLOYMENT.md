@@ -74,6 +74,26 @@ Run `docs/QUICK-TEST.md` against the live site. Key signals:
 - Image upload in the admin works (confirms the storage policies).
 - Pitch generation / Apollo enrichment return results rather than 401 (confirms the Edge Functions and JWT).
 
+## 7. Quote alerts and auto-reply (optional)
+
+The `quote-notify` Edge Function emails you (and/or posts to a chat webhook) when someone submits the quote form, creates the CRM lead automatically, and can send the submitter a short acknowledgement. It is called by a database trigger, not by browsers.
+
+1. Choose an email provider. The function uses [Resend](https://resend.com) (HTTP API); verify a sending domain there so `FROM_EMAIL` can be on your own domain. Skip this step if you only want a chat webhook.
+2. Set the function's secrets:
+   ```bash
+   supabase secrets set --project-ref <project-ref> \
+     QUOTE_WEBHOOK_SECRET=<long random string> \
+     RESEND_API_KEY=<key> NOTIFY_EMAIL=<where alerts go> \
+     FROM_EMAIL="Jerry Dev Studio <hello@yourdomain.com>" \
+     AUTO_REPLY=true            # omit to disable the submitter acknowledgement
+   # optional: NOTIFY_WEBHOOK_URL=<Slack/Discord incoming webhook>
+   ```
+3. Deploy it: `supabase functions deploy quote-notify --project-ref <project-ref>` (`verify_jwt = false` is set in `config.toml`; the function authenticates the trigger with the `x-webhook-secret` header instead).
+4. In the SQL Editor create the two Vault secrets named in `supabase/quote_notify.sql` (`project_url` and `quote_webhook_secret`, the latter equal to `QUOTE_WEBHOOK_SECRET`), then run that file to create the trigger.
+5. Submit a test quote and check the function logs (Dashboard → Edge Functions → quote-notify → Logs). A failed notification never blocks the submission.
+
+Abuse note: the quote form is public, so the auto-reply is limited to one per email address per 24 hours and 20 per hour overall, and never repeats what the submitter typed. If you see misuse, set `AUTO_REPLY` off.
+
 ## Notes
 
 - **Schema changes** are applied by running SQL in the Supabase SQL Editor; update `supabase/schema.sql` in the same commit so it stays the source of truth. `schema.sql` is for fresh setups: `INSERT ... ON CONFLICT DO NOTHING` seed rows never overwrite an existing row, so changed defaults (e.g. the theme fonts) do not alter a live database — change those through the admin UI.

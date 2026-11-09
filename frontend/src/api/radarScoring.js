@@ -2,12 +2,40 @@
  * radarScoring.js
  * AI-powered opportunity scoring (0 - 100) and freshness decay calculator for Client Radar leads.
  *
- * Scoring Model:
- * 1. Freshness & Time Decay (35 pts max) — Recency heavily dictates reply rate
- * 2. Reachability & Direct Contact (30 pts max) — Direct founder email or Apollo-enrichable domain
+ * Scoring Model (rule-based, no LLM):
+ * 1. Freshness & Time Decay (30 pts max) — Recency heavily dictates reply rate
+ * 2. Reachability & Direct Contact (15 pts max) — Direct founder email or Apollo-enrichable domain
  * 3. Studio Tech Match (25 pts max) — FlutterFlow, Flutter, Mobile, Supabase
- * 4. Deal Intent & Structure (10 pts max) — Contract/freelance vs full-time
+ * 4. Engagement Fit (30 pts max) — Project/contract work that leaves the studio free to
+ *    serve other clients, vs. exclusive full-time employment (see classifyEngagement)
  */
+
+// Wording that signals scoped, non-exclusive work.
+const FIT_RE =
+  /\b(contract(?:or|ing)?|freelanc\w*|part[\s-]?time|hourly|fixed[\s-]?price|project[\s-]?based|per[\s-]project|retainer|short[\s-]?term|b2b|1099|consult\w*|time[\s-]?boxed)\b/i
+// Employment wording that takes a contractor off the market or isn't a contract at all.
+const HARD_NOT_FIT_RE =
+  /contract[\s-]to[\s-]hire|\bw[\s-]?2\b|\b(health|dental|medical) (insurance|benefits)\b|\b401\(?k\)?\b|\bpaid time off\b|\bPTO\b|\b(35|40)\s*(hours|hrs)\b|\bon-?site (only|required)\b/i
+const FULL_TIME_RE = /\bfull[\s-]?time\b|\bpermanent\b|\bemployee\b/i
+
+/**
+ * Classifies whether a posting suits a studio that works for several clients at once.
+ * Returns { fit: 'fit' | 'unclear' | 'not_fit', label }.
+ *   fit      – contract / freelance / part-time / project wording, no employment red flags
+ *   not_fit  – exclusive full-time, W-2, contract-to-hire, benefits, fixed 40h weeks
+ *   unclear  – the post doesn't say
+ * `employmentType` is only trusted when the source supplies it (e.g. Jobicy).
+ */
+export function classifyEngagement(item) {
+  const text = `${item.employmentType || ''} ${item.title || ''} ${item.fullText || item.description || ''}`
+  const hasFit = FIT_RE.test(text)
+  const hardNotFit = HARD_NOT_FIT_RE.test(text)
+  const fullTime = FULL_TIME_RE.test(text)
+
+  if (hasFit && !hardNotFit) return { fit: 'fit', label: 'Contract fit' }
+  if (hardNotFit || fullTime) return { fit: 'not_fit', label: 'Full-time role' }
+  return { fit: 'unclear', label: 'Engagement unclear' }
+}
 
 /**
  * Calculates human-friendly relative time string.
@@ -81,7 +109,7 @@ export function computeOpportunityScore(item) {
     dealIntent: 0,
   }
 
-  // 1. Freshness & Decay (Max 35 pts)
+  // 1. Freshness & Decay (Max 30 pts)
   const time = item.date ? new Date(item.date).getTime() : Date.now()
   const diffHours = isNaN(time) ? 12 : Math.max(0, (Date.now() - time) / (60 * 60 * 1000))
   const diffDays = diffHours / 24
@@ -90,19 +118,19 @@ export function computeOpportunityScore(item) {
   let isStale = false
 
   if (diffHours < 12) {
-    breakdown.freshness = 35
+    breakdown.freshness = 30
     freshnessStatus = 'urgent' // Hot post, founders online now
   } else if (diffHours < 24) {
-    breakdown.freshness = 30
+    breakdown.freshness = 26
     freshnessStatus = 'urgent'
   } else if (diffDays <= 3) {
-    breakdown.freshness = 22
+    breakdown.freshness = 19
     freshnessStatus = 'fresh'
   } else if (diffDays <= 7) {
-    breakdown.freshness = 14
+    breakdown.freshness = 12
     freshnessStatus = 'moderate'
   } else if (diffDays <= 14) {
-    breakdown.freshness = 6
+    breakdown.freshness = 5
     freshnessStatus = 'aging'
   } else {
     breakdown.freshness = 0
@@ -110,15 +138,15 @@ export function computeOpportunityScore(item) {
     isStale = true
   }
 
-  // 2. Reachability & Direct Contact (Max 30 pts)
+  // 2. Reachability & Direct Contact (Max 15 pts)
   if (item.email) {
-    breakdown.reachability = 30 // Direct email ready
+    breakdown.reachability = 15 // Direct email ready
   } else if (item.decisionMaker) {
-    breakdown.reachability = 25 // Apollo-verified executive found
+    breakdown.reachability = 13 // Apollo-verified executive found
   } else if (item.website) {
-    breakdown.reachability = 15 // Domain available for 1-click Apollo scan
+    breakdown.reachability = 8 // Domain available for 1-click Apollo scan
   } else {
-    breakdown.reachability = 5
+    breakdown.reachability = 2
   }
 
   // 3. Studio Tech Match (Max 25 pts)
@@ -134,14 +162,14 @@ export function computeOpportunityScore(item) {
     breakdown.techMatch = 5 // General tech
   }
 
-  // 4. Deal Intent & Structure (Max 10 pts)
-  const typeText = `${item.type || ''} ${searchableText}`.toLowerCase()
-  if (/contract|freelance|consult|part-time|hourly|b2b/i.test(typeText)) {
-    breakdown.dealIntent = 10 // Fastest to contract/close
-  } else if (/founder|founding|seed|series a|pre-seed|equity/i.test(typeText)) {
-    breakdown.dealIntent = 8 // Direct founder or early startup
+  // 4. Engagement Fit (Max 30 pts)
+  const engagement = classifyEngagement(item)
+  if (engagement.fit === 'fit') {
+    breakdown.dealIntent = 30
+  } else if (engagement.fit === 'unclear') {
+    breakdown.dealIntent = 12
   } else {
-    breakdown.dealIntent = 4 // Standard full-time role
+    breakdown.dealIntent = 0
   }
 
   // Total Score (Clamped between 0 and 100)
@@ -166,9 +194,9 @@ export function computeOpportunityScore(item) {
     tierLabel = 'High Match'
     badgeColor = 'bg-neon-blue/20 border-neon-blue/50 text-neon-blue shadow-sm'
     glowEffect = true
-  } else if (totalScore < 50 || isStale) {
+  } else if (totalScore < 50 || isStale || engagement.fit === 'not_fit') {
     tier = 'low'
-    tierLabel = isStale ? 'Stale Lead' : 'Low Probability'
+    tierLabel = isStale ? 'Stale Lead' : engagement.fit === 'not_fit' ? 'Not a fit' : 'Low Probability'
     badgeColor = 'bg-slate-500/15 border-slate-500/30 text-slate-400'
   }
 
@@ -181,6 +209,7 @@ export function computeOpportunityScore(item) {
     freshnessLabel: formatTimeAgo(item.date),
     freshnessStatus,
     isStale,
+    engagement,
     breakdown,
   }
 }

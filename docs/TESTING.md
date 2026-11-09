@@ -125,6 +125,11 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 
 - [ ] Radar loads Hacker News / RemoteOK / Jobicy results; one source failing does not blank the page
 - [ ] Opportunity scores are 0–100; sorting and the freshness filter work; stale items are flagged
+- [ ] Each card shows a fit badge (Contract fit / Engagement unclear / Full-time role); "Hide full-time / employment roles" is on by default and hides the full-time ones
+- [ ] "Dismiss" hides a post, survives a reload, and "Show dismissed" brings it back with a Restore link
+- [ ] A post already imported shows "In CRM" after a reload, and cannot be imported twice
+- [ ] Submit a test quote: the lead appears in the CRM Pipeline (when `quote-notify` is deployed), you get the alert, and "Convert to deal" in the inbox shows it as already in CRM instead of creating a duplicate
+- [ ] Submit the same email twice within a day: only the first gets an auto-reply
 - [ ] "Add to CRM" inserts a lead and opens the pitch drawer
 - [ ] Integrations: save a key, hide/show the password toggle, "Test connection" succeeds for a
       valid key and fails cleanly for a bad one

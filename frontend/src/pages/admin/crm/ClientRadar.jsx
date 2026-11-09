@@ -50,6 +50,24 @@ const SORT_OPTIONS = [
 
 const POST_URL_RE = /Post URL: (\S+)/
 
+const DISMISSED_KEY = 'radar_dismissed_v1'
+
+const loadDismissed = () => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DISMISSED_KEY) || '[]'))
+  } catch {
+    return new Set()
+  }
+}
+
+const itemKey = (item) => item.url || item.id
+
+const FIT_STYLES = {
+  fit: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300',
+  unclear: 'bg-slate-500/15 border-slate-500/30 text-slate-300',
+  not_fit: 'bg-rose-500/15 border-rose-500/30 text-rose-300',
+}
+
 const radarSource = (item) =>
   item.source === 'hacker_news' ? 'hacker_news' : 'job_board'
 
@@ -91,6 +109,9 @@ export default function ClientRadar() {
   const [importedMap, setConvertedMap] = useState({})
   const [importedLeads, setImportedLeads] = useState({})
   const [existingByUrl, setExistingByUrl] = useState({})
+  const [hideNotFit, setHideNotFit] = useState(true)
+  const [showDismissed, setShowDismissed] = useState(false)
+  const [dismissed, setDismissed] = useState(loadDismissed)
   const [drawerLead, setDrawerLead] = useState(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -165,6 +186,35 @@ export default function ClientRadar() {
     }
   }, [activeTab, loadData])
 
+  const setDismissedPersist = (updater) => {
+    setDismissed((prev) => {
+      const next = updater(new Set(prev))
+      try {
+        localStorage.setItem(DISMISSED_KEY, JSON.stringify([...next]))
+      } catch {
+        // storage unavailable; dismissal lasts for this session only
+      }
+      return next
+    })
+  }
+  const dismissItem = (item) => setDismissedPersist((set) => set.add(itemKey(item)))
+  const restoreItem = (item) =>
+    setDismissedPersist((set) => {
+      set.delete(itemKey(item))
+      return set
+    })
+
+  // Applies the engagement-fit and dismissed visibility rules to a scored list.
+  const applyVisibility = useCallback(
+    (list) =>
+      list.filter((item) => {
+        if (!showDismissed && dismissed.has(itemKey(item))) return false
+        if (hideNotFit && item.opportunity.engagement.fit === 'not_fit') return false
+        return true
+      }),
+    [hideNotFit, showDismissed, dismissed],
+  )
+
   // Score and filter HN leads
   const scoredHn = useMemo(() => {
     return hnItems.map((item) => ({
@@ -174,7 +224,7 @@ export default function ClientRadar() {
   }, [hnItems])
 
   const filteredHn = useMemo(() => {
-    let list = scoredHn
+    let list = applyVisibility(scoredHn)
 
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -208,7 +258,7 @@ export default function ClientRadar() {
       }
       return 0
     })
-  }, [scoredHn, search, freshnessFilter, sortBy])
+  }, [scoredHn, search, freshnessFilter, sortBy, applyVisibility])
 
   // Score and filter Remote leads
   const scoredRemote = useMemo(() => {
@@ -219,7 +269,7 @@ export default function ClientRadar() {
   }, [remoteItems])
 
   const filteredRemote = useMemo(() => {
-    let list = scoredRemote
+    let list = applyVisibility(scoredRemote)
 
     if (search.trim()) {
       const q = search.toLowerCase()
@@ -253,7 +303,7 @@ export default function ClientRadar() {
       }
       return 0
     })
-  }, [scoredRemote, search, freshnessFilter, sortBy])
+  }, [scoredRemote, search, freshnessFilter, sortBy, applyVisibility])
 
   // 1-Click Apollo Enrichment for Radar Leads
   const [enrichingRadarId, setEnrichingRadarId] = useState(null)
@@ -459,6 +509,28 @@ export default function ClientRadar() {
               </select>
             </div>
           </div>
+
+          {/* Row 3: Engagement fit & dismissed */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 pt-2.5 border-t border-panel-edge/60 text-xs text-slate-300">
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={hideNotFit}
+                onChange={(e) => setHideNotFit(e.target.checked)}
+                className="h-3.5 w-3.5 accent-[#6D5AF6]"
+              />
+              Hide full-time / employment roles
+            </label>
+            <label className="inline-flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showDismissed}
+                onChange={(e) => setShowDismissed(e.target.checked)}
+                className="h-3.5 w-3.5 accent-[#6D5AF6]"
+              />
+              Show dismissed ({dismissed.size})
+            </label>
+          </div>
         </div>
       )}
 
@@ -553,6 +625,29 @@ export default function ClientRadar() {
                             <span>{isStale ? '⚠️' : ''}</span>
                             <span>{opp.freshnessLabel}</span>
                           </span>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${FIT_STYLES[opp.engagement?.fit] || FIT_STYLES.unclear}`}
+                            title="Whether the post looks like scoped contract work that leaves you free to serve other clients"
+                          >
+                            {opp.engagement?.label}
+                          </span>
+                          {dismissed.has(itemKey(item)) ? (
+                            <button
+                              type="button"
+                              onClick={() => restoreItem(item)}
+                              className="text-xs text-neon-blue hover:underline cursor-pointer"
+                            >
+                              Restore
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => dismissItem(item)}
+                              className="text-xs text-slate-400 hover:text-white cursor-pointer"
+                            >
+                              Dismiss
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -568,19 +663,19 @@ export default function ClientRadar() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs pt-1">
                             <div className="flex justify-between">
                               <span className="text-slate-400"> Freshness ({opp.freshnessLabel}):</span>
-                              <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 30</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-400"> Reachability:</span>
-                              <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 30</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 15</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-400"> Studio Tech Fit:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.techMatch} / 25</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400"> Deal Intent:</span>
-                              <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 10</span>
+                              <span className="text-slate-400"> Engagement fit:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 30</span>
                             </div>
                           </div>
                         </div>
@@ -793,6 +888,29 @@ export default function ClientRadar() {
                             <span>{isStale ? '⚠️' : ''}</span>
                             <span>{opp.freshnessLabel}</span>
                           </span>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${FIT_STYLES[opp.engagement?.fit] || FIT_STYLES.unclear}`}
+                            title="Whether the post looks like scoped contract work that leaves you free to serve other clients"
+                          >
+                            {opp.engagement?.label}
+                          </span>
+                          {dismissed.has(itemKey(item)) ? (
+                            <button
+                              type="button"
+                              onClick={() => restoreItem(item)}
+                              className="text-xs text-neon-blue hover:underline cursor-pointer"
+                            >
+                              Restore
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => dismissItem(item)}
+                              className="text-xs text-slate-400 hover:text-white cursor-pointer"
+                            >
+                              Dismiss
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -808,19 +926,19 @@ export default function ClientRadar() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs pt-1">
                             <div className="flex justify-between">
                               <span className="text-slate-400"> Freshness ({opp.freshnessLabel}):</span>
-                              <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 35</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.freshness} / 30</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-400"> Reachability:</span>
-                              <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 30</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.reachability} / 15</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-slate-400"> Studio Tech Fit:</span>
                               <span className="text-white font-semibold">+{opp.breakdown?.techMatch} / 25</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-slate-400"> Deal Intent:</span>
-                              <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 10</span>
+                              <span className="text-slate-400"> Engagement fit:</span>
+                              <span className="text-white font-semibold">+{opp.breakdown?.dealIntent} / 30</span>
                             </div>
                           </div>
                         </div>

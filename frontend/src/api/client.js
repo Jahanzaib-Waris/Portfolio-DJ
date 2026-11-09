@@ -818,6 +818,14 @@ const BUDGET_DEAL_VALUES = {
 export const budgetToDealValue = (budget) => BUDGET_DEAL_VALUES[budget] ?? 0
 
 export const convertQuoteToLead = async (quote) => {
+  // Idempotent: the quote-notify function may already have created this lead.
+  const { data: existing } = await supabase
+    .from('crm_leads')
+    .select('*')
+    .eq('quote_request_id', quote.id)
+    .limit(1)
+  if (existing && existing.length > 0) return existing[0]
+
   const dealValue = budgetToDealValue(quote.budget)
 
   const payload = {
