@@ -118,7 +118,7 @@ Until step 1 is done, Client Radar keeps working in live mode, so the order abov
 - Project `fbeegpzrbocqgyxeqqtc`: `radar.sql`, `quote_notify.sql` and `radar_cron.sql` are applied; `radar-ingest` and `quote-notify` are deployed; Vault holds `project_url`, `radar_cron_secret`, `quote_webhook_secret`.
 - Function secrets set: `RADAR_CRON_SECRET`, `QUOTE_WEBHOOK_SECRET`, `SITE_URL`, `NOTIFY_WEBHOOK_URL` (Discord). No email provider (no `RESEND_API_KEY`), so email alerts and the visitor auto-reply are off.
 - The daily job `radar-ingest-daily` runs at 03:00 UTC. The legacy Django tables (and their 267 rows, including 84 old page views) were dropped, and the temporary local backup was deleted on 2026-11-09, so that data no longer exists anywhere.
-- The live `site_theme` row still stores the old `Manrope` / `Fira Code` defaults (rendered as Plus Jakarta Sans / JetBrains Mono through an alias in `applyTheme.js`); re-saving the theme in the admin replaces them.
+- The live `site_theme` row still stores the old `Manrope` / `Fira Code` defaults (rendered as Plus Jakarta Sans / JetBrains Mono through an alias in `applyTheme.js`); to replace them, pick Plus Jakarta Sans and JetBrains Mono in Settings → Theme and Save (saving without changing the dropdowns keeps the old values), or update the row with SQL.
 
 ## Notes
 
