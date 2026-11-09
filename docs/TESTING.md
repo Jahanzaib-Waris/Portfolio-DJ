@@ -138,6 +138,7 @@ You need one Supabase Auth user (Dashboard → Authentication → Users) to sign
 - [ ] Pitch text names the post it came from, mentions working alongside other clients, and contains no made-up numbers or results
 - [ ] App Rescue Scanner: search "expense tracker" returns apps; flagged ones show reasons (low rating, months since update); "Add to CRM" creates a lead whose notes include the App Store URL, and the card then shows "In CRM"
 - [ ] Search Links tab includes Reddit r/forhire, r/FlutterFlow and the FlutterFlow job-postings forum
+- [ ] Help & Guide: the sidebar entry opens `/admin/help`; the search box filters topics; each quick answer jumps to the right section; topic pages show "On this page", the side topic list (a scrolling row on phones) and working Previous/Next links; an unknown topic URL shows a friendly message
 - [ ] Submit a test quote: the lead appears in the CRM Pipeline (when `quote-notify` is deployed), you get the alert, and "Convert to deal" in the inbox shows it as already in CRM instead of creating a duplicate
 - [ ] Submit the same email twice within a day: only the first gets an auto-reply
 - [ ] "Add to CRM" inserts a lead and opens the pitch drawer

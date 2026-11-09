@@ -38,6 +38,8 @@ const BrandingSettings = lazy(() => import('./pages/admin/settings/BrandingSetti
 const ThemeEditor = lazy(() => import('./pages/admin/settings/ThemeEditor'))
 const IntegrationSettings = lazy(() => import('./pages/admin/settings/IntegrationSettings'))
 const AdminNotFound = lazy(() => import('./pages/admin/AdminNotFound'))
+const HelpIndex = lazy(() => import('./pages/admin/help/HelpIndex'))
+const HelpTopic = lazy(() => import('./pages/admin/help/HelpTopic'))
 
 function AdminLoading() {
   return (
@@ -95,6 +97,8 @@ function App() {
               <Route path="settings/branding" element={<BrandingSettings />} />
               <Route path="settings/theme" element={<ThemeEditor />} />
               <Route path="settings/integrations" element={<IntegrationSettings />} />
+              <Route path="help" element={<HelpIndex />} />
+              <Route path="help/:slug" element={<HelpTopic />} />
               <Route path="*" element={<AdminNotFound />} />
             </Route>
           </Route>

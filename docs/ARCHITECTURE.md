@@ -165,6 +165,7 @@ CRM stage values: `lead`, `contacted`, `proposal`, `negotiation`, `closed_won`, 
 | `/admin/settings/account` | `AccountSettings` | Password change via Supabase Auth |
 | `/admin/settings/branding`, `/theme` | Branding / `ThemeEditor` | Writes `site_branding` / `site_theme` |
 | `/admin/settings/integrations` | `IntegrationSettings` | AI provider + Apollo keys, connection tests |
+| `/admin/help`, `/admin/help/:slug` | `HelpIndex`, `HelpTopic` | In-app Help & Guide: searchable topic list, quick answers, 8 topic pages with an "On this page" list and previous/next links. Content is data in `pages/admin/help/helpTopics.jsx` (building blocks in `HelpBlocks.jsx`) |
 | `*` under `/admin` | `AdminNotFound` | |
 
 `AdminLayout` provides the grouped sidebar, live badges (unread quotes, CRM follow-ups due), the identity dropdown, and a mobile slide-over drawer. Feedback uses the shared toast system (`useToast()`); `AdminPageHeader` supplies breadcrumbs and the sticky save/cancel bar with a dirty-state badge.

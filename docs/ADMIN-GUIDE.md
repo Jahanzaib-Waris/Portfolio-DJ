@@ -1,6 +1,6 @@
 # Admin Guide — how the panel works and where to start
 
-A plain-language tour of `/admin` for the studio owner. For internals see `ARCHITECTURE.md`; for set-up and deploy steps see `DEPLOYMENT.md`; for test checklists see `TESTING.md` and `QUICK-TEST.md`.
+A plain-language tour of `/admin` for the studio owner. The same material is built into the panel under **Help & Guide** (`/admin/help`), split into short topics with search; its text lives in `frontend/src/pages/admin/help/helpTopics.jsx`. For internals see `ARCHITECTURE.md`; for set-up and deploy steps see `DEPLOYMENT.md`; for test checklists see `TESTING.md` and `QUICK-TEST.md`.
 
 Sign in at https://jerry-dev-studio.web.app/admin/login with the admin user created in Supabase (Authentication → Users). Public sign-ups should stay disabled: any signed-in user is treated as admin.
 
